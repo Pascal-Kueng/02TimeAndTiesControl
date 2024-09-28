@@ -1,7 +1,7 @@
 
 
 
-SHUTDOWN <- TRUE
+SHUTDOWN <- F
 
 
 
@@ -17,10 +17,10 @@ dir_path <- "C:/Users/kueng/OneDrive - Universität Zürich UZH/04 Papers/02 T&T
 notebooks <- c(
   "01_Analysis_Script_FINAL.Rmd", 
   "02_Analysis_Script_As_Preregistred.Rmd",
-  "03_Analysis_Script_ExcludePushing.Rmd", 
-  "04_Analysis_Script_SensitivityCovariatesALL.Rmd",
-  "05_Analysis_Script_SensitivityCovariates_NoExchangeProcesses.Rmd",
-  "06_Analysis_Script_SensitivityCovariates_OnlyExchangeProcesses.Rmd"
+  "03_Analysis_Script_ExcludePushing.Rmd"#, 
+  #"04_Analysis_Script_SensitivityCovariatesALL.Rmd",
+  #"05_Analysis_Script_SensitivityCovariates_NoExchangeProcesses.Rmd",
+  #"06_Analysis_Script_SensitivityCovariates_OnlyExchangeProcesses.Rmd"
 )
 
 

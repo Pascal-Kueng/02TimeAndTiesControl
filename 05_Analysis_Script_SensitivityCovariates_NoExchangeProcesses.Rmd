@@ -61,7 +61,7 @@ options(
 
 ```{r prepare_datasets, results='asis'}
 
-df <- openxlsx::read.xlsx(file.path(top_directory, 'long.xlsx'))
+df <- openxlsx::read.xlsx(file.path('long.xlsx'))
 df_original <- df
 
 df_double <- prepare_data(df, use_mi = use_mi)[[1]]
@@ -301,7 +301,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "NoExchangeProcesses_pa_sub")
+  file = file.path("models_cache", "NoExchangeProcesses_pa_sub")
 )
 
 
@@ -415,7 +415,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory,"models_cache", "NoExchangeProcesses_pa_obj_log")
+  file = file.path("models_cache", "NoExchangeProcesses_pa_obj_log")
 )
 
 
@@ -523,7 +523,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory,"models_cache", "NoExchangeProcesses_mood")
+  file = file.path("models_cache", "NoExchangeProcesses_mood")
 )
 
 
@@ -627,7 +627,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory,"models_cache", "NoExchangeProcesses_reactance")
+  file = file.path("models_cache", "NoExchangeProcesses_reactance")
 
 )
 
@@ -738,7 +738,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory,"models_cache", "NoExchangeProcesses_is_reactance")
+  file = file.path("models_cache", "NoExchangeProcesses_is_reactance")
 
 )
 
@@ -815,7 +815,8 @@ summary_all_models <- all_models %>%
 
 export_xlsx(summary_all_models, 
             rows_to_pack = rows_to_pack_final,
-            file.path(working_directory, "Output", "NoExchangeProcesses_AllModels_SensCovariates.xlsx"),
+            file.path("Output", "SensitivityCovariates",
+                      "NoExchangeProcesses_AllModels_SensCovariates.xlsx"),
             merge_option = 'both', 
             simplify_2nd_row = TRUE,
             colwidths = c(40, 7.4, 12.85, 7.4, 12.85,7.4, 12.85,7.4, 12.85,7.4, 12.85),

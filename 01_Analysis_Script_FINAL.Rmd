@@ -224,7 +224,7 @@ df_sample_summary <- print_df(
 )
 
 export_xlsx(df_sample_summary,
-            file.path('OutputFinal', 'SampleDescription.xlsx'),
+            file.path('Output', 'SampleDescription.xlsx'),
             merge_option = 'both',
             rows_to_pack = packing_sample,
             colwidths = c(20,35,7,7,7,7,7,10)
@@ -253,7 +253,7 @@ main_descriptives <- report_measures(
 
 openxlsx::write.xlsx(
   main_descriptives, 
-  file.path('OutputFinal', 'DescriptivesMain.xlsx')
+  file.path('Output', 'DescriptivesMain.xlsx')
   )
 
 print_df(main_descriptives)
@@ -284,7 +284,7 @@ all_descriptives <- report_measures(df_full, all_constructs, ICC = F)
 
 openxlsx::write.xlsx(
   all_descriptives, 
-  file.path('OutputFinal', 'DescriptivesAll.xlsx')
+  file.path('Output', 'DescriptivesAll.xlsx')
 )
 
 print_df(all_descriptives)
@@ -301,7 +301,7 @@ main_cors <- summary(cors, 'wb')$merged_wb
 
 openxlsx::write.xlsx(
   main_cors, 
-  file.path('OutputFinal', 'Correlations.xlsx')
+  file.path('Output', 'Correlations.xlsx')
 )
 
 print_df(main_cors, width = '7em')
@@ -581,7 +581,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_final", "pa_sub")
+  file = file.path("models_cache", "pa_sub")
 )
 
 
@@ -685,7 +685,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_final", "pa_obj_log")
+  file = file.path("models_cache", "pa_obj_log")
 )
 
 
@@ -783,7 +783,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_final", "mood")
+  file = file.path("models_cache", "mood")
 )
 
 
@@ -881,7 +881,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_final", "reactance")
+  file = file.path("models_cache", "reactance")
 )
 
 
@@ -979,7 +979,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_final", "reactance_ordinal")
+  file = file.path("models_cache", "reactance_ordinal")
 )
 
 
@@ -1084,7 +1084,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_final", "is_reactance")
+  file = file.path("models_cache", "is_reactance")
 )
 
 
@@ -1170,7 +1170,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack_final,
-  file.path("OutputFinal", "AllModels.xlsx"), 
+  file.path("Output", "AllModels.xlsx"), 
   merge_option = 'both', 
   simplify_2nd_row = TRUE,
   colwidths = c(38, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),

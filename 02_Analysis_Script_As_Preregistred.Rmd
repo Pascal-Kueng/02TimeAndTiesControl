@@ -27,7 +27,6 @@ library(kableExtra)
 library(brms)
 library(bayesplot)
 
-
 ```
 
 
@@ -96,13 +95,6 @@ prepare_for_export <- function(model) {
 
 
 ```{r load, echo=FALSE, warning=FALSE, message=FALSE, results='hide'}
-
-working_directory <- file.path(
-  'C:', 'Users', 'kueng', 'OneDrive - Universität Zürich UZH',
-  '04 Papers', '02 T&T Control', 'Analysis', 'ACTIVITY', 'BRMS', 'AsPreregistered'
-)
-
-setwd(working_directory)
 
 df <- openxlsx::read.xlsx('long.xlsx')
 
@@ -574,7 +566,7 @@ sample_table <- report_measures(df_wide, sample_measures, ICC=F)
 
 rownames(sample_table) <- NULL
 
-openxlsx::write.xlsx(sample_table, 'Output/Sample.xlsx')
+openxlsx::write.xlsx(sample_table, 'Output/AsPreregistred/Sample.xlsx')
 
 print_df(sample_table)
 
@@ -599,7 +591,7 @@ main_constructs <- c("persuasion_A", "persuasion_B",
 
 main_descriptives <- report_measures(df_wide, main_constructs)
 
-openxlsx::write.xlsx(main_descriptives, 'Output/DescriptivesMain.xlsx')
+openxlsx::write.xlsx(main_descriptives, 'Output/AsPreregistred/DescriptivesMain.xlsx')
 
 print_df(main_descriptives)
 
@@ -648,7 +640,7 @@ all_constructs <- c(
 
 all_descriptives <- report_measures(df_wide, all_constructs, ICC = F)
 
-openxlsx::write.xlsx(all_descriptives, 'Output/DescriptivesAll.xlsx')
+openxlsx::write.xlsx(all_descriptives, 'Output/AsPreregistred/DescriptivesAll.xlsx')
 
 print_df(all_descriptives)
 
@@ -664,7 +656,7 @@ cors <- wbCorr(df_wide[,c(main_constructs)], df_wide$coupleID, method = 'spearma
 main_cors <- summary(cors, 'wb')$merged_wb
 
 
-openxlsx::write.xlsx(main_cors, 'Output/Correlations.xlsx')
+openxlsx::write.xlsx(main_cors, 'Output/AsPreregistred/Correlations.xlsx')
 
 print_df(main_cors, width = '7em')
 
@@ -975,7 +967,7 @@ persuasion_pa_sub_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_pa_sub_ind"
+  file = file.path("models_cache", "persuasion_pa_sub_ind")
 )
 
 
@@ -1059,7 +1051,7 @@ persuasion_pa_sub_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_pa_sub_apim"
+  file = file.path("models_cache", "as_preregistered_persuasion_pa_sub_apim")
 )
 
 
@@ -1163,7 +1155,7 @@ persuasion_pa_obj_log_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_pa_obj_log_ind"
+  file = file.path("models_cache", "as_preregistered_persuasion_pa_obj_log_ind")
 )
 
 
@@ -1247,7 +1239,7 @@ persuasion_pa_obj_log_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_pa_obj_log_apim"
+  file = file.path("models_cache", "as_preregistered_persuasion_pa_obj_log_apim")
 )
 
 
@@ -1342,7 +1334,7 @@ persuasion_aff_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_aff_ind"
+  file = file.path("models_cache", "as_preregistered_persuasion_aff_ind")
 )
 
 
@@ -1425,7 +1417,7 @@ persuasion_aff_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_aff_apim"
+  file = file.path("models_cache", "as_preregistered_persuasion_aff_apim")
 )
 
 
@@ -1520,7 +1512,7 @@ persuasion_anticipAff_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_anticipAff_ind"
+  file = file.path("models_cache", "as_preregistered_persuasion_anticipAff_ind")
 )
 
 
@@ -1602,7 +1594,7 @@ persuasion_anticipAff_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_anticipAff_apim"
+  file = file.path("models_cache", "as_preregistered_persuasion_anticipAff_apim")
 )
 
 
@@ -1694,7 +1686,7 @@ persuasion_reactance_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_reactance_ind"
+  file = file.path("models_cache", "as_preregistered_persuasion_reactance_ind")
 )
 
 
@@ -1776,7 +1768,7 @@ persuasion_reactance_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/persuasion_reactance_apim"
+  file = file.path("models_cache", "as_preregistered_persuasion_reactance_apim")
 )
 
 
@@ -2027,7 +2019,7 @@ pressure_pa_sub_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_pa_sub_ind"
+  file = file.path("models_cache", "as_preregistered_pressure_pa_sub_ind")
 )
 
 
@@ -2111,7 +2103,7 @@ pressure_pa_sub_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_pa_sub_apim"
+  file = file.path("models_cache", "as_preregistered_pressure_pa_sub_apim")
 )
 
 
@@ -2199,7 +2191,7 @@ pressure_pa_obj_log_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_pa_obj_log_ind"
+  file = file.path("models_cache", "as_preregistered_pressure_pa_obj_log_ind")
 )
 
 
@@ -2283,7 +2275,7 @@ pressure_pa_obj_log_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_pa_obj_log_apim"
+  file = file.path("models_cache", "as_preregistered_pressure_pa_obj_log_apim")
 )
 
 
@@ -2371,7 +2363,7 @@ pressure_aff_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_aff_ind"
+  file = file.path("models_cache", "as_preregistered_pressure_aff_ind")
 )
 
 
@@ -2454,7 +2446,7 @@ pressure_aff_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_aff_apim"
+  file = file.path("models_cache", "as_preregistered_pressure_aff_apim")
 )
 
 
@@ -2541,7 +2533,7 @@ pressure_anticipAff_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_anticipAff_ind"
+  file = file.path("models_cache", "as_preregistered_pressure_anticipAff_ind")
 )
 
 
@@ -2623,7 +2615,7 @@ pressure_anticipAff_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_anticipAff_apim"
+  file = file.path("models_cache", "as_preregistered_pressure_anticipAff_apim")
 )
 
 
@@ -2708,7 +2700,7 @@ pressure_reactance_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_reactance_ind"
+  file = file.path("models_cache", "as_preregistered_pressure_reactance_ind")
 )
 
 
@@ -2790,7 +2782,7 @@ pressure_reactance_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pressure_reactance_apim"
+  file = file.path("models_cache", "as_preregistered_pressure_reactance_apim")
 )
 
 
@@ -3046,7 +3038,7 @@ pushing_pa_sub_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_pa_sub_ind"
+  file = file.path("models_cache", "as_preregistered_pushing_pa_sub_ind")
 )
 
 
@@ -3133,7 +3125,7 @@ pushing_pa_sub_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_pa_sub_apim"
+  file = file.path("models_cache", "as_preregistered_pushing_pa_sub_apim")
 )
 
 
@@ -3222,7 +3214,7 @@ pushing_pa_obj_log_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_pa_obj_log_ind"
+  file = file.path("models_cache", "as_preregistered_pushing_pa_obj_log_ind")
 )
 
 
@@ -3310,7 +3302,7 @@ pushing_pa_obj_log_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_pa_obj_log_apim"
+  file = file.path("models_cache", "as_preregistered_pushing_pa_obj_log_apim")
 )
 
 
@@ -3399,7 +3391,7 @@ pushing_aff_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_aff_ind"
+  file = file.path("models_cache", "as_preregistered_pushing_aff_ind")
 )
 
 
@@ -3485,7 +3477,7 @@ pushing_aff_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_aff_apim"
+  file = file.path("models_cache", "as_preregistered_pushing_aff_apim")
 )
 
 
@@ -3573,7 +3565,7 @@ pushing_anticipAff_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_anticipAff_ind"
+  file = file.path("models_cache", "as_preregistered_pushing_anticipAff_ind")
 )
 
 
@@ -3658,7 +3650,7 @@ pushing_anticipAff_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_anticipAff_apim"
+  file = file.path("models_cache", "as_preregistered_pushing_anticipAff_apim")
 )
 
 
@@ -3744,7 +3736,7 @@ pushing_reactance_ind <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_reactance_ind"
+  file = file.path("models_cache", "as_preregistered_pushing_reactance_ind")
 )
 
 
@@ -3829,7 +3821,7 @@ pushing_reactance_apim <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = "models_cache/pushing_reactance_apim"
+  file = file.path("models_cache", "as_preregistered_pushing_reactance_apim")
 )
 
 
@@ -3939,7 +3931,7 @@ all_models$Pushing_apim <- prepare_for_export(pushing_all_apim_models)
 
 ```{r export_all_models}
 
-openxlsx::write.xlsx(all_models, file = "Output/AllModels.xlsx")
+openxlsx::write.xlsx(all_models, file = "Output/AsPreregistred/AllModels.xlsx")
 
 ```
 

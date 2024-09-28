@@ -61,7 +61,7 @@ options(
 
 ```{r prepare_datasets, results='asis'}
 
-df <- openxlsx::read.xlsx(file.path(top_directory, 'long.xlsx'))
+df <- openxlsx::read.xlsx(file.path('long.xlsx'))
 df_original <- df
 
 # Importantly, we do not recode pushing here. 
@@ -276,7 +276,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "pa_sub")
+  file = file.path("models_cache", "exclude_pushing_pa_sub")
 )
 
 
@@ -378,7 +378,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory,"models_cache", "pa_obj_log")
+  file = file.path("models_cache", "exclude_pushing_pa_obj_log")
 )
 
 
@@ -474,7 +474,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory,"models_cache", "mood")
+  file = file.path("models_cache", "exclude_pushing_mood")
 )
 
 
@@ -566,7 +566,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory,"models_cache", "reactance")
+  file = file.path("models_cache", "exclude_pushing_reactance")
 
 )
 
@@ -663,7 +663,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "is_reactance")
+  file = file.path("models_cache", "exclude_pushing_is_reactance")
 
 )
 
@@ -740,7 +740,7 @@ summary_all_models <- all_models %>%
 
 export_xlsx(summary_all_models, 
             rows_to_pack = rows_to_pack_final,
-            file.path(working_directory, "OutputFinal", "AllModels_noPushing.xlsx"),
+            file.path("Output", "SensitivityExcludePushing", "AllModels_noPushing.xlsx"),
             merge_option = 'both', 
             simplify_2nd_row = TRUE,
             colwidths = c(40, 7.4, 12.85, 7.4, 12.85,7.4, 12.85,7.4, 12.85,7.4, 12.85),
@@ -805,7 +805,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "pa_sub_onlyp")
+  file = file.path("models_cache", "exclude_pushing_pa_sub_onlyp")
 )
 
 
@@ -888,7 +888,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "pa_obj_log_onlyp")
+  file = file.path("models_cache", "exclude_pushing_pa_obj_log_onlyp")
 )
 
 
@@ -973,7 +973,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "mood_onlyp")
+  file = file.path("models_cache", "exclude_pushing_mood_onlyp")
 )
 
 
@@ -1054,7 +1054,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "reactance_onlyp")
+  file = file.path("models_cache", "exclude_pushing_reactance_onlyp")
 )
 
 
@@ -1150,7 +1150,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache", "is_reactance_onlyp")
+  file = file.path("models_cache", "exclude_pushing_is_reactance_onlyp")
 )
 
 
@@ -1227,7 +1227,8 @@ summary_all_models <- all_models %>%
 
 export_xlsx(summary_all_models, 
             rows_to_pack = rows_to_pack_final,
-            file.path(working_directory, "OutputFinal", "AllModels_onlyPushing.xlsx"),            merge_option = 'both', 
+            file.path("Output", "SensitivityExcludePushing", "AllModels_onlyPushing.xlsx"),
+            merge_option = 'both', 
             simplify_2nd_row = TRUE,
             colwidths = c(40, 7.4, 12.85, 7.4, 12.85,7.4, 12.85,7.4, 12.85,7.4, 12.85),
             line_above_rows = c(1,2,3,21),
