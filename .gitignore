@@ -4,6 +4,7 @@ long.xlsx
 .rda
 .rds
 .rdS
+.Rds
 df_double.Rda
 
 # Temporary folders created in knitting process

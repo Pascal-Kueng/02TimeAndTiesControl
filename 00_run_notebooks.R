@@ -9,9 +9,6 @@ SHUTDOWN <- F
 library(rmarkdown)
 library(fs)
 
-# Define the directory containing the .Rmd files
-dir_path <- "C:/Users/kueng/OneDrive - Universität Zürich UZH/04 Papers/02 T&T Control/Analysis/ACTIVITY/BRMS"
-
 
 # Define the list of .Rmd files you want to knit
 notebooks <- c(
@@ -25,7 +22,7 @@ notebooks <- c(
 
 
 # Create a log file to record any failures, overwrite if it exists
-log_file <- file(file.path(dir_path, "knit_failures.log"), open = "wt")
+log_file <- file(file.path("knit_failures.log"), open = "wt")
 writeLines(paste("Knit failures log -", Sys.time(), "\n"), log_file)
 
 # Function to knit Rmd file and log failures
@@ -40,7 +37,7 @@ knit_rmd <- function(file) {
 }
 
 # Get list of specified .Rmd files in the directory
-rmd_files <- file.path(dir_path, notebooks)
+rmd_files <- file.path(notebooks)
 
 # Check if the specified files exist
 rmd_files <- rmd_files[file_exists(rmd_files)]
