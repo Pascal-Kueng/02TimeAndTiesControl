@@ -6,6 +6,9 @@ long.xlsx
 .rdS
 df_double.Rda
 
+# Temporary folders created in knitting process
+*_files/
+
 # History files
 .Rhistory
 .Rapp.history
