@@ -1,6 +1,10 @@
 # Sensitive Data
 long.xlsx
 .Rda
+.rda
+.rds
+.rdS
+df_double.Rda
 
 # History files
 .Rhistory
