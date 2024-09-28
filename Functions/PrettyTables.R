@@ -174,7 +174,9 @@ export_xlsx <- function(html_table,
                         verbose = FALSE,
                         rows_to_pack = NULL,
                         line_above_rows = NULL,
-                        line_below_rows = NULL) {
+                        line_below_rows = NULL,
+                        specify_header_rows = c(1),
+                        repeat_header_rows_at = c(1)) {
   
   # Check and load required packages
   required_packages <- c("xml2", "rvest", "openxlsx")
@@ -340,21 +342,19 @@ export_xlsx <- function(html_table,
         
         if (exists("indent_rows")) {
           # Apply indentation for the rows below the packed row
-          if (row + indent_rows <= nrow(final)) {
-            for (subsequent_row in (row + 1):(row + indent_rows)) {
-              if (!is.null(packing_names) && !grepl(packing_names, final[subsequent_row, 1], ignore.case = TRUE)) {
-                addStyle(
-                  wb,
-                  sheet = sheet_name,
-                  style = createStyle(indent = 1),
-                  rows = subsequent_row + 1,
-                  cols = 1,
-                  gridExpand = TRUE,
-                  stack = TRUE
-                )
-              } else {
-                break
-              }
+          for (subsequent_row in (row + 1):(row + indent_rows)) {
+            if (!is.null(packing_names) && !grepl(packing_names, final[subsequent_row, 1], ignore.case = TRUE)) {
+              addStyle(
+                wb,
+                sheet = sheet_name,
+                style = createStyle(indent = 1),
+                rows = subsequent_row + 1,
+                cols = 1,
+                gridExpand = TRUE,
+                stack = TRUE
+              )
+            } else {
+              break
             }
           }
         }
@@ -375,3 +375,6 @@ export_xlsx <- function(html_table,
   saveWorkbook(wb, file, overwrite = TRUE)
   if (verbose) message("Workbook saved successfully.")
 }
+
+
+

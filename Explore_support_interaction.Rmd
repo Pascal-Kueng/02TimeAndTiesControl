@@ -1,0 +1,547 @@
+---
+title: "APIM - Control"
+author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    theme: flatly
+    df_print: kable
+    toc: yes
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    toc_depth: 5
+    highlight: tango
+---
+
+
+# Setup
+
+```{r setup, warning=FALSE, message=FALSE, results='hide'}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(R.utils)
+library(wbCorr)
+library(readxl)
+library(kableExtra)
+library(brms)
+library(bayesplot)
+library(beepr)
+
+
+source(file.path('Functions', 'ReportModels.R'))
+source(file.path('Functions', 'PrettyTables.R'))
+source(file.path('Functions', 'ReportMeasures.R'))
+source(file.path('Functions', 'PrepareData.R'))
+
+
+```
+
+
+```{r set_options}
+
+system("shutdown /a")
+
+# Set options for analysis
+use_mi = FALSE
+shutdown = FALSE
+report_ordinal = FALSE
+
+options(
+  dplyr.print_max = 100, 
+  brms.backend = 'cmdstan',
+  brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
+  error = function() beepr::beep(sound = 5)
+)
+
+
+```
+
+
+```{r prepare_datasets, results='asis'}
+
+df <- openxlsx::read.xlsx(file.path(top_directory, 'long.xlsx'))
+df_original <- df
+
+df_list <- prepare_data(df, use_mi = use_mi)
+df_double <- df_list[[1]]
+df_full <- df_list[[2]]
+
+```
+
+
+
+# Descriptives
+
+# Sample Statistics
+
+```{r describe_sample, results='asis'}
+
+# Income (mean of both partner's report)
+merge_income <- function(income1, income2) {
+  merged_income <- numeric(length(income1))
+  
+  # Loop through each pair of incomes
+  for (i in seq_along(income1)) {
+    # Handle NA
+    if (is.na(income1[i])) {
+      merged_income[i] <- income2[i]
+    } 
+    
+    else if (is.na(income2[i])) {
+      merged_income[i] <- income1[i]
+    }
+    
+    # if both are informative, take mean and round
+    else if (income1[i] %in% 1:6 && income2[i] %in% 1:6) {
+      merged_income[i] <- round((income1[i] + income2[i]) / 2)
+    }
+    
+    # if one is informative and the other not, use the informative one. 
+    else if (income1[i] %in% 1:6) {
+      merged_income[i] <- income1[i]
+    }
+    else if (income2[i] %in% 1:6) {
+      merged_income[i] <- income2[i]
+    }
+    
+    # Now we only have cases, where both are either 70 or 99. We simply report "undisclosed". 
+    else {
+      merged_income[i] <- 99
+    }
+  }
+  
+  # Convert to factor
+  merged_income <- factor(
+    merged_income, levels = c(1,2,3,4,5,6,70,99), 
+    labels = c(
+      "up to CHF 2'000.-", 
+      "CHF 2'001.- to CHF 4'000.-",
+      "CHF 4'001.- to CHF 6'000.-",
+      "CHF 6'001.- to CHF 8'000.-",
+      "CHF 8'001.- to CHF 10'000.-", 
+      "above CHF 10'000.-", 
+      "I don't know",
+      "Undisclosed"
+  )
+  )
+  
+  return(merged_income)
+}
+
+
+
+df_sample_report <- df_full %>%
+  group_by(coupleID) %>%
+  arrange(userID) %>%
+  # Computing couple level variables
+  mutate(
+    Household_Income = merge_income(first(pre_income_1), last(pre_income_1)),
+    
+    reldur = pre_rel_duration_m / 12 + pre_rel_duration_y,
+    Relationship_duration = mean(reldur, na.rm = TRUE),
+    
+    habdur = pre_hab_duration_m / 12 + pre_hab_duration_y,
+    Cohabiting_duration = mean(habdur, na.rm = TRUE),
+    
+    Marital_status = factor(
+      case_when(
+        all(pre_mat_stat == 1) ~ "Married",
+        any(pre_mat_stat == 1) ~ "One Partner Married",
+        TRUE ~ "Not Married"
+      )
+    ),
+    
+    Have_children = factor(
+      (first(pre_child_option) + last(pre_child_option)) > 0, 
+      levels = c(FALSE, TRUE), 
+      labels = c('Have Children', 'No Children')),
+    
+    Gender = factor(
+      gender, 
+      levels = c(1,2,3), 
+      labels = c('Male','Female', 'Other')),
+    
+
+
+    Couple_type = as.factor(
+      case_when(
+        first(Gender) == last(Gender) & first(Gender) == 'Male' ~ 'Same-Sex Couple (Male)',
+        first(Gender) == last(Gender) & first(Gender) == 'Female' ~ 'Same-Sex Couple (Female)',
+        TRUE ~ 'Mixed-sex Couple'
+      )
+    )
+  ) %>%
+  ungroup() %>%
+  # Individual level variables
+  mutate(
+    Age = pre_age,
+    Handedness = factor(
+      pre_handedness, 
+      levels = c(0, 1, 2), 
+      c('Right','Left', 'Ambidextrous')),
+  Highest_Education = factor(
+    pre_education, 
+    levels = c(1,2,3,4,5,6,7), 
+    labels = c(
+      "(still) no school diploma",
+      "compulsory education (9 years)",
+      "vocational training (apprenticeship)",
+      "Matura (university entrance qualification)",
+      "Bachelor's degree", 
+      "Master's degree",
+      "Doctorate degree"
+      )
+    ),
+  BMI = pre_weight / ((pre_height / 100)^2) # to meters
+  ) %>%
+  select(c(Relationship_duration, Cohabiting_duration, Couple_type, Household_Income, 
+            Marital_status, Have_children, 
+            Gender, Age, Handedness, Highest_Education, BMI))
+
+
+sample_table <- report_measures(df_sample_report, ICC = F)
+sample_table$n_Obs <- as.numeric(sample_table$n_Obs) / 55
+rownames(sample_table) <- NULL
+
+n_couple_vars <- 17
+sample_table$n_Obs[1:n_couple_vars] <- sample_table$n_Obs[1:n_couple_vars] / 2
+
+packing_sample <- list(
+    "Couple level variables (38 couples)" = 
+      c(1, n_couple_vars),
+    "Individual level variables (76 individuals)" 
+    = c(n_couple_vars+1, nrow(sample_table))
+    ) 
+
+df_sample_summary <- print_df(
+  sample_table,
+  rows_to_pack = packing_sample
+)
+
+export_xlsx(df_sample_summary,
+            file.path(working_directory, 'OutputFinal', 'SampleDescription.xlsx'),
+            merge_option = 'both',
+            rows_to_pack = packing_sample,
+            colwidths = c(20,35,7,7,7,7,7,10)
+            )
+
+df_sample_summary
+
+```
+
+
+
+## Measures
+
+### Focal Variables
+
+```{r describe_measures_main, results='asis'}
+main_constructs <- c("persuasion", "pressure","pushing", 
+                     "pa_sub", "pa_obj", "aff", "reactance"
+                     )
+
+main_descriptives <- report_measures(
+  data = df_full, 
+  measures = main_constructs,
+  ICC = TRUE, 
+  cluster_var = df_full$userID)
+
+openxlsx::write.xlsx(
+  main_descriptives, 
+  file.path('OutputFinal', 'DescriptivesMain.xlsx')
+  )
+
+print_df(main_descriptives)
+
+```
+
+### All Variables
+
+```{r describe_measures_all, results='asis'}
+
+
+
+
+all_constructs <- c(
+  main_constructs,
+  "day",
+  "weartime",
+  "isWeekend",
+  "plan",
+  "studyGroup",
+  "support",
+  "got_JITAI",
+  "skilled_support"
+)
+
+
+all_descriptives <- report_measures(df_full, all_constructs, ICC = F)
+
+openxlsx::write.xlsx(
+  all_descriptives, 
+  file.path(working_directory, 'OutputFinal', 'DescriptivesAll.xlsx')
+)
+
+print_df(all_descriptives)
+
+```
+
+## Correlations
+
+```{r correlations, results='asis'}
+cors <- wbCorr(df_full[,c(main_constructs)], df_full$coupleID, method = 'spearman')
+
+main_cors <- summary(cors, 'wb')$merged_wb
+
+
+openxlsx::write.xlsx(
+  main_cors, 
+  file.path(working_directory, 'OutputFinal', 'Correlations.xlsx')
+)
+
+print_df(main_cors, width = '7em')
+
+```
+
+Within-person correlations are above the diagonal and between-person 
+correlations are below the diagonal.  
+On the diagonal are intraclass correlations (ICCs)
+
+
+# Modelling
+
+```{r set_report_order_persuasion}
+
+# For indistinguishable Dyads
+model_rows_fixed <- c(
+    'Intercept', 
+    # '-- WITHIN PERSON MAIN EFFECTS --', 
+    'persuasion_self_cw', 
+    'persuasion_partner_cw', 
+    'pressure_self_cw', 
+    'pressure_partner_cw', 
+    'pushing_self_cw', 
+    'pushing_partner_cw', 
+    'day', 
+    'weartime_self_cw',
+    
+    # '-- BETWEEN PERSON MAIN EFFECTS',
+    'persuasion_self_cb',
+    'persuasion_partner_cb',
+    'pressure_self_cb',
+    'pressure_partner_cb',
+    'pushing_self_cb',
+    'pushing_partner_cb',
+    'weartime_self_cb'
+  )
+
+
+model_rows_fixed_ordinal <- c(
+  model_rows_fixed[1],
+  'Intercept[1]',
+  'Intercept[2]',
+  'Intercept[3]',
+  'Intercept[4]',
+  'Intercept[5]',
+  model_rows_fixed[2:length(model_rows_fixed)]
+)
+
+model_rows_random <- c(
+  # '--------------',
+  # '-- RANDOM EFFECTS --',
+  'sd(Intercept)', 
+  'sd(persuasion_self_cw)',
+  'sd(persuasion_partner_cw)',
+  'sd(pressure_self_cw)',
+  'sd(pressure_partner_cw)',
+  'sd(pushing_self_cw)',
+  'sd(pushing_partner_cw)',
+  # '-- CORRELATION STRUCTURE -- ', 
+  'ar[1]', 
+  'nu',
+  'shape',
+  'sderr',
+  'sigma'
+)
+
+model_rows_random_ordinal <- c(model_rows_random,'disc')
+
+```
+
+
+```{r set_display_names}
+
+# For indistinguishable Dyads
+model_rownames_fixed <- c(
+    'Intercept', 
+    # '-- WITHIN PERSON MAIN EFFECTS --', 
+    'Daily perceived persuasion target -> target', 
+    'Daily perceived persuasion target -> agent', 
+    'Daily perceived pressure target -> target', 
+    'Daily perceived pressure target -> agent', 
+    'Daily perceived pushing target -> target', 
+    'Daily perceived pushing target -> agent', 
+    'Day', 
+    'Daily weartime',
+    
+    # '-- BETWEEN PERSON MAIN EFFECTS',
+    'Mean perceived persuasion target -> target',
+    'Mean Perceived persuasion target -> agent',
+    'Mean Perceived pressure target -> target',
+    'Mean Perceived pressure target -> agent',
+    'Mean Perceived pushing target -> target',
+    'Mean Perceived pushing target -> agent',
+    'Mean weartime'
+  )
+
+
+model_rownames_fixed_ordinal <- c(
+  model_rownames_fixed[1],
+  'Intercept[1]',
+  'Intercept[2]',
+  'Intercept[3]',
+  'Intercept[4]',
+  'Intercept[5]',
+  model_rownames_fixed[2:length(model_rownames_fixed)]
+)
+
+model_rownames_random <- c(
+  # '--------------',
+  # '-- RANDOM EFFECTS --',
+  'sd(Intercept)', 
+  'sd(Daily perceived persuasion target -> target)', 
+  'sd(Daily perceived persuasion target -> agent)', 
+  'sd(Daily perceived pressure target -> target)', 
+  'sd(Daily perceived pressure target -> agent)', 
+  'sd(Daily perceived pushing target -> target)', 
+  'sd(Daily perceived pushing target -> agent)', 
+  # '-- CORRELATION STRUCTURE -- ', 
+  'ar[1]', 
+  'nu',
+  'shape',
+  'sderr',
+  'sigma'
+)
+
+model_rownames_random_ordinal <- c(model_rownames_random,'disc')
+
+
+```
+
+
+```{r parameters_for_printing}
+
+rows_to_pack <- list(
+  "Within-Person Effects" = c(2,9),
+  "Between-Person Effects" = c(10,16),
+  "Random Effects" = c(17, 23), 
+  "Additional Parameters" = c(24,28)
+  )
+
+
+rows_to_pack_ordinal <- list(
+  "Intercepts" = c(1,6),
+  "Within-Person Effects" = c(2+5,9+5),
+  "Between-Person Effects" = c(10+5,16+5),
+  "Random Effects" = c(17+5, 23+5), 
+  "Additional Parameters" = c(24+5,28+6)
+  )
+
+```
+
+
+## Subjective MVPA
+
+```{r explore_pa_sub_dist}
+
+range(df_double$pa_sub, na.rm = T) 
+hist(df_double$pa_sub, breaks = 100) 
+
+```
+
+
+```{r priors}
+
+
+
+
+
+```
+
+
+
+```{r pa_sub, results='hide', message=FALSE, warning=FALSE}
+
+
+formula <- bf(
+  aff ~ 
+    support_self_cb + support_partner_cb +
+    support_self_cw + support_partner_cw +
+
+    day + 
+    
+    # Random effects
+    (1 | coupleID)
+)
+
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+sup_test <- brm(
+  formula = formula, 
+  data = df_double, 
+  iter = 800,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path(working_directory, "models_cache_final", "support_test"),
+  file_refit = 'always',
+  family = gaussian()
+)
+
+```
+
+
+```{r check_pa_sub, warning=FALSE}
+
+pp_check(sup_test, type='hist')
+pp_check(sup_test)
+pp_check(sup_test, type = 'ecdf_overlay')
+
+loo(sup_test)
+plot(sup_test, ask = FALSE)
+
+```
+
+
+```{r report_pa_sub, results='asis', warning=FALSE}
+
+summarize_brms(
+  sup_test) %>%
+  print_df()
+
+conditional_effects(sup_test, ask = FALSE)
+conditional_smooths(sup_test, stype = 'raster', rug = TRUE, ask = FALSE)
+
+```
+
+
+
+
+
+
+```{r shut_system_down, results='hide', echo=FALSE, message=FALSE, warning=FALSE}
+
+if (shutdown) {
+  system("shutdown /s /t 180")
+}
+
+beepr::beep(sound = 3)
+
+```
+
+

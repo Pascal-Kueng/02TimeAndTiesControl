@@ -32,22 +32,10 @@ library(bayesplot)
 library(beepr)
 
 
-top_directory <- file.path(
-  'C:', 'Users', 'kueng', 'OneDrive - Universität Zürich UZH',
-  '04 Papers', '02 T&T Control', 'Analysis', 'ACTIVITY', 'BRMS'
-)
-
-working_directory <- top_directory
-setwd(working_directory)
-
-functions_directory <- file.path('C:', 'Users', 'kueng', 
-                                 'OneDrive - Universität Zürich UZH', 
-                                 'RFunctions')
-
-source(file.path(functions_directory, 'ReportModels.R'))
-source(file.path(functions_directory, 'PrettyTables.R'))
-source(file.path(functions_directory, 'ReportMeasures.R'))
-source(file.path(top_directory, 'Functions', 'PrepareData.R'))
+source(file.path('Functions', 'ReportModels.R'))
+source(file.path('Functions', 'PrettyTables.R'))
+source(file.path('Functions', 'ReportMeasures.R'))
+source(file.path('Functions', 'PrepareData.R'))
 
 
 ```
@@ -76,7 +64,7 @@ options(
 
 ```{r prepare_datasets, results='asis'}
 
-df <- openxlsx::read.xlsx(file.path(top_directory, 'long.xlsx'))
+df <- openxlsx::read.xlsx('long.xlsx')
 df_original <- df
 
 df_list <- prepare_data(df, use_mi = use_mi)
@@ -236,7 +224,7 @@ df_sample_summary <- print_df(
 )
 
 export_xlsx(df_sample_summary,
-            file.path(working_directory, 'OutputFinal', 'SampleDescription.xlsx'),
+            file.path('OutputFinal', 'SampleDescription.xlsx'),
             merge_option = 'both',
             rows_to_pack = packing_sample,
             colwidths = c(20,35,7,7,7,7,7,10)
@@ -296,7 +284,7 @@ all_descriptives <- report_measures(df_full, all_constructs, ICC = F)
 
 openxlsx::write.xlsx(
   all_descriptives, 
-  file.path(working_directory, 'OutputFinal', 'DescriptivesAll.xlsx')
+  file.path('OutputFinal', 'DescriptivesAll.xlsx')
 )
 
 print_df(all_descriptives)
@@ -313,7 +301,7 @@ main_cors <- summary(cors, 'wb')$merged_wb
 
 openxlsx::write.xlsx(
   main_cors, 
-  file.path(working_directory, 'OutputFinal', 'Correlations.xlsx')
+  file.path('OutputFinal', 'Correlations.xlsx')
 )
 
 print_df(main_cors, width = '7em')
@@ -593,7 +581,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache_final", "pa_sub")
+  file = file.path("models_cache_final", "pa_sub")
 )
 
 
@@ -697,7 +685,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache_final", "pa_obj_log")
+  file = file.path("models_cache_final", "pa_obj_log")
 )
 
 
@@ -795,7 +783,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache_final", "mood")
+  file = file.path("models_cache_final", "mood")
 )
 
 
@@ -893,7 +881,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache_final", "reactance")
+  file = file.path("models_cache_final", "reactance")
 )
 
 
@@ -991,7 +979,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache_final", "reactance_ordinal")
+  file = file.path("models_cache_final", "reactance_ordinal")
 )
 
 
@@ -1096,7 +1084,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache_final", "is_reactance")
+  file = file.path("models_cache_final", "is_reactance")
 )
 
 
@@ -1182,7 +1170,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack_final,
-  file.path(working_directory, "OutputFinal", "AllModels.xlsx"), 
+  file.path("OutputFinal", "AllModels.xlsx"), 
   merge_option = 'both', 
   simplify_2nd_row = TRUE,
   colwidths = c(38, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
