@@ -1,9 +1,9 @@
 # Sensitive Data
 long.xlsx
-.Rda
-.rda
-.rds
-.Rds
+*.Rda
+*.rda
+*.rds
+*.Rds
 df_double.Rda
 
 # Temporary folders created in knitting process
