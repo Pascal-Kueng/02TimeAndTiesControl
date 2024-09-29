@@ -302,7 +302,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "all_covariates_pa_sub")
+  file = file.path("models_cache_brms", "all_covariates_pa_sub")
 )
 
 
@@ -417,7 +417,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "all_covariates_pa_obj_log")
+  file = file.path("models_cache_brms", "all_covariates_pa_obj_log")
 )
 
 
@@ -527,7 +527,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "all_covariates_mood")
+  file = file.path("models_cache_brms", "all_covariates_mood")
 )
 
 
@@ -631,7 +631,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "all_covariates_reactance")
+  file = file.path("models_cache_brms", "all_covariates_reactance")
 
 )
 
@@ -742,7 +742,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "all_covariates_is_reactance")
+  file = file.path("models_cache_brms", "all_covariates_is_reactance")
 
 )
 

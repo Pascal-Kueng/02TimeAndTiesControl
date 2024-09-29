@@ -301,7 +301,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "NoExchangeProcesses_pa_sub")
+  file = file.path("models_cache_brms", "NoExchangeProcesses_pa_sub")
 )
 
 
@@ -415,7 +415,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "NoExchangeProcesses_pa_obj_log")
+  file = file.path("models_cache_brms", "NoExchangeProcesses_pa_obj_log")
 )
 
 
@@ -523,7 +523,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "NoExchangeProcesses_mood")
+  file = file.path("models_cache_brms", "NoExchangeProcesses_mood")
 )
 
 
@@ -627,7 +627,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "NoExchangeProcesses_reactance")
+  file = file.path("models_cache_brms", "NoExchangeProcesses_reactance")
 
 )
 
@@ -738,7 +738,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "NoExchangeProcesses_is_reactance")
+  file = file.path("models_cache_brms", "NoExchangeProcesses_is_reactance")
 
 )
 

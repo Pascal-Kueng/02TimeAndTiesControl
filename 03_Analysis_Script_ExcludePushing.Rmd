@@ -276,7 +276,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_pa_sub")
+  file = file.path("models_cache_brms", "exclude_pushing_pa_sub")
 )
 
 
@@ -378,7 +378,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_pa_obj_log")
+  file = file.path("models_cache_brms", "exclude_pushing_pa_obj_log")
 )
 
 
@@ -474,7 +474,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_mood")
+  file = file.path("models_cache_brms", "exclude_pushing_mood")
 )
 
 
@@ -566,7 +566,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_reactance")
+  file = file.path("models_cache_brms", "exclude_pushing_reactance")
 
 )
 
@@ -663,7 +663,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_is_reactance")
+  file = file.path("models_cache_brms", "exclude_pushing_is_reactance")
 
 )
 
@@ -805,7 +805,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_pa_sub_onlyp")
+  file = file.path("models_cache_brms", "exclude_pushing_pa_sub_onlyp")
 )
 
 
@@ -888,7 +888,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_pa_obj_log_onlyp")
+  file = file.path("models_cache_brms", "exclude_pushing_pa_obj_log_onlyp")
 )
 
 
@@ -973,7 +973,7 @@ mood <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_mood_onlyp")
+  file = file.path("models_cache_brms", "exclude_pushing_mood_onlyp")
 )
 
 
@@ -1054,7 +1054,7 @@ reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_reactance_onlyp")
+  file = file.path("models_cache_brms", "exclude_pushing_reactance_onlyp")
 )
 
 
@@ -1150,7 +1150,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache", "exclude_pushing_is_reactance_onlyp")
+  file = file.path("models_cache_brms", "exclude_pushing_is_reactance_onlyp")
 )
 
 

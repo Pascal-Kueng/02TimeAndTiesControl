@@ -498,7 +498,7 @@ sup_test <- brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path(working_directory, "models_cache_final", "support_test"),
+  file = file.path(working_directory, "models_cache_brms", "support_test"),
   file_refit = 'always',
   family = gaussian()
 )
