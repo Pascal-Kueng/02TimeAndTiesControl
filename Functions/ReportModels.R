@@ -348,13 +348,15 @@ DHARMa.check_brms.all <- function(model, integer = FALSE, ...) {
 }
 
 
-check_brms <- function(model, check_loo = TRUE, integer = FALSE, ...) {
+check_brms <- function(model, check_loo = TRUE, integer = FALSE, useDHARMA = FALSE, ...) {
   message('Checking Convergence')
   rstan::check_hmc_diagnostics(model$fit)
   plot(model, ask = FALSE)
   
-  message('Checking Residuals')
-  DHARMa.check_brms.all(model, integer = integer)
+  if (useDHARMA) {
+    message('Checking Residuals')
+    DHARMa.check_brms.all(model, integer = integer)
+  }
   
   message('Checking Fit')
   plot(pp_check(model, type = 'ecdf_overlay'))
