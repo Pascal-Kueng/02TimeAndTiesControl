@@ -41,7 +41,11 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
            aff = (ss_affect1 + ss_affect3 + (7 - ss_affect2) + (7 - ss_affect4)) / 4, #Affect Scale
            
            
-           pa_sub = ifelse(ss_pa == 0, 0, ss_pa_min_solo + ss_pa_min_collab),
+           pa_sub = case_when(
+             is.na(ss_pa) ~ NA, # If ss_pa is NA, pa_min_total becomes NA
+             ss_pa == 0 ~ 0,          # If ss_pa is 0, pa_min_total becomes 0
+             ss_pa == 1 ~ ss_pa_min_collab + ss_pa_min_solo # If ss_pa is 1, it retains its value
+           ),
            
            pa_obj = ifelse(wear_minutes > 600, minutes_mvpa_non_filtered, NA),
            
