@@ -15,9 +15,6 @@ output:
     highlight: tango
 ---
 
-
-# Setup
-
 ```{r setup, warning=FALSE, message=FALSE, results='hide'}
 
 knitr::opts_chunk$set(echo = TRUE)
@@ -30,7 +27,7 @@ library(kableExtra)
 library(brms)
 library(bayesplot)
 library(beepr)
-library(DHARMa)
+
 
 source(file.path('Functions', 'ReportModels.R'))
 source(file.path('Functions', 'PrettyTables.R'))
@@ -54,7 +51,6 @@ options(
   dplyr.print_max = 100, 
   brms.backend = 'cmdstan',
   brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
-  #brms.file_refit = 'always',
   error = function() beepr::beep(sound = 5)
 )
 
@@ -64,253 +60,13 @@ options(
 
 ```{r prepare_datasets, results='asis'}
 
-df <- openxlsx::read.xlsx('long.xlsx')
+df <- openxlsx::read.xlsx(file.path('long.xlsx'))
 df_original <- df
 
-df_list <- prepare_data(df, use_mi = use_mi)
-df_double <- df_list[[1]]
-df_full <- df_list[[2]]
+# Importantly, we do not recode pushing here. 
+df_double <- prepare_data(df, recode_pushing = FALSE, use_mi = use_mi)[[1]]
 
 ```
-
-
-
-# Descriptives
-
-# Sample Statistics
-
-```{r describe_sample, results='asis'}
-
-# Income (mean of both partner's report)
-merge_income <- function(income1, income2) {
-  merged_income <- numeric(length(income1))
-  
-  # Loop through each pair of incomes
-  for (i in seq_along(income1)) {
-    # Handle NA
-    if (is.na(income1[i])) {
-      merged_income[i] <- income2[i]
-    } 
-    
-    else if (is.na(income2[i])) {
-      merged_income[i] <- income1[i]
-    }
-    
-    # if both are informative, take mean and round
-    else if (income1[i] %in% 1:6 && income2[i] %in% 1:6) {
-      merged_income[i] <- round((income1[i] + income2[i]) / 2)
-    }
-    
-    # if one is informative and the other not, use the informative one. 
-    else if (income1[i] %in% 1:6) {
-      merged_income[i] <- income1[i]
-    }
-    else if (income2[i] %in% 1:6) {
-      merged_income[i] <- income2[i]
-    }
-    
-    # Now we only have cases, where both are either 70 or 99. We simply report "undisclosed". 
-    else {
-      merged_income[i] <- 99
-    }
-  }
-  
-  # Convert to factor
-  merged_income <- factor(
-    merged_income, levels = c(1,2,3,4,5,6,70,99), 
-    labels = c(
-      "up to CHF 2'000.-", 
-      "CHF 2'001.- to CHF 4'000.-",
-      "CHF 4'001.- to CHF 6'000.-",
-      "CHF 6'001.- to CHF 8'000.-",
-      "CHF 8'001.- to CHF 10'000.-", 
-      "above CHF 10'000.-", 
-      "I don't know",
-      "Undisclosed"
-  )
-  )
-  
-  return(merged_income)
-}
-
-
-
-df_sample_report <- df_full %>%
-  group_by(coupleID) %>%
-  arrange(userID) %>%
-  # Computing couple level variables
-  mutate(
-    Household_Income = merge_income(first(pre_income_1), last(pre_income_1)),
-    
-    reldur = pre_rel_duration_m / 12 + pre_rel_duration_y,
-    Relationship_duration = mean(reldur, na.rm = TRUE),
-    
-    habdur = pre_hab_duration_m / 12 + pre_hab_duration_y,
-    Cohabiting_duration = mean(habdur, na.rm = TRUE),
-    
-    Marital_status = factor(
-      case_when(
-        all(pre_mat_stat == 1) ~ "Married",
-        any(pre_mat_stat == 1) ~ "One Partner Married",
-        TRUE ~ "Not Married"
-      )
-    ),
-    
-    Have_children = factor(
-      (first(pre_child_option) + last(pre_child_option)) > 0, 
-      levels = c(FALSE, TRUE), 
-      labels = c('Have Children', 'No Children')),
-    
-    Gender = factor(
-      gender, 
-      levels = c(1,2,3), 
-      labels = c('Male','Female', 'Other')),
-    
-
-
-    Couple_type = as.factor(
-      case_when(
-        first(Gender) == last(Gender) & first(Gender) == 'Male' ~ 'Same-Sex Couple (Male)',
-        first(Gender) == last(Gender) & first(Gender) == 'Female' ~ 'Same-Sex Couple (Female)',
-        TRUE ~ 'Mixed-sex Couple'
-      )
-    )
-  ) %>%
-  ungroup() %>%
-  # Individual level variables
-  mutate(
-    Age = pre_age,
-    Handedness = factor(
-      pre_handedness, 
-      levels = c(0, 1, 2), 
-      c('Right','Left', 'Ambidextrous')),
-  Highest_Education = factor(
-    pre_education, 
-    levels = c(1,2,3,4,5,6,7), 
-    labels = c(
-      "(still) no school diploma",
-      "compulsory education (9 years)",
-      "vocational training (apprenticeship)",
-      "Matura (university entrance qualification)",
-      "Bachelor's degree", 
-      "Master's degree",
-      "Doctorate degree"
-      )
-    ),
-  BMI = pre_weight / ((pre_height / 100)^2) # to meters
-  ) %>%
-  select(c(Relationship_duration, Cohabiting_duration, Couple_type, Household_Income, 
-            Marital_status, Have_children, 
-            Gender, Age, Handedness, Highest_Education, BMI))
-
-
-sample_table <- report_measures(df_sample_report, ICC = F)
-sample_table$n_Obs <- as.numeric(sample_table$n_Obs) / 55
-rownames(sample_table) <- NULL
-
-n_couple_vars <- 17
-sample_table$n_Obs[1:n_couple_vars] <- sample_table$n_Obs[1:n_couple_vars] / 2
-
-packing_sample <- list(
-    "Couple level variables (38 couples)" = 
-      c(1, n_couple_vars),
-    "Individual level variables (76 individuals)" 
-    = c(n_couple_vars+1, nrow(sample_table))
-    ) 
-
-df_sample_summary <- print_df(
-  sample_table,
-  rows_to_pack = packing_sample
-)
-
-export_xlsx(df_sample_summary,
-            file.path('Output', 'SampleDescription.xlsx'),
-            merge_option = 'both',
-            rows_to_pack = packing_sample,
-            colwidths = c(20,35,7,7,7,7,7,10)
-            )
-
-df_sample_summary
-
-```
-
-
-
-## Measures
-
-### Focal Variables
-
-```{r describe_measures_main, results='asis'}
-main_constructs <- c("persuasion", "pressure","pushing", 
-                     "pa_sub", "pa_obj", "aff", "reactance"
-                     )
-
-main_descriptives <- report_measures(
-  data = df_full, 
-  measures = main_constructs,
-  ICC = TRUE, 
-  cluster_var = df_full$userID)
-
-openxlsx::write.xlsx(
-  main_descriptives, 
-  file.path('Output', 'DescriptivesMain.xlsx')
-  )
-
-print_df(main_descriptives)
-
-```
-
-### All Variables
-
-```{r describe_measures_all, results='asis'}
-
-
-
-
-all_constructs <- c(
-  main_constructs,
-  "day",
-  "weartime",
-  "isWeekend",
-  "plan",
-  "studyGroup",
-  "support",
-  "got_JITAI",
-  "skilled_support"
-)
-
-
-all_descriptives <- report_measures(df_full, all_constructs, ICC = F)
-
-openxlsx::write.xlsx(
-  all_descriptives, 
-  file.path('Output', 'DescriptivesAll.xlsx')
-)
-
-print_df(all_descriptives)
-
-```
-
-## Correlations
-
-```{r correlations, results='asis'}
-cors <- wbCorr(df_full[,c(main_constructs)], df_full$coupleID, method = 'spearman')
-
-main_cors <- summary(cors, 'wb')$merged_wb
-
-
-openxlsx::write.xlsx(
-  main_cors, 
-  file.path('Output', 'Correlations.xlsx')
-)
-
-print_df(main_cors, width = '7em')
-
-```
-
-Within-person correlations are above the diagonal and between-person 
-correlations are below the diagonal.  
-On the diagonal are intraclass correlations (ICCs)
 
 
 # Modelling
@@ -695,6 +451,8 @@ rows_to_pack_hu <- list(
 range(df_double$pa_sub, na.rm = T) 
 hist(df_double$pa_sub, breaks = 100) 
 
+hist(log(df_double$pa_sub+00000000001), breaks = 20)
+
 ```
 
 Modelling using the gaussian family fails. 
@@ -733,11 +491,12 @@ formula <- bf(
     # Random effects
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-  
-  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  , autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ arma(gr = coupleID)
+  #, autocor = ~ unstr(gr = coupleID)
+  #, autocor = ~ ar(gr = coupleID)
 )
-
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
@@ -746,9 +505,9 @@ prior1 <- c(
   
   brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  brms::set_prior("normal(0, 0.5)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  brms::set_prior("normal(0, 5)", class = "sderr", lb = 0), # Standard error of residuals
-  brms::set_prior("normal(0, 5)", class = "sigma", lb = 0) # Residual SD for lognormal
+  #brms::set_prior("normal(0, 0.1)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  brms::set_prior("normal(0,5)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0,5)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
 
@@ -759,16 +518,17 @@ pa_sub <- my_brm(
   imputed_data = implist,
   
   formula = formula, 
-  #prior = prior1,
+  prior = prior1,
   data = df_double, 
   family = brms::hurdle_lognormal(),
   #control = list(adapt_delta = 0.99),
-  #iter = 5000,
+  iter = 1000,
   #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "pa_sub_hu")
+  file = file.path("models_cache_brms", "pa_sub_hu"),
+  file_refit = 'always'
 )
 
 
@@ -826,7 +586,7 @@ we log transform.
 ```{r pa_obj_log, results='hide', message=FALSE, warning=FALSE}
 
 formula <- bf(
-  pa_obj_log ~ 
+  pa_obj ~ 
     persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
@@ -842,7 +602,7 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID),
 
-  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+  autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -857,6 +617,17 @@ prior1 <- c(
   brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
 )
 
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b"),
+  brms::set_prior("normal(4, 2)", class = "Intercept"), # for non-zero PA
+  #brms::set_prior("normal(0, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
+  
+  brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  
+  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("student_t(3, 0, 10)", class = "sderr", lb = 0),
+  brms::set_prior("student_t(3, 0, 10)", class = "sigma", lb = 0) # Residual SD for lognormal
+)
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -867,14 +638,15 @@ pa_obj_log <- my_brm(
   formula = formula, 
   prior = prior1,
   data = df_double, 
-  family = gaussian(),
+  family = brms::lognormal(),
   #control = list(adapt_delta = 0.99),
   iter = 5000,
   warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "pa_obj_log")
+  file = file.path("models_cache_brms", "pa_obj_lognormal"),
+  file_refit = 'always'
 )
 
 
@@ -941,8 +713,8 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID),
-
-  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+  
+  autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -967,14 +739,15 @@ mood <- my_brm(
   formula = formula, 
   prior = prior1,
   data = df_double, 
-  family = gaussian(),
+  family = brms::skew_normal(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
   iter = 5000,
   warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "mood")
+  file = file.path("models_cache_brms", "mood_skew"),
+  file_refit = 'always'
 )
 
 
@@ -1040,7 +813,7 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID),
 
-  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+  autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -1142,7 +915,7 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID),
 
-  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+  autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -1248,8 +1021,8 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID),
 
-  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
-)
+  autocor = ~ ar(gr = coupleID)
+  )
 
 
 
