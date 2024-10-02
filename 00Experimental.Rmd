@@ -1174,7 +1174,7 @@ export_xlsx(
   file.path("Output", "AllModels_experimental.xlsx"), 
   merge_option = 'both', 
   simplify_2nd_row = TRUE,
-  colwidths = c(38, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
+  colwidths = c(38, 7.2, 13.3, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
   line_above_rows = c(1,2),
   line_below_rows = c(-1)
 )
