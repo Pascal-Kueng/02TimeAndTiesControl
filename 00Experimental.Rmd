@@ -492,10 +492,6 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ cosy(gr = coupleID)
-  #, autocor = ~ arma(gr = coupleID)
-  #, autocor = ~ unstr(gr = coupleID)
-  #, autocor = ~ ar(gr = coupleID)
 )
 
 prior1 <- c(
@@ -506,7 +502,7 @@ prior1 <- c(
   brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
   #brms::set_prior("normal(0, 0.1)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  brms::set_prior("normal(0,5)", class = "sderr", lb = 0),
+  #brms::set_prior("normal(0,5)", class = "sderr", lb = 0),
   brms::set_prior("normal(0,5)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
@@ -522,13 +518,13 @@ pa_sub <- my_brm(
   data = df_double, 
   family = brms::hurdle_lognormal(),
   #control = list(adapt_delta = 0.99),
-  iter = 1000,
-  #warmup = 2000,
+  iter = 5000,
+  warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "pa_sub_hu"),
-  file_refit = 'always'
+  file = file.path("models_cache_brms", "pa_sub_hu")
+  #, file_refit = 'always'
 )
 
 
@@ -543,7 +539,8 @@ plot(pp_check(pa_sub))
 
 pp_check_transformed(pa_sub, transform = log1p)
 
-loo(pa_sub)
+loo_pa_sub <- loo(pa_sub)
+loo_pa_sub
 
 ```
 
@@ -600,9 +597,8 @@ formula <- bf(
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-
-  autocor = ~ ar(gr = coupleID)
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -624,10 +620,11 @@ prior1 <- c(
   
   brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("student_t(3, 0, 10)", class = "sderr", lb = 0),
   brms::set_prior("student_t(3, 0, 10)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
+
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -645,8 +642,8 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "pa_obj_lognormal"),
-  file_refit = 'always'
+  file = file.path("models_cache_brms", "pa_obj_lognormal")
+  #, file_refit = 'always'
 )
 
 
@@ -661,7 +658,8 @@ plot(pp_check(pa_obj_log))
 
 #pp_check_transformed(pa_obj_log, transform = log1p)
 
-loo(pa_obj_log)
+loo_pa_obj_log <- loo(pa_obj_log)
+loo_pa_obj_log
 
 ```
 
@@ -712,9 +710,8 @@ formula <- bf(
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-  
-  autocor = ~ ar(gr = coupleID)
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -725,7 +722,7 @@ prior1 <- c(
   
   brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
 
-  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  #brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
   brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
   
 )
@@ -741,13 +738,13 @@ mood <- my_brm(
   data = df_double, 
   family = brms::skew_normal(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "mood_skew"),
-  file_refit = 'always'
+  file = file.path("models_cache_brms", "mood_skew")
+  #, file_refit = 'always'
 )
 
 
@@ -762,7 +759,8 @@ plot(pp_check(mood))
 
 #pp_check_transformed(mood, transform = log1p)
 
-loo(pa_sub)
+loo_mood <- loo(mood)
+loo_mood
 
 ```
 
@@ -811,21 +809,37 @@ formula <- bf(
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-
-  autocor = ~ ar(gr = coupleID)
+    pushing_self_cw + pushing_partner_cw | coupleID), 
+  
+  hu = ~ persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = ~ ar(gr = coupleID)
 )
 
 
 
 prior1 <- c(
-  brms::set_prior("normal(0, 5)", class = "b"),
-  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
+  brms::set_prior("normal(0, 1.5)", class = "b"),
+  brms::set_prior("normal(0, 2)", class = "Intercept"), # for non-zero PA
+  brms::set_prior("normal(0, 1.5)", class = "Intercept", dpar = 'hu'), # hurdle part
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
-
-  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
-  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+  brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  
+  #brms::set_prior("normal(0, 0.1)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0,5)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0,5)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
 
@@ -840,14 +854,15 @@ reactance <- my_brm(
   formula = formula, 
   prior = prior1,
   data = df_double, 
-  family = gaussian(),
+  family = brms::hurdle_lognormal(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "reactance")
+  file = file.path("models_cache_brms", "reactance_hu")
+  #, file_refit = 'always'
 )
 
 
@@ -860,9 +875,10 @@ plot(reactance, ask = FALSE)
 plot(pp_check(reactance, type = 'ecdf_overlay'))
 plot(pp_check(reactance))
 
-#pp_check_transformed(reactance, transform = log1p)
+pp_check_transformed(reactance, transform = log1p)
 
-loo(reactance)
+loo_reactance <- loo(reactance)
+loo_reactance
 
 ```
 
@@ -884,6 +900,8 @@ summarize_brms(
 ```{r testingdifferencecoefs}
 
 hypothesis(reactance, "pressure_self_cw > pushing_self_cw")
+hypothesis(reactance, "hu_pressure_self_cw > hu_pushing_self_cw")
+
 
 ```
 
@@ -913,9 +931,8 @@ formula <- bf(
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-
-  autocor = ~ ar(gr = coupleID)
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -923,9 +940,9 @@ formula <- bf(
 prior1 <- c(
   set_prior("normal(0, 2.5)", class = "b"),
   set_prior("normal(0, 5)", class = "Intercept"),
-  set_prior("normal(0, 1)", class = "sd", group = "coupleID", lb = 0),
-  set_prior("normal(0, 0.075)", class = "ar", lb = -1, ub = 1),
-  set_prior("normal(0.5, 2.0)", class = "sderr", lb = 0)
+  set_prior("normal(0, 1)", class = "sd", group = "coupleID", lb = 0)
+  #set_prior("normal(0, 0.075)", class = "ar", lb = -1, ub = 1),
+  #set_prior("normal(0.5, 2.0)", class = "sderr", lb = 0)
 )
 
 
@@ -942,12 +959,13 @@ reactance_ordinal <- my_brm(
   data = df_double, 
   family = brms::cumulative(),
   control = list(adapt_delta = 0.95),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "reactance_ordinal")
+  file = file.path("models_cache_brms", "reactance_ordinal_noar")
+  #, file_refit = 'always'
 )
 
 
@@ -962,7 +980,9 @@ plot(pp_check(reactance_ordinal))
 
 #pp_check_transformed(reactance_ordinal, transform = log1p)
 
-loo(reactance_ordinal)
+loo_reactance_ordinal <- loo(reactance_ordinal)
+loo_reactance_ordinal
+
 ```
 
 ```{r report_reactance_ordinal, results='asis', warning=FALSE}
@@ -1019,9 +1039,8 @@ formula <- bf(
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-
-  autocor = ~ ar(gr = coupleID)
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = ~ ar(gr = coupleID)
   )
 
 
@@ -1030,9 +1049,9 @@ prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
   brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
 
-  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1)
+  #brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1)
   #brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
 )
 
@@ -1046,14 +1065,15 @@ is_reactance <- my_brm(
   formula = formula, 
   prior = prior1,
   data = df_double, 
-  family = bernoulli(),
+  family = brms::bernoulli(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", "is_reactance")
+  file = file.path("models_cache_brms", "is_reactance_noar")
+  #, file_refit = 'always'
 )
 
 
@@ -1067,7 +1087,8 @@ plot(pp_check(is_reactance))
 
 #pp_check_transformed(is_reactance, transform = log1p)
 
-loo(is_reactance)
+loo_is_reactance <- loo(is_reactance)
+loo_is_reactance
 
 ```
 
@@ -1092,6 +1113,11 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 ```
 
 
+```{r compare react mods}
+loo_compare(loo_reactance, loo_reactance_ordinal, loo_is_reactance)
+```
+
+
 # Report All Models
 
 ```{r report_sidebyside, warning=FALSE}
@@ -1104,11 +1130,11 @@ if (report_ordinal) {
   model_rownames_random_final <- model_rownames_random_ordinal
   rows_to_pack_final <- rows_to_pack_ordinal
 } else {
-  model_rows_random_final <- model_rows_random
-  model_rows_fixed_final <- model_rows_fixed
-  model_rownames_fixed_final <- model_rownames_fixed
-  model_rownames_random_final <- model_rownames_random
-  rows_to_pack_final <- rows_to_pack
+  model_rows_random_final <- model_rows_random_hu
+  model_rows_fixed_final <- model_rows_fixed_hu
+  model_rownames_fixed_final <- model_rownames_fixed_hu
+  model_rownames_random_final <- model_rownames_random_hu
+  rows_to_pack_final <- rows_to_pack_hu
 }
 
 
@@ -1118,6 +1144,7 @@ all_models <- report_side_by_side(
   pa_obj_log,
   mood,
   reactance,
+  reactance_ordinal,
   is_reactance,
   
   model_rows_random = model_rows_random_final,
@@ -1131,17 +1158,18 @@ all_models <- report_side_by_side(
 summary_all_models <- all_models %>%
   print_df(rows_to_pack = rows_to_pack_final) %>%
   add_header_above(
-    c(" ", "Subjective MVPA" = 2, 
-      "Device-Based MVPA" = 2, 
-      "Mood" = 2,
-      "Reactance Gaussian" = 2, 
+    c(" ", "Subjective MVPA Hurdle Lognormal" = 2, 
+      "Device-Based MVPA Lognormal" = 2, 
+      "Mood Skewnormal" = 2,
+      "Reactance Lognormal" = 2, 
+      "Reactance Ordinal" = 2,
       "Reactance Dichotome" = 2)
   )
 
 export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack_final,
-  file.path("Output", "AllModels.xlsx"), 
+  file.path("Output", "AllModels_experimental.xlsx"), 
   merge_option = 'both', 
   simplify_2nd_row = TRUE,
   colwidths = c(38, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),

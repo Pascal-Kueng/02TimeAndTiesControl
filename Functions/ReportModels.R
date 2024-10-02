@@ -299,7 +299,13 @@ report_side_by_side <- function(..., model_rows_random = NULL, model_rows_fixed 
     model <- models[[i]]
     model_name <- model_names[i]
     print(model_name)
-    if ('bernoulli' %in% model$family | 'negbinomial' %in% model$family | 'cumulative' %in% model$family | grepl('log', model_name)) {
+    if (model$family[[1]] %in% c(
+      'bernoulli', 
+      'negbinomial',
+      'cumulative', 
+      'hurdle_lognormal', 
+      'lognormal',
+      'skewnormal') | grepl('log', model_name)) {
       exponentiate <- TRUE
     } else {
       exponentiate <- FALSE
