@@ -227,6 +227,28 @@ summarize_brms <- function(model, short_version = FALSE,
 
 
 
+
+
+#### Check Models
+
+
+
+pp_check_transformed <- function(model, transform = log1p) {
+  # only for univariate models
+  outcome_variable <- strsplit(as.character(formula(model)), " ~ ")[[1]][1]
+  pred <- brms::posterior_predict(model)
+  
+  # Use get to dynamically reference the outcome variable in the model's data
+  bayesplot::ppc_dens_overlay(
+    y = transform(model$data[[outcome_variable]]),
+    yrep = transform(pred[1:10, ])
+  )
+}
+
+
+
+
+
 DHARMa.check_brms <- function(model,        
                        integer = FALSE,   # integer response? (TRUE/FALSE)
                        plot = TRUE,       
@@ -254,118 +276,14 @@ DHARMa.check_brms <- function(model,
 }
 
 
-
-
-
-
-
-
-
-DHARMa.check_brms <- function(model,        
-                              integer = FALSE,   
-                              plot = TRUE,       
-                              debug = FALSE,     # Add debug parameter
-                              ...) {
-  mdata <- brms::standata(model)
-  if (!"Y" %in% names(mdata))
-    stop("Cannot extract the required information from this brms model")
-  
-  # Check if model is ordinal
-  is_ordinal <- model$family$family %in% c("cumulative", "sratio", "cratio", "acat")
-  
-  # Get posterior predictions
-  simulatedResponse <- brms::posterior_predict(model, ndraws = 1000)
-  
-  if (is_ordinal) {
-    # For ordinal models, get mode of predictions efficiently
-    modes <- apply(simulatedResponse, c(1, 2), function(x) {
-      tab <- tabulate(x)
-      which.max(tab)
-    })
-    simulatedResponse <- t(modes)
-  } else {
-    simulatedResponse <- t(simulatedResponse)
-  }
-  
-  # Get fitted values (posterior expectations)
-  fittedValues <- if (is_ordinal) {
-    epred <- brms::posterior_epred(model, ndraws = 1000, re.form = NA)
-    apply(epred, 3, function(x) which.max(colMeans(x)))
-  } else {
-    apply(t(brms::posterior_epred(model, ndraws = 1000, re.form = NA)), 1, median)
-  }
-  
-  # Ensure all components have the same length
-  n <- length(mdata$Y)
-  if (nrow(simulatedResponse) != n) {
-    stop("Adjusting simulatedResponse to match observed data length")
-  }
-  if (length(fittedValues) != n) {
-    stop("Adjusting fittedValues to match observed data length")
-  }
-  
-  tryCatch({
-    dharma.obj <- DHARMa::createDHARMa(
-      simulatedResponse = simulatedResponse,
-      observedResponse = mdata$Y, 
-      fittedPredictedResponse = fittedValues,
-      integerResponse = integer,
-      seed = 123
-    )
-    
-    if (isTRUE(plot)) {
-      plot(dharma.obj, ...)
-    }
-    
-    invisible(dharma.obj)
-  }, error = function(e) {
-    cat("Error in createDHARMa:\n")
-    cat("simulatedResponse dim:", dim(simulatedResponse), "\n")
-    cat("observedResponse length:", length(mdata$Y), "\n")
-    cat("fittedPredictedResponse length:", length(fittedValues), "\n")
-    stop(e)
-  })
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 DHARMa.check_brms.all <- function(model, integer = FALSE, ...) {
   model.check <- DHARMa.check_brms(model, integer = integer, plot = FALSE)
-  plot(model.check)
+  try(plot(model.check))
   try(testDispersion(model.check))
   try(testZeroInflation(model.check))
   try(testOutliers(model.check))
 }
 
-
-check_brms <- function(model, check_loo = TRUE, integer = FALSE, useDHARMA = FALSE, ...) {
-  message('Checking Convergence')
-  rstan::check_hmc_diagnostics(model$fit)
-  plot(model, ask = FALSE)
-  
-  if (useDHARMA) {
-    message('Checking Residuals')
-    DHARMa.check_brms.all(model, integer = integer)
-  }
-  
-  message('Checking Fit')
-  plot(pp_check(model, type = 'ecdf_overlay'))
-  plot(pp_check(model))
-  if (check_loo) {
-    loo(model)
-    
-  }
-}
 
 
 

@@ -590,7 +590,13 @@ pa_sub <- my_brm(
 
 ```{r check_pa_sub, warning=FALSE}
 
-check_brms(pa_sub, integer = TRUE, check_loo = FALSE)
+plot(pa_sub, ask = FALSE)
+plot(pp_check(pa_sub, type = 'ecdf_overlay'))
+plot(pp_check(pa_sub))
+
+pp_check_transformed(pa_sub, transform = log1p)
+
+loo(pa_sub)
 
 ```
 
@@ -690,7 +696,13 @@ pa_obj_log <- my_brm(
 
 ```{r check_pa_obj_log, warning=FALSE}
 
-check_brms(pa_obj_log, integer = TRUE, check_loo = FALSE)
+plot(pa_obj_log, ask = FALSE)
+plot(pp_check(pa_obj_log, type = 'ecdf_overlay'))
+plot(pp_check(pa_obj_log))
+
+#pp_check_transformed(pa_obj_log, transform = log1p)
+
+loo(pa_obj_log)
 
 ```
 
@@ -784,7 +796,13 @@ mood <- my_brm(
 
 ```{r check_mood, warning=FALSE}
 
-check_brms(mood, integer = FALSE, check_loo = FALSE)
+plot(mood, ask = FALSE)
+plot(pp_check(mood, type = 'ecdf_overlay'))
+plot(pp_check(mood))
+
+#pp_check_transformed(mood, transform = log1p)
+
+loo(pa_sub)
 
 ```
 
@@ -878,7 +896,13 @@ reactance <- my_brm(
 
 ```{r check_reactance, warning=FALSE}
 
-check_brms(reactance, integer = FALSE, check_loo = FALSE)
+plot(reactance, ask = FALSE)
+plot(pp_check(reactance, type = 'ecdf_overlay'))
+plot(pp_check(reactance))
+
+#pp_check_transformed(reactance, transform = log1p)
+
+loo(reactance)
 
 ```
 
@@ -972,8 +996,13 @@ reactance_ordinal <- my_brm(
 
 ```{r check_reactance_ordinal, warning=FALSE}
 
-check_brms(reactance_ordinal, integer = FALSE, check_loo = FALSE)
+plot(reactance_ordinal, ask = FALSE)
+plot(pp_check(reactance_ordinal, type = 'ecdf_overlay'))
+plot(pp_check(reactance_ordinal))
 
+#pp_check_transformed(reactance_ordinal, transform = log1p)
+
+loo(reactance_ordinal)
 ```
 
 ```{r report_reactance_ordinal, results='asis', warning=FALSE}
@@ -1072,7 +1101,13 @@ is_reactance <- my_brm(
 
 ```{r check_is_reactance, warning=FALSE}
 
-check_brms(is_reactance, integer = FALSE, check_loo = FALSE)
+plot(is_reactance, ask = FALSE)
+plot(pp_check(is_reactance, type = 'ecdf_overlay'))
+plot(pp_check(is_reactance))
+
+#pp_check_transformed(is_reactance, transform = log1p)
+
+loo(is_reactance)
 
 ```
 
