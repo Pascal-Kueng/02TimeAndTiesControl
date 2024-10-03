@@ -54,7 +54,7 @@ options(
   dplyr.print_max = 100, 
   brms.backend = 'cmdstan',
   brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
-  brms.file_refit = 'always',
+  #brms.file_refit = 'always',
   error = function() beepr::beep(sound = 5)
 )
 
@@ -612,6 +612,8 @@ summarize_brms(
   model_rownames_random = model_rownames_random,
   exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
+
+summary(pa_sub)
 
 ```
 
