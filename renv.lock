@@ -822,6 +822,27 @@
       ],
       "Hash": "3f038e5ac7f41d4ac41ce658c85e3042"
     },
+    "cmdstanr": {
+      "Package": "cmdstanr",
+      "Version": "0.8.1",
+      "Source": "Repository",
+      "Repository": "https://stan-dev.r-universe.dev",
+      "RemoteUrl": "https://github.com/stan-dev/cmdstanr",
+      "RemoteRef": "v0.8.1",
+      "RemoteSha": "02259ef7aa2a8b1c8de2fa3fc42a9feafd789288",
+      "Requirements": [
+        "R",
+        "R6",
+        "checkmate",
+        "data.table",
+        "jsonlite",
+        "posterior",
+        "processx",
+        "rlang",
+        "withr"
+      ],
+      "Hash": "e3409949f3437c53affcf4447c9aaace"
+    },
     "coda": {
       "Package": "coda",
       "Version": "0.19-4.1",
@@ -2401,8 +2422,11 @@
       "Package": "pan",
       "Version": "1.9",
       "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "495d032ad6bfc725f37ce89e3d6dadb2"
+      "Repository": "RSPM",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "aefe2753a8e7277e0fdd6d1d08d1692e"
     },
     "parallelly": {
       "Package": "parallelly",
@@ -3631,13 +3655,12 @@
       "RemoteUsername": "Pascal-Kueng",
       "RemoteSha": "2d2eb929f9876503d2be6ed020070afbbcb77ac8",
       "Requirements": [
-        "R",
         "httr",
         "methods",
         "remotes",
         "writexl"
       ],
-      "Hash": "b7e50cd690f7c9a7991f572dfb5ba21e"
+      "Hash": "e4843473a0dc11ab539174af29beee10"
     },
     "withr": {
       "Package": "withr",
