@@ -348,7 +348,7 @@ summarize_brms <- function(model,
     paste0("[", full_results$`l-95% CI`, ", ", full_results$`u-95% CI`, "]")
   )
   
-  return(full_results[, c(1, 9)])
+  return(full_results[, c(1, 8)])
 }
 
 
