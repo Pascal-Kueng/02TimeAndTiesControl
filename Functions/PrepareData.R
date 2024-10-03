@@ -37,9 +37,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
            ss_affect2 = ss_affect2 + 1, 
            ss_affect3 = ss_affect3 + 1, 
            ss_affect4 = ss_affect4 + 1, 
-           
            aff = (ss_affect1 + ss_affect3 + (7 - ss_affect2) + (7 - ss_affect4)) / 4, #Affect Scale
-           
            
            pa_sub = case_when(
              is.na(ss_pa) ~ NA, # If ss_pa is NA, pa_min_total becomes NA
@@ -79,7 +77,15 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
            support = sp_emo_pleasure,
            comf = sp_emo_comf,
            reas = sp_emo_reass
-    ) 
+    ) %>%
+    arrange(
+      coupleID,
+      day
+    )
+  
+  
+  
+  
   df_full <- df
   df <- df %>%
     select(all_of(all_variables))

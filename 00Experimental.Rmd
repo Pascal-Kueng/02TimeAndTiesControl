@@ -52,7 +52,7 @@ options(
   brms.backend = 'cmdstan',
   brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
   brms.file_refit = 'on_change',
-  #brms.file_refit = 'always',
+  brms.file_refit = 'always',
   error = function() beepr::beep(sound = 5)
 )
 
@@ -451,9 +451,9 @@ rows_to_pack_hu <- list(
 ```{r explore_pa_sub_dist}
 
 range(df_double$pa_sub, na.rm = T) 
-hist(df_double$pa_sub, breaks = 30) 
+hist(df_double$pa_sub, breaks = 40) 
 
-hist(log(df_double$pa_sub+00000000001), breaks = 30)
+hist(log(df_double$pa_sub+00000000001), breaks = 40)
 
 ```
 
@@ -493,19 +493,20 @@ formula <- bf(
     # Random effects
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
+    pushing_self_cw + pushing_partner_cw | coupleID) 
+  , autocor = ~ ar(gr = coupleID)
 )
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
   brms::set_prior("normal(4, 2)", class = "Intercept"), # for non-zero PA
-  brms::set_prior("normal(0, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
+  brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
   
   brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  #brms::set_prior("normal(0, 0.1)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  #brms::set_prior("normal(0,5)", class = "sderr", lb = 0),
-  brms::set_prior("normal(0,5)", class = "sigma", lb = 0) # Residual SD for lognormal
+  brms::set_prior("normal(0, 0.1)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  brms::set_prior("normal(0.1,1)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0.1,1)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
 
@@ -519,14 +520,13 @@ pa_sub <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::hurdle_lognormal(),
-  #control = list(adapt_delta = 0.99),
+  control = list(adapt_delta = 0.95),
   iter = 5000,
   warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
   file = file.path("models_cache_brms", "pa_sub_hu")
-  #, file_refit = 'always'
 )
 
 
@@ -600,7 +600,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = ~ ar(gr = coupleID)
+  , autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -622,8 +622,8 @@ prior1 <- c(
   
   brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  #brms::set_prior("student_t(3, 0, 10)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  brms::set_prior("student_t(3, 0, 10)", class = "sderr", lb = 0),
   brms::set_prior("student_t(3, 0, 10)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
@@ -639,8 +639,8 @@ pa_obj_log <- my_brm(
   data = df_double, 
   family = brms::lognormal(),
   #control = list(adapt_delta = 0.99),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -713,7 +713,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = ~ ar(gr = coupleID)
+  , autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -724,7 +724,7 @@ prior1 <- c(
   
   brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
 
-  #brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
   brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
   
 )
@@ -740,8 +740,8 @@ mood <- my_brm(
   data = df_double, 
   family = brms::skew_normal(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -827,7 +827,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = ~ ar(gr = coupleID)
+  , autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -835,12 +835,12 @@ formula <- bf(
 prior1 <- c(
   brms::set_prior("normal(0, 1.5)", class = "b"),
   brms::set_prior("normal(0, 2)", class = "Intercept"), # for non-zero PA
-  brms::set_prior("normal(0, 1.5)", class = "Intercept", dpar = 'hu'), # hurdle part
+  brms::set_prior("normal(40, 10)", class = "Intercept", dpar = 'hu'), # hurdle part
   
   brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  #brms::set_prior("normal(0, 0.1)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  #brms::set_prior("normal(0,5)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0, 0.1)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  brms::set_prior("normal(0,5)", class = "sderr", lb = 0),
   brms::set_prior("normal(0,5)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
@@ -858,8 +858,8 @@ reactance <- my_brm(
   data = df_double, 
   family = brms::hurdle_lognormal(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -888,12 +888,12 @@ loo_reactance
 
 summarize_brms(
   reactance, 
-  model_rows_fixed = model_rows_fixed,
-  model_rows_random = model_rows_random,
-  model_rownames_fixed = model_rownames_fixed,
-  model_rownames_random = model_rownames_random,
-  exponentiate = F) %>%
-  print_df(rows_to_pack = rows_to_pack)
+  model_rows_fixed = model_rows_fixed_hu,
+  model_rows_random = model_rows_random_hu,
+  model_rownames_fixed = model_rownames_fixed_hu,
+  model_rownames_random = model_rownames_random_hu,
+  exponentiate = T) %>%
+  print_df(rows_to_pack = rows_to_pack_hu)
 
 ```
 
@@ -934,7 +934,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = ~ ar(gr = coupleID)
+  , autocor = ~ ar(gr = coupleID)
 )
 
 
@@ -942,9 +942,9 @@ formula <- bf(
 prior1 <- c(
   set_prior("normal(0, 2.5)", class = "b"),
   set_prior("normal(0, 5)", class = "Intercept"),
-  set_prior("normal(0, 1)", class = "sd", group = "coupleID", lb = 0)
-  #set_prior("normal(0, 0.075)", class = "ar", lb = -1, ub = 1),
-  #set_prior("normal(0.5, 2.0)", class = "sderr", lb = 0)
+  set_prior("normal(0, 1)", class = "sd", group = "coupleID", lb = 0),
+  set_prior("normal(0, 0.075)", class = "ar", lb = -1, ub = 1),
+  set_prior("normal(0.5, 2.0)", class = "sderr", lb = 0)
 )
 
 
@@ -961,8 +961,8 @@ reactance_ordinal <- my_brm(
   data = df_double, 
   family = brms::cumulative(),
   control = list(adapt_delta = 0.95),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -1042,7 +1042,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = ~ ar(gr = coupleID)
+  , autocor = ~ ar(gr = coupleID)
   )
 
 
@@ -1051,10 +1051,10 @@ prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
   brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
 
-  #brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1)
-  #brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
 )
 
 
@@ -1069,8 +1069,8 @@ is_reactance <- my_brm(
   data = df_double, 
   family = brms::bernoulli(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = 1000,
+  #warmup = 2000,
   chains = 4,
   cores = 4,
   seed = 7777,
