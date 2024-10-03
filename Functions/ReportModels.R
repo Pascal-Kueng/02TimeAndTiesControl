@@ -332,7 +332,10 @@ summarize_brms <- function(model,
   full_results <- rbind(fixed_effects, random_effects)
   
   if (!short_version) {
-    return(full_results[, c(1, 3:8)])
+    if (include_p_direction) {
+      return(full_results[, c(1, 3:8)])
+    }
+    return(full_results[, c(1, 3:7)])
   }
   
   # Create short version with CI
