@@ -791,7 +791,7 @@ hist(log(df_double$reactance + 0.0000001))
 
 
 formula <- bf(
-  reactance | trunc(lb = 0, ub = 5) ~ 
+  reactance ~ 
     persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
@@ -869,7 +869,7 @@ reactance <- my_brm(
 
 ```{r check_reactance}
 
-check_brms(reactance, log_pp_check = TRUE)
+check_brms(reactance, log_pp_check = T)
 DHARMa.check_brms.all(reactance, integer = FALSE)
 
 ```
@@ -882,7 +882,7 @@ summarize_brms(
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = F,
+  exponentiate = T,
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack_hu)
 
@@ -934,7 +934,7 @@ prior1 <- c(
   set_prior("normal(0, 2.5)", class = "b"),
   set_prior("normal(-1, 5)", class = "Intercept"),
 
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0) # Random effects SD for couple
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
@@ -1041,7 +1041,7 @@ prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
   brms::set_prior("normal(-1, 5)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0) # Random effects SD for couple
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
