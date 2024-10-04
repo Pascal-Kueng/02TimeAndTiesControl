@@ -50,6 +50,7 @@ use_mi = FALSE
 shutdown = TRUE
 report_ordinal = FALSE
 
+iterations = 2000
 iterations = 10000
 
 options(
@@ -675,112 +676,8 @@ summarize_brms(
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
-summary(pa_obj_log)
-
 ```
 
-
-### Modelling Days when they indicated they engaged in physical activity (0,1)
-
-```{r explore_pa_obj_dist}
-
-df_double$pa_obj_no_activity <- df_double$pa_obj[df_double$ss_pa_y]
-
-range(df_double$pa_obj, na.rm = T) 
-hist(df_double$pa_obj, breaks = 50)
-
-df_double$pa_obj_log <- log(df_double$pa_obj)
-
-hist(df_double$pa_obj_log, breaks = 50)
-
-```
-
-
-```{r pa_obj_log, results='hide', message=FALSE}
-
-formula <- bf(
-  pa_obj ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + weartime_self_cw + weartime_self_cb +
-    
-    # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
-)
-
-
-prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b"),
-  brms::set_prior("normal(4, 2)", class = "Intercept"), # for non-zero PA
-  #brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
-  
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
-  
-  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
-  
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
-  brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) # Residual SD for lognormal
-)
-
-
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-pa_obj_log <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = brms::lognormal(),
-  #control = list(adapt_delta = 0.95),
-  iter = iterations,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", "pa_obj_lognormal")
-)
-
-pa_obj_log$prior
-
-```
-
-
-```{r check_pa_obj_log}
-
-check_brms(pa_obj_log, log_pp_check = TRUE)
-
-```
-
-
-
-```{r report_pa_obj_log, results='asis'}
-
-summarize_brms(
-  pa_obj_log, 
-  model_rows_fixed = model_rows_fixed,
-  model_rows_random = model_rows_random,
-  model_rownames_fixed = model_rownames_fixed,
-  model_rownames_random = model_rownames_random,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack)
-
-summary(pa_obj_log)
-
-```
 
 
 ## Affect
