@@ -50,6 +50,8 @@ use_mi = FALSE
 shutdown = TRUE
 report_ordinal = FALSE
 
+iterations = 5000
+
 options(
   dplyr.print_max = 100, 
   brms.backend = 'cmdstan',
@@ -58,6 +60,8 @@ options(
   #brms.file_refit = 'always',
   error = function() beepr::beep(sound = 5)
 )
+
+
 
 
 ```
@@ -125,6 +129,7 @@ model_rows_random <- c(
   # '-- CORRELATION STRUCTURE -- ', 
   'ar[1]', 
   'ma[1]', 
+  'cosy',
   'nu',
   'shape',
   'sderr',
@@ -185,6 +190,7 @@ model_rownames_random <- c(
   # '-- CORRELATION STRUCTURE -- ', 
   'ar[1]',
   'ma[1]', 
+  'cosy',
   'nu',
   'shape',
   'sderr',
@@ -246,6 +252,7 @@ model_rownames_random <- c(
   # '-- CORRELATION STRUCTURE -- ', 
   'ar[1]', 
   'ma[1]', 
+  'cosy',
   'nu',
   'shape',
   'sderr',
@@ -265,7 +272,7 @@ rows_to_pack <- list(
   "Within-Person Effects" = c(2,9),
   "Between-Person Effects" = c(10,16),
   "Random Effects" = c(17, 23), 
-  "Additional Parameters" = c(24,29)
+  "Additional Parameters" = c(24,30)
   )
 
 
@@ -274,7 +281,7 @@ rows_to_pack_ordinal <- list(
   "Within-Person Effects" = c(2+5,9+5),
   "Between-Person Effects" = c(10+5,16+5),
   "Random Effects" = c(17+5, 23+5), 
-  "Additional Parameters" = c(24+5,29+6)
+  "Additional Parameters" = c(24+5,30+6)
   )
 
 ```
@@ -348,6 +355,7 @@ model_rows_random_hu <- c(
   # '-- CORRELATION STRUCTURE -- ', 
   'ar[1]', 
   'ma[1]', 
+  'cosy',
   'nu',
   'shape',
   'sderr',
@@ -427,6 +435,7 @@ model_rownames_random_hu <- c(
   # '-- CORRELATION STRUCTURE -- ', 
   'ar[1]', 
   'ma[1]', 
+  'cosy',
   'nu',
   'shape',
   'sderr',
@@ -447,7 +456,7 @@ rows_to_pack_hu <- list(
   "Hurdle Between-Person Effects" = c(26,32),
   
   "Random Effects" = c(33, 46), 
-  "Additional Parameters" = c(47,52)
+  "Additional Parameters" = c(47,53)
   )
 
 
@@ -502,9 +511,10 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID) 
-  , autocor = ~ arma(gr = coupleID:userID, cov = TRUE)
-  #, autocor = ~ unstr(gr = coupleID)
-  #, autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ ar(time = day, gr = coupleID:userID)
+  #, autocor = ~ arma(gr = coupleID:userID, cov = TRUE)
+  #, autocor = ~ unstr(time = day, gr = coupleID)
+  , autocor = ~ cosy(time = day, gr = coupleID:userID)
 )
 
 prior1 <- c(
@@ -512,10 +522,11 @@ prior1 <- c(
   brms::set_prior("normal(4, 2)", class = "Intercept"), # for non-zero PA
   brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
   
-  brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
   brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
   brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) # Residual SD for lognormal
@@ -531,9 +542,8 @@ pa_sub <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::hurdle_lognormal(),
-  control = list(adapt_delta = 0.95),
-  #iter = 8000,
-  #warmup = 3000,
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -546,14 +556,7 @@ pa_sub <- my_brm(
 
 ```{r check_pa_sub, warning=FALSE}
 
-plot(pa_sub, ask = FALSE, nvariables = 2)
-plot(pp_check(pa_sub, type = 'ecdf_overlay'))
-plot(pp_check(pa_sub))
-
-pp_check_transformed(pa_sub, transform = log1p)
-
-loo_pa_sub <- loo(pa_sub)
-loo_pa_sub
+check_brms(pa_sub, log_pp_check = TRUE)
 
 ```
 
@@ -613,23 +616,23 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ arma(gr = coupleID, cov = TRUE)
+  , autocor = ~ cosy(time = day, gr = coupleID:userID)
 )
-
 
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
   brms::set_prior("normal(4, 2)", class = "Intercept"), # for non-zero PA
-  #brms::set_prior("normal(0, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
+  #brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
   
-  brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
   brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
-  brms::set_prior("student_t(3, 0, 10)", class = "sigma", lb = 0) # Residual SD for lognormal
+  brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
 
@@ -643,14 +646,12 @@ pa_obj_log <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::lognormal(),
-  control = list(adapt_delta = 0.95),
-  iter = 8000,
-  warmup = 3000,
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
   chains = 4,
   cores = 4,
   seed = 7777,
   file = file.path("models_cache_brms", "pa_obj_lognormal")
-  #, file_refit = 'always'
 )
 
 
@@ -659,14 +660,7 @@ pa_obj_log <- my_brm(
 
 ```{r check_pa_obj_log, warning=FALSE}
 
-plot(pa_obj_log, ask = FALSE, nvariables = 2)
-plot(pp_check(pa_obj_log, type = 'ecdf_overlay'))
-plot(pp_check(pa_obj_log))
-
-#pp_check_transformed(pa_obj_log, transform = log1p)
-
-loo_pa_obj_log <- loo(pa_obj_log)
-loo_pa_obj_log
+check_brms(pa_obj_log, log_pp_check = TRUE)
 
 ```
 
@@ -680,7 +674,8 @@ summarize_brms(
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T) %>%
+  exponentiate = T,
+  include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
 ```
@@ -718,23 +713,22 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ arma(gr = coupleID, cov = TRUE)
+  , autocor = ~ cosy(time = day, gr = coupleID:userID)
 )
-
 
 
 prior1 <- c(
   brms::set_prior("normal(0, 5)", class = "b"),
-  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=6), # range of the outcome scale
+  brms::set_prior("normal(3, 2)", class = "Intercept", lb=0, ub=6), # range of the outcome scale
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
-
-  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  
+  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
   brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
-  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
-  
+  brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
@@ -748,8 +742,7 @@ mood <- my_brm(
   data = df_double, 
   family = brms::skew_normal(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = iterations,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -763,14 +756,7 @@ mood <- my_brm(
 
 ```{r check_mood, warning=FALSE}
 
-plot(mood, ask = FALSE, nvariables = 2)
-plot(pp_check(mood, type = 'ecdf_overlay'))
-plot(pp_check(mood))
-
-#pp_check_transformed(mood, transform = log1p)
-
-loo_mood <- loo(mood)
-loo_mood
+check_brms(mood, log_pp_check = TRUE)
 
 ```
 
@@ -782,7 +768,8 @@ summarize_brms(
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = F) %>%
+  exponentiate = F,
+  include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
 ```
@@ -835,23 +822,24 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ arma(gr = coupleID, cov = TRUE)
+  , autocor = ~ cosy(time = day, gr = coupleID:userID)
 )
 
 
 
 prior1 <- c(
-  brms::set_prior("normal(0, 1.5)", class = "b"),
+  brms::set_prior("normal(0, 5)", class = "b"),
   brms::set_prior("normal(0, 2)", class = "Intercept"), # for non-zero PA
-  brms::set_prior("normal(40, 10)", class = "Intercept", dpar = 'hu'), # hurdle part
+  brms::set_prior("normal(20, 10)", class = "Intercept", dpar = 'hu'), # hurdle part
   
-  brms::set_prior("normal(0, 5)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
   brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
-  brms::set_prior("normal(0,5)", class = "sigma", lb = 0) # Residual SD for lognormal
+  brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
 
@@ -868,8 +856,7 @@ reactance <- my_brm(
   data = df_double, 
   family = brms::hurdle_lognormal(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = iterations,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -883,14 +870,7 @@ reactance <- my_brm(
 
 ```{r check_reactance, warning=FALSE}
 
-plot(reactance, ask = FALSE, nvariables = 2)
-plot(pp_check(reactance, type = 'ecdf_overlay'))
-plot(pp_check(reactance))
-
-pp_check_transformed(reactance, transform = log1p)
-
-loo_reactance <- loo(reactance)
-loo_reactance
+check_brms(reactance, log_pp_check = TRUE)
 
 ```
 
@@ -902,7 +882,8 @@ summarize_brms(
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = T) %>%
+  exponentiate = F,
+  include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack_hu)
 
 ```
@@ -944,20 +925,23 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ arma(gr = coupleID, cov = TRUE)
+  , autocor = ~ cosy(time = day, gr = coupleID:userID)
 )
 
 
 
 prior1 <- c(
   set_prior("normal(0, 2.5)", class = "b"),
-  set_prior("normal(0, 5)", class = "Intercept"),
-  set_prior("normal(0, 1)", class = "sd", group = "coupleID", lb = 0),
+  set_prior("normal(-1, 5)", class = "Intercept"),
+
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
-  brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
-  brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0)
+  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
 
@@ -973,9 +957,8 @@ reactance_ordinal <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::cumulative(),
-  control = list(adapt_delta = 0.95),
-  iter = 5000,
-  warmup = 2000,
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -989,14 +972,8 @@ reactance_ordinal <- my_brm(
 
 ```{r check_reactance_ordinal, warning=FALSE}
 
-plot(reactance_ordinal, ask = FALSE, nvariables = 2)
-plot(pp_check(reactance_ordinal, type = 'ecdf_overlay'))
-plot(pp_check(reactance_ordinal))
+check_brms(reactance_ordinal, log_pp_check = TRUE)
 
-#pp_check_transformed(reactance_ordinal, transform = log1p)
-
-loo_reactance_ordinal <- loo(reactance_ordinal)
-loo_reactance_ordinal
 
 ```
 
@@ -1008,7 +985,8 @@ summarize_brms(
   model_rows_random = model_rows_random_ordinal,
   model_rownames_fixed = model_rownames_fixed_ordinal,
   model_rownames_random = model_rownames_random_ordinal,
-  exponentiate = T) %>%
+  exponentiate = T,
+  include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack_ordinal)
 
 ```
@@ -1055,18 +1033,23 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ ar(gr = coupleID)
+  , autocor = ~ cosy(time = day, gr = coupleID:userID)
   )
 
 
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
-  brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
+  brms::set_prior("normal(-1, 5)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
-
-  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1)
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  
+  #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
+  #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
+  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  
+  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
 
@@ -1081,8 +1064,7 @@ is_reactance <- my_brm(
   data = df_double, 
   family = brms::bernoulli(),
   #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = 5000,
-  warmup = 2000,
+  iter = iterations,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -1095,14 +1077,7 @@ is_reactance <- my_brm(
 
 ```{r check_is_reactance, warning=FALSE}
 
-plot(is_reactance, ask = FALSE, nvariables = 2)
-plot(pp_check(is_reactance, type = 'ecdf_overlay'))
-plot(pp_check(is_reactance))
-
-#pp_check_transformed(is_reactance, transform = log1p)
-
-loo_is_reactance <- loo(is_reactance)
-loo_is_reactance
+check_brms(is_reactance, log_pp_check = TRUE)
 
 ```
 
@@ -1114,7 +1089,8 @@ summarize_brms(
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T) %>%
+  exponentiate = T,
+  include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
 ```

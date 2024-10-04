@@ -369,6 +369,24 @@ pp_check_transformed <- function(model, transform = log1p) {
 }
 
 
+# Check brms models for convergence etc. 
+check_brms <- function(
+    model, 
+    log_pp_check = FALSE, # a function needs to be passed!
+    transform = log1p
+) { 
+  plot(model, ask = FALSE, nvariables = 2)
+  plot(pp_check(model, type = 'ecdf_overlay'))
+  plot(pp_check(model))
+  
+  if (log_pp_check) {
+    plot(pp_check_transformed(model, transform = transform))
+  }
+  loo(model)
+}
+  
+
+
 
 
 
