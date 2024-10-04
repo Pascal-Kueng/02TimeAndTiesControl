@@ -419,10 +419,11 @@ DHARMa.check_brms <- function(model,
 
 DHARMa.check_brms.all <- function(model, integer = FALSE, ...) {
   model.check <- DHARMa.check_brms(model, integer = integer, plot = FALSE)
-  try(plot(model.check))
+  plot(model.check)
   try(testDispersion(model.check))
   try(testZeroInflation(model.check))
   try(testOutliers(model.check))
+  return(model.check)
 }
 
 

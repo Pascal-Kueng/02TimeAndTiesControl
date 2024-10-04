@@ -30,6 +30,8 @@ library(kableExtra)
 library(brms)
 library(bayesplot)
 library(beepr)
+library(DHARMa)
+
 
 
 source(file.path('Functions', 'ReportModels.R'))
@@ -51,7 +53,7 @@ shutdown = TRUE
 report_ordinal = FALSE
 
 iterations = 2000
-iterations = 10000
+#iterations = 10000
 
 options(
   dplyr.print_max = 100, 
@@ -510,10 +512,7 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID) 
-  #, autocor = ~ ar(time = day, gr = coupleID:userID)
-  #, autocor = ~ arma(gr = coupleID:userID, cov = TRUE)
-  #, autocor = ~ unstr(time = day, gr = coupleID)
-  , autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ cosy(gr = coupleID)
 )
 
 prior1 <- c(
@@ -525,9 +524,9 @@ prior1 <- c(
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  #brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
   brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
@@ -541,7 +540,7 @@ pa_sub <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::hurdle_lognormal(),
-  control = list(adapt_delta = 0.95),
+  #control = list(adapt_delta = 0.95),
   iter = iterations,
   chains = 4,
   cores = 4,
@@ -556,9 +555,9 @@ pa_sub <- my_brm(
 ```{r check_pa_sub}
 
 check_brms(pa_sub, log_pp_check = TRUE)
+DHARMa.check_brms.all(pa_sub, integer = TRUE)
 
 ```
-
 
 
 ```{r report_pa_sub, results='asis'}
@@ -612,7 +611,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ cosy(gr = coupleID)
 )
 
 
@@ -625,9 +624,9 @@ prior1 <- c(
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  #brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
   brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
@@ -659,6 +658,7 @@ pa_obj_log$prior
 ```{r check_pa_obj_log}
 
 check_brms(pa_obj_log, log_pp_check = TRUE)
+DHARMa.check_brms.all(pa_obj_log, integer = TRUE)
 
 ```
 
@@ -710,21 +710,21 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ cosy(gr = coupleID)
 )
 
 
 prior1 <- c(
   brms::set_prior("normal(0, 5)", class = "b"),
-  brms::set_prior("normal(3, 2)", class = "Intercept", lb=0, ub=6), # range of the outcome scale
+  brms::set_prior("normal(3, 2)", class = "Intercept", lb=1, ub=6), # range of the outcome scale
   
   brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  #brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
   brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
@@ -744,7 +744,6 @@ mood <- my_brm(
   cores = 4,
   seed = 7777,
   file = file.path("models_cache_brms", "mood_skew")
-  #, file_refit = 'always'
 )
 
 
@@ -754,6 +753,7 @@ mood <- my_brm(
 ```{r check_mood}
 
 check_brms(mood, log_pp_check = FALSE)
+DHARMa.check_brms.all(mood, integer = FALSE)
 
 ```
 
@@ -791,7 +791,7 @@ hist(log(df_double$reactance + 0.0000001))
 
 
 formula <- bf(
-  reactance ~ 
+  reactance | trunc(lb = 0, ub = 5) ~ 
     persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
@@ -821,7 +821,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ cosy(gr = coupleID)
 )
 
 
@@ -835,9 +835,9 @@ prior1 <- c(
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  #brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
   brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
@@ -870,6 +870,7 @@ reactance <- my_brm(
 ```{r check_reactance}
 
 check_brms(reactance, log_pp_check = TRUE)
+DHARMa.check_brms.all(reactance, integer = FALSE)
 
 ```
 
@@ -924,7 +925,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ cosy(gr = coupleID)
 )
 
 
@@ -937,9 +938,9 @@ prior1 <- c(
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  #brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0)
+  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0)
   #, brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
@@ -972,7 +973,6 @@ reactance_ordinal <- my_brm(
 ```{r check_reactance_ordinal}
 
 check_brms(reactance_ordinal)
-
 
 ```
 
@@ -1032,7 +1032,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ cosy(gr = coupleID)
   )
 
 
@@ -1045,9 +1045,9 @@ prior1 <- c(
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  #brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0)
+  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0)
   #,brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
 )
 
@@ -1077,6 +1077,8 @@ is_reactance <- my_brm(
 ```{r check_is_reactance}
 
 check_brms(is_reactance)
+DHARMa.check_brms.all(is_reactance, integer = FALSE)
+
 
 ```
 
