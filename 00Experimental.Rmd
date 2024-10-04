@@ -15,7 +15,7 @@ output:
     highlight: tango
 ---
 
-```{r setup, warning=FALSE, message=FALSE, results='hide'}
+```{r setup, message=FALSE, results='hide'}
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -477,7 +477,7 @@ hist(log(df_double$pa_sub+00000000001), breaks = 40)
 Modelling using the gaussian family fails. 
 Due to the many zeros, transformations won't help estimating the models. We employ the negative binomial family. 
 
-```{r pa_sub, results='hide', message=FALSE, warning=FALSE}
+```{r pa_sub, results='hide', message=FALSE}
 
 
 formula <- bf(
@@ -554,7 +554,7 @@ pa_sub <- my_brm(
 ```
 
 
-```{r check_pa_sub, warning=FALSE}
+```{r check_pa_sub}
 
 check_brms(pa_sub, log_pp_check = TRUE)
 
@@ -562,7 +562,7 @@ check_brms(pa_sub, log_pp_check = TRUE)
 
 
 
-```{r report_pa_sub, results='asis', warning=FALSE}
+```{r report_pa_sub, results='asis'}
 
 summarize_brms(
   pa_sub, 
@@ -598,7 +598,7 @@ we log transform.
 
 
 
-```{r pa_obj_log, results='hide', message=FALSE, warning=FALSE}
+```{r pa_obj_log, results='hide', message=FALSE}
 
 formula <- bf(
   pa_obj ~ 
@@ -621,21 +621,27 @@ formula <- bf(
 
 
 prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b"),
-  brms::set_prior("normal(2, 2)", class = "Intercept"), # for day to day MVPA
+  brms::set_prior("normal(0, 2.5)", class = "b", dpar = "mu1"),
+    brms::set_prior("normal(0, 2.5)", class = "b", dpar = "mu2"),
+
+  brms::set_prior("normal(2, 2)", class = "Intercept", dpar = "mu1"), # for day to day MVPA
   brms::set_prior("normal(4, 2)", class = "Intercept", dpar = "mu2"),
-  brms::set_prior("beta(2, 8)", class = "theta"),
+  
+  brms::set_prior("dirichlet(8,1)", class = "theta"),
 
   #brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu'), # hurdle part
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", dpar = "mu1", lb = 0), 
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", dpar = "mu2", lb = 0),  
+
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
-  brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
+  #brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
-  brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) 
+  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0.1,2)", class = "sigma1", lb = 0),
+  brms::set_prior("normal(0.1,2)", class = "sigma2", lb = 0) 
 )
 
 
@@ -646,7 +652,7 @@ pa_obj_log <- my_brm(
   imputed_data = implist,
   
   formula = formula, 
-  #prior = prior1,
+  prior = prior1,
   data = df_double, 
   family = brms::mixture(lognormal(), lognormal()),
   #control = list(adapt_delta = 0.95),
@@ -657,11 +663,12 @@ pa_obj_log <- my_brm(
   file = file.path("models_cache_brms", "pa_obj_lognormal")
 )
 
+pa_obj_log$prior
 
 ```
 
 
-```{r check_pa_obj_log, warning=FALSE}
+```{r check_pa_obj_log}
 
 check_brms(pa_obj_log, log_pp_check = TRUE)
 
@@ -669,7 +676,7 @@ check_brms(pa_obj_log, log_pp_check = TRUE)
 
 
 
-```{r report_pa_obj_log, results='asis', warning=FALSE}
+```{r report_pa_obj_log, results='asis'}
 
 summarize_brms(
   pa_obj_log, 
@@ -699,7 +706,7 @@ hist(df_double$aff, breaks = 15)
 
 
 
-```{r mood, results='hide', results='hide', message=FALSE, warning=FALSE}
+```{r mood, results='hide', results='hide', message=FALSE}
 
 
 formula <- bf(
@@ -759,13 +766,13 @@ mood <- my_brm(
 ```
 
 
-```{r check_mood, warning=FALSE}
+```{r check_mood}
 
 check_brms(mood, log_pp_check = FALSE)
 
 ```
 
-```{r report_mood, results='asis', warning=FALSE}
+```{r report_mood, results='asis'}
 
 summarize_brms(
   mood, 
@@ -795,7 +802,7 @@ hist(log(df_double$reactance + 0.0000001))
 
 
 
-```{r reactance, results='hide', message=FALSE, warning=FALSE}
+```{r reactance, results='hide', message=FALSE}
 
 
 formula <- bf(
@@ -875,13 +882,13 @@ reactance <- my_brm(
 ```
 
 
-```{r check_reactance, warning=FALSE}
+```{r check_reactance}
 
 check_brms(reactance, log_pp_check = TRUE)
 
 ```
 
-```{r report_reactance, results='asis', warning=FALSE}
+```{r report_reactance, results='asis'}
 
 summarize_brms(
   reactance, 
@@ -910,7 +917,7 @@ hypothesis(reactance, "hu_pressure_self_cw > hu_pushing_self_cw")
 ### Ordinal
 
 
-```{r reactance_ordinal, results='hide', message=FALSE, warning=FALSE}
+```{r reactance_ordinal, results='hide', message=FALSE}
 
 df_double$reactance_ordinal <- factor(df_double$reactance,
                                       levels = 0:5, 
@@ -977,14 +984,14 @@ reactance_ordinal <- my_brm(
 ```
 
 
-```{r check_reactance_ordinal, warning=FALSE}
+```{r check_reactance_ordinal}
 
 check_brms(reactance_ordinal)
 
 
 ```
 
-```{r report_reactance_ordinal, results='asis', warning=FALSE}
+```{r report_reactance_ordinal, results='asis'}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1007,7 +1014,7 @@ hypothesis(reactance_ordinal, "pressure_self_cw > pushing_self_cw")
 
 ### Binary 
 
-```{r is_reactance, results='hide', message=FALSE, warning=FALSE}
+```{r is_reactance, results='hide', message=FALSE}
 
 introduce_binary_reactance <- function(data) {
   data$is_reactance <- factor(data$reactance > 0, levels = c(FALSE, TRUE), labels = c(0, 1))
@@ -1082,13 +1089,13 @@ is_reactance <- my_brm(
 
 ```
 
-```{r check_is_reactance, warning=FALSE}
+```{r check_is_reactance}
 
 check_brms(is_reactance)
 
 ```
 
-```{r report_is_reactance, results='asis', warning=FALSE}
+```{r report_is_reactance, results='asis'}
 
 summarize_brms(
   is_reactance, 
@@ -1113,7 +1120,7 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 # Report All Models
 
-```{r report_sidebyside, warning=FALSE}
+```{r report_sidebyside}
 
 
 if (report_ordinal) {
@@ -1185,7 +1192,7 @@ report::cite_packages()
 ```
 
 
-```{r shut_system_down, results='hide', echo=FALSE, message=FALSE, warning=FALSE}
+```{r shut_system_down, results='hide', echo=FALSE, message=FALSE}
 
 if (shutdown) {
   system("shutdown /s /t 180")
