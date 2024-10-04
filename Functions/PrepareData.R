@@ -24,7 +24,8 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
                                 'isWeekend',
                                 'studyGroup',
                                 'got_JITAI',
-                                'skilled_support'
+                                'skilled_support',
+                                'ss_pa'
   )
   
   
