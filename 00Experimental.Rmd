@@ -684,6 +684,8 @@ summary(pa_obj_log)
 
 ```{r explore_pa_obj_dist}
 
+df_double$pa_obj_no_activity <- df_double$pa_obj[df_double$ss_pa_y]
+
 range(df_double$pa_obj, na.rm = T) 
 hist(df_double$pa_obj, breaks = 50)
 
