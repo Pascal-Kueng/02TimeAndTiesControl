@@ -502,7 +502,7 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID) 
-  , autocor = ~ arma(gr = coupleID, cov = TRUE)
+  , autocor = ~ arma(gr = coupleID:userID, cov = TRUE)
   #, autocor = ~ unstr(gr = coupleID)
   #, autocor = ~ cosy(gr = coupleID)
 )
@@ -532,8 +532,8 @@ pa_sub <- my_brm(
   data = df_double, 
   family = brms::hurdle_lognormal(),
   control = list(adapt_delta = 0.95),
-  iter = 8000,
-  warmup = 3000,
+  #iter = 8000,
+  #warmup = 3000,
   chains = 4,
   cores = 4,
   seed = 7777,
