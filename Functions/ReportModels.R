@@ -375,6 +375,7 @@ check_brms <- function(
     log_pp_check = FALSE, # a function needs to be passed!
     transform = log1p
 ) { 
+  rstan::check_hmc_diagnostics(model$fit)
   plot(model, ask = FALSE, nvariables = 2)
   plot(pp_check(model, type = 'ecdf_overlay'))
   plot(pp_check(model))
