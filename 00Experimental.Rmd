@@ -513,6 +513,11 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID) 
   , autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ ar(time = day, gr = coupleID:userID)
+  #, autocor = ~ ma(time = day, gr = coupleID:userID)
+  #, autocor = ~ arma(time = day, gr = coupleID:userID)
+  #, autocor = ~ unstr(time = day, gr = coupleID:userID)
 )
 
 prior1 <- c(
@@ -612,6 +617,11 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
   , autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ ar(time = day, gr = coupleID:userID)
+  #, autocor = ~ ma(time = day, gr = coupleID:userID)
+  #, autocor = ~ arma(time = day, gr = coupleID:userID)
+  #, autocor = ~ unstr(time = day, gr = coupleID:userID)
 )
 
 
@@ -710,6 +720,11 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
   , autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ ar(time = day, gr = coupleID:userID)
+  #, autocor = ~ ma(time = day, gr = coupleID:userID)
+  #, autocor = ~ arma(time = day, gr = coupleID:userID)
+  #, autocor = ~ unstr(time = day, gr = coupleID:userID)
 )
 
 
@@ -821,6 +836,11 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
   , autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ ar(time = day, gr = coupleID:userID)
+  #, autocor = ~ ma(time = day, gr = coupleID:userID)
+  #, autocor = ~ arma(time = day, gr = coupleID:userID)
+  #, autocor = ~ unstr(time = day, gr = coupleID:userID)
 )
 
 
@@ -925,6 +945,11 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
   , autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ ar(time = day, gr = coupleID:userID)
+  #, autocor = ~ ma(time = day, gr = coupleID:userID)
+  #, autocor = ~ arma(time = day, gr = coupleID:userID)
+  #, autocor = ~ unstr(time = day, gr = coupleID:userID)
 )
 
 
@@ -933,7 +958,7 @@ prior1 <- c(
   set_prior("normal(0, 2.5)", class = "b"),
   set_prior("normal(-1, 5)", class = "Intercept"),
 
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0) # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
@@ -1032,6 +1057,11 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
   , autocor = ~ cosy(gr = coupleID)
+  #, autocor = ~ cosy(time = day, gr = coupleID:userID)
+  #, autocor = ~ ar(time = day, gr = coupleID:userID)
+  #, autocor = ~ ma(time = day, gr = coupleID:userID)
+  #, autocor = ~ arma(time = day, gr = coupleID:userID)
+  #, autocor = ~ unstr(time = day, gr = coupleID:userID)
   )
 
 
@@ -1040,7 +1070,7 @@ prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b"),
   brms::set_prior("normal(-1, 5)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
   
-  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0) # Random effects SD for couple
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0), # Random effects SD for couple
   
   #brms::set_prior("normal(0, 0.3)", class = "ar", lb = -1, ub = 1), # Autocorrelation prior
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
