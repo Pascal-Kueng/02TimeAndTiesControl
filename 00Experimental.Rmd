@@ -531,7 +531,7 @@ prior1 <- c(
   #brms::set_prior("normal(0, 0.3)", class = "ma", lb = -1, ub = 1), # moving average prior
   brms::set_prior("normal(0, 0.3)", class = "cosy", lb = -1, ub = 1), # compound symmetry prior
   
-  #brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
+  brms::set_prior("normal(0.1,2)", class = "sderr", lb = 0),
   brms::set_prior("normal(0.1,2)", class = "sigma", lb = 0) # Residual SD for lognormal
 )
 
