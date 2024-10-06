@@ -75,20 +75,17 @@ corstr = 'ar'
 
 if (corstr == 'ar') {
   autocor_str <- ~ ar(time = day, gr = coupleID:userID, p = 1)
-  autocor_prior <- brms::set_prior("normal(0, 5)", class = "ar", lb = -1, ub = 1) 
+  autocor_prior <- brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1) 
   suffix = paste0('ar_', as.character(iterations))
 } else if (corstr == 'cosy_couple') {
   autocor_str <- ~ cosy(gr = coupleID)
-  autocor_prior <- brms::set_prior("normal(0, 5)", class = "cosy", lb = -1, ub = 1)
+  autocor_prior <- brms::set_prior("cauchy(0, 5)", class = "cosy", lb = -1, ub = 1)
   suffix = paste0('cosy_couple_', as.character(iterations))
 } else if (corstr == 'cosy_couple:user') {
   autocor_str <- ~ cosy(time = day, gr = coupleID:userID)
-  autocor_prior <- brms::set_prior("normal(0, 5)", class = "ma", lb = -1, ub = 1)
+  autocor_prior <- brms::set_prior("cauchy(0, 5)", class = "cosy", lb = -1, ub = 1)
   suffix = paste0('cosy_couple:user_', as.character(iterations))
 }
-
-
-
 
 
 
@@ -100,8 +97,7 @@ if (corstr == 'ar') {
 df <- openxlsx::read.xlsx(file.path('long.xlsx'))
 df_original <- df
 
-# Importantly, we do not recode pushing here. 
-df_double <- prepare_data(df, recode_pushing = FALSE, use_mi = use_mi)[[1]]
+df_double <- prepare_data(df, recode_pushing = TRUE, use_mi = use_mi)[[1]]
 
 ```
 
@@ -963,7 +959,7 @@ reactance_ordinal <- my_brm(
   cores = 4,
   seed = 7777,
   file = file.path("models_cache_brms", paste0("reactance_ordinal_noar_", suffix))
-  #, file_refit = 'always'
+  , file_refit = 'always'
 )
 
 
