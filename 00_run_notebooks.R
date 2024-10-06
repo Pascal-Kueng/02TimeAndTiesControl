@@ -12,12 +12,17 @@ library(fs)
 
 # Define the list of .Rmd files you want to knit
 notebooks <- c(
-  "01_Analysis_Script_FINAL.Rmd", 
-  "02_Analysis_Script_As_Preregistred.Rmd",
-  "03_Analysis_Script_ExcludePushing.Rmd",
-  "04_Analysis_Script_SensitivityCovariatesALL.Rmd",
-  "05_Analysis_Script_SensitivityCovariates_NoExchangeProcesses.Rmd",
-  "06_Analysis_Script_SensitivityCovariates_OnlyExchangeProcesses.Rmd"
+  "00ExperimentalCosyCouple5000.Rmd"
+  , "00ExperimentalCosyUserCouple5000.Rmd"
+  #, "00ExperimentalAr5000.Rmd"
+  #, "00ExperimentalMa5000.Rmd"
+  #, "00ExperimentalArma5000.Rmd"
+  , "01_Analysis_Script_FINAL.Rmd"
+  #"02_Analysis_Script_As_Preregistred.Rmd",
+  #"03_Analysis_Script_ExcludePushing.Rmd",
+  #"04_Analysis_Script_SensitivityCovariatesALL.Rmd",
+  #"05_Analysis_Script_SensitivityCovariates_NoExchangeProcesses.Rmd",
+  #"06_Analysis_Script_SensitivityCovariates_OnlyExchangeProcesses.Rmd"
 )
 
 
