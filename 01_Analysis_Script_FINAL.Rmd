@@ -616,8 +616,6 @@ summarize_brms(
   exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
-summary(pa_sub)
-
 ```
 
 

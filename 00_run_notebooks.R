@@ -12,9 +12,9 @@ library(fs)
 
 # Define the list of .Rmd files you want to knit
 notebooks <- c(
-  "00ExperimentalCosyCouple5000.Rmd"
-  , "00ExperimentalCosyUserCouple5000.Rmd"
-  #, "00ExperimentalAr5000.Rmd"
+  "00ExperimentalCosyCouple.Rmd"
+  , "00ExperimentalCosyCoupleUser.Rmd"
+  , "00ExperimentalAr.Rmd"
   #, "00ExperimentalMa5000.Rmd"
   #, "00ExperimentalArma5000.Rmd"
   , "01_Analysis_Script_FINAL.Rmd"
