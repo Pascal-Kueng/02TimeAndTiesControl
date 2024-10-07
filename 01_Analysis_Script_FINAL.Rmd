@@ -565,6 +565,7 @@ prior1 <- c(
   brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
   brms::set_prior("cauchy(0, 20)", class = "shape"), 
   brms::set_prior("cauchy(0, 10)", class='sderr')
+  #brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
 )
 
 
