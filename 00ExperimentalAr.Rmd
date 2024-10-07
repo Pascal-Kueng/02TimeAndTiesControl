@@ -930,7 +930,7 @@ prior1 <- c(
   
   #, brms::set_prior("normal(10, 10", class = "shape")
   
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
   , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
   , autocor_prior
