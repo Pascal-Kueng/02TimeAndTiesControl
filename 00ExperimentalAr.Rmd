@@ -808,7 +808,7 @@ summarize_brms(
 ```{r pa_obj_negbin, results='hide', message=FALSE}
 
 formula <- bf(
-  pa_obj ~ 
+  round(pa_obj) ~ 
     persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
@@ -836,7 +836,7 @@ prior1 <- c(
   
   , brms::set_prior("normal(10, 10", class = "shape")
   
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
   , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
   , autocor_prior
