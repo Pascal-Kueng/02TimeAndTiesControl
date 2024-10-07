@@ -65,8 +65,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 1000
-warmup = 500
+iterations = 5000
+warmup = 2000
 #corstr = 'ar'
 corstr = 'cosy_couple'
 #corstr = 'cosy_couple:user'

@@ -39,6 +39,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
            ss_affect3 = ss_affect3 + 1, 
            ss_affect4 = ss_affect4 + 1, 
            aff = (ss_affect1 + ss_affect3 + (7 - ss_affect2) + (7 - ss_affect4)) / 4, #Affect Scale
+           aff = aff - 1, # so it goes from 0 to 5
            
            pa_sub = case_when(
              is.na(ss_pa) ~ NA, # If ss_pa is NA, pa_min_total becomes NA
