@@ -67,8 +67,8 @@ options(
 
 iterations = 5000
 warmup = 2000
-#corstr = 'ar'
-corstr = 'cosy_couple'
+corstr = 'ar'
+#corstr = 'cosy_couple'
 #corstr = 'cosy_couple:user'
 
 
@@ -608,226 +608,6 @@ summarize_brms(
 ```
 
 
-### negbinomial
-```{r pa_sub_negbinom, results='hide', message=FALSE}
-
-
-formula <- bf(
-  pa_sub ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-  
-  hu = ~ persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
-) 
-
-prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-  , brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
-  
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  , brms::set_prior("normal(10, 10", class = "shape")
-  
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  , autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = hurdle_negbinomial()
-  )
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-pa_sub <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  #family = brms::hurdle_lognormal(), 
-  family = brms::hurdle_negbinomial(), 
-  #family = brms::hurdle_poisson()
-  control = list(adapt_delta = 0.95),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_negbinom", suffix))
-)
-
-
-```
-
-
-```{r check_pa_sub_negbinom}
-
-check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE)
-
-```
-
-
-```{r report_pa_sub_negbinom, results='asis'}
-
-summarize_brms(
-  pa_sub, 
-  model_rows_fixed = model_rows_fixed_hu,
-  model_rows_random = model_rows_random_hu,
-  model_rownames_fixed = model_rownames_fixed_hu,
-  model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack_hu
-)
-
-```
-
-### lognormal
-```{r pa_sub_lognorm, results='hide', message=FALSE}
-
-
-formula <- bf(
-  pa_sub ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID),
-  
-  hu = ~ persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
-) 
-
-prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-  , brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
-  
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("normal(10, 10", class = "shape")
-  
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  , autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = hurdle_lognormal()
-  )
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-pa_sub <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = brms::hurdle_lognormal(), 
-  #family = brms::hurdle_negbinomial(), 
-  #family = brms::hurdle_poisson()
-  control = list(adapt_delta = 0.95),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal", suffix))
-)
-
-
-```
-
-
-```{r check_pa_sub_lognorm}
-
-check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE)
-
-```
-
-
-```{r report_pa_sub_lognorm, results='asis'}
-
-summarize_brms(
-  pa_sub, 
-  model_rows_fixed = model_rows_fixed_hu,
-  model_rows_random = model_rows_random_hu,
-  model_rownames_fixed = model_rownames_fixed_hu,
-  model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack_hu
-)
-
-```
-
-
-
-
-
 
 ## Device Based MVPA 
 
@@ -1023,192 +803,8 @@ summarize_brms(
 ```
 
 
-### negbinom
 
 
-```{r pa_obj_negbin, results='hide', message=FALSE}
-
-formula <- bf(
-  pa_obj ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + weartime_self_cw + weartime_self_cb +
-    
-    # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
-)
-
-
-
-prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  , brms::set_prior("normal(10, 10", class = "shape")
-  
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  , autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = negbinomial()
-  )
-
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-pa_obj_log <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = negbinomial(),
-  #control = list(adapt_delta = 0.95),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_negbin_", suffix))
-)
-
-```
-
-
-```{r check_pa_negbin}
-
-check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE)
-
-```
-
-
-
-```{r report_pa_negbin, results='asis'}
-
-summarize_brms(
-  pa_obj_log, 
-  model_rows_fixed = model_rows_fixed,
-  model_rows_random = model_rows_random,
-  model_rownames_fixed = model_rownames_fixed,
-  model_rownames_random = model_rownames_random,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack)
-
-```
-
-
-### poisson
-
-
-```{r pa_obj_poisson, results='hide', message=FALSE}
-
-formula <- bf(
-  pa_obj ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + weartime_self_cw + weartime_self_cb +
-    
-    # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
-)
-
-
-
-prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("normal(10, 10", class = "shape")
-  
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  , autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = poisson()
-  )
-
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-pa_obj_log <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = poisson(),
-  #control = list(adapt_delta = 0.95),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_poisson_", suffix))
-)
-
-```
-
-
-```{r check_pa_poisson}
-
-check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE)
-
-```
-
-
-
-```{r report_pa_poisson, results='asis'}
-
-summarize_brms(
-  pa_obj_log, 
-  model_rows_fixed = model_rows_fixed,
-  model_rows_random = model_rows_random,
-  model_rownames_fixed = model_rownames_fixed,
-  model_rownames_random = model_rownames_random,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack)
-
-```
 
 ## Affect
 
@@ -1219,9 +815,95 @@ hist(df_double$aff, breaks = 15)
 
 ```
 
+### Gaussian
+```{r mood_gauss, results='hide', results='hide', message=FALSE}
 
 
-```{r mood, results='hide', results='hide', message=FALSE}
+formula <- bf(
+  aff ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  , autocor = autocor_str
+)
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b")
+  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6) # range of the outcome scale
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  
+  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
+  
+  , autocor_prior
+)
+
+brms::validate_prior(
+  prior1, 
+  formula = formula, 
+  data = df_double, 
+  family = gaussian()
+  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+mood <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("mood_gauss_", suffix))
+)
+
+
+```
+
+
+```{r check_mood_gauss}
+
+check_brms(mood, log_pp_check = FALSE)
+DHARMa.check_brms.all(mood, integer = FALSE)
+
+```
+
+```{r report_mood_gauss, results='asis'}
+
+summarize_brms(
+  mood, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = F,
+  include_p_direction = T) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+### Skewnormal
+```{r mood_skew, results='hide', results='hide', message=FALSE}
 
 
 formula <- bf(
@@ -1260,7 +942,7 @@ brms::validate_prior(
   prior1, 
   formula = formula, 
   data = df_double, 
-  family = skew_normal()
+  family = brms::skew_normal()
   )
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
@@ -1286,14 +968,14 @@ mood <- my_brm(
 ```
 
 
-```{r check_mood}
+```{r check_mood_skew}
 
 check_brms(mood, log_pp_check = FALSE)
 DHARMa.check_brms.all(mood, integer = FALSE)
 
 ```
 
-```{r report_mood, results='asis'}
+```{r report_mood_skew, results='asis'}
 
 summarize_brms(
   mood, 
@@ -1306,6 +988,7 @@ summarize_brms(
   print_df(rows_to_pack = rows_to_pack)
 
 ```
+
 
 
 ## Reactance
