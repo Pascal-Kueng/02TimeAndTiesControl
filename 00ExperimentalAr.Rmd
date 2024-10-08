@@ -904,19 +904,6 @@ summarize_brms(
 
 ## Reactance
 
-
-
-
-```{r check_reactance}
-
-check_brms(reactance, log_pp_check = T)
-DHARMa.check_brms.all(reactance, integer = FALSE)
-
-```
-
-
-
-
 ### Ordinal
 
 
