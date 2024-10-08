@@ -1,7 +1,7 @@
 
 # Data Preparation
 
-prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
+prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_code_studyGroup = TRUE) {
     
   
   
@@ -18,12 +18,14 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
   predictors_not_to_center <- c('day', 'userID', 'coupleID', # independent variables that don't need to be centered.
                                 'aff', # outcomes (not centered)
                                 'pa_sub',
-                                'pa_obj',                               
+                                'pa_obj',                  
                                 'reactance', 
+                                
                                 'plan',
                                 'isWeekend',
                                 'studyGroup',
                                 'got_JITAI',
+                                
                                 'skilled_support',
                                 'ss_pa'
   )
@@ -51,7 +53,10 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
            
            day = day/54,
            
+           
            barriers = (ss_barr_1 + ss_barr_2 + ss_barr_3 + ss_barr_4 + ss_barr_5 + ss_barr_6 + ss_barr_7) / 7,
+           
+           
            
            plan = ifelse(
              is.na(ss_pa_no), 
@@ -258,14 +263,19 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE) {
     return(dataframe)
   }
   
+  
   df_double <- recode_factors(df_double)
   df_full <- recode_factors(df_full)
   
   
+  # Contrast Code Factors
+  if (contrast_code_studyGroup) {
+    contrasts(df_double$studyGroup) <- contr.sum(3)
+  }
+  
   return(list(df_double, df_full))
 }
   
-
 
 
 
