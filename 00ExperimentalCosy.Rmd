@@ -67,8 +67,8 @@ options(
 
 iterations = 5000
 warmup = 2000
-corstr = 'ar'
-#corstr = 'cosy_couple'
+#corstr = 'ar'
+corstr = 'cosy_couple'
 #corstr = 'cosy_couple:user'
 
 
