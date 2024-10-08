@@ -806,9 +806,6 @@ summarize_brms(
 
 
 
-
-
-
 ## Affect
 
 ```{r explore_aff_dist}
