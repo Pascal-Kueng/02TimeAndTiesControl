@@ -65,8 +65,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 1000
-warmup = 500
+iterations = 5000
+warmup = 2000
 corstr = 'ar'
 #corstr = 'cosy_couple'
 #corstr = 'cosy_couple:user'
@@ -991,95 +991,6 @@ summarize_brms(
   print_df(rows_to_pack = rows_to_pack)
 
 ```
-
-
-### Weibull
-```{r mood_weib, results='hide', results='hide', message=FALSE}
-
-
-formula <- bf(
-  (aff + 1) ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day +
-    
-    # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
-)
-
-
-prior1 <- c(
-  brms::set_prior("normal(0, 5)", class = "b")
-  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6) # range of the outcome scale
-  
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  , autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = brms::weibull()
-  )
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-mood <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = brms::weibull(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood__weib_", suffix))
-)
-
-
-```
-
-
-```{r check_mood_weib}
-
-check_brms(mood, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood, integer = FALSE)
-
-```
-
-```{r report_mood_weib, results='asis'}
-
-summarize_brms(
-  mood, 
-  model_rows_fixed = model_rows_fixed,
-  model_rows_random = model_rows_random,
-  model_rownames_fixed = model_rownames_fixed,
-  model_rownames_random = model_rownames_random,
-  exponentiate = F,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack)
-
-```
-
 
 
 
