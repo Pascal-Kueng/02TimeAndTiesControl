@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - MAIN Analyses"
+title: "APIM - Control - NO AR1"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -62,32 +62,20 @@ options(
 )
 
 
-
 ####################### Model parameters #######################
 
 iterations = 5000
 warmup = 2000
-corstr = 'ar'
+
+# NO AR!!!
+#corstr = 'ar'
 #corstr = 'cosy_couple'
 #corstr = 'cosy_couple:user'
 
 
 ################################################################
 
-if (corstr == 'ar') {
-  autocor_str <- ~ ar(time = day, gr = coupleID:userID, p = 1)
-  autocor_prior <- brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1) 
-  suffix = paste0('ar_', as.character(iterations))
-} else if (corstr == 'cosy_couple') {
-  autocor_str <- ~ cosy(gr = coupleID)
-  autocor_prior <- brms::set_prior("cauchy(0, 5)", class = "cosy", lb = -1, ub = 1)
-  suffix = paste0('cosy_couple_', as.character(iterations))
-} else if (corstr == 'cosy_couple:user') {
-  autocor_str <- ~ cosy(time = day, gr = coupleID:userID)
-  autocor_prior <- brms::set_prior("cauchy(0, 5)", class = "cosy", lb = -1, ub = 1)
-  suffix = paste0('cosy_couple:user_', as.character(iterations))
-}
-
+suffix = as.character(iterations)
 
 
 ```
@@ -534,7 +522,7 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
+  #, autocor = autocor_str
 ) 
 
 prior1 <- c(
@@ -547,9 +535,9 @@ prior1 <- c(
   #, brms::set_prior("normal(10, 10", class = "shape")
   
   #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
-  , autocor_prior
+  #, autocor_prior
 )
 
 brms::validate_prior(
@@ -577,7 +565,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_poisson_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_poisson_NOAR", suffix))
 )
 
 
@@ -638,7 +626,7 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
+  #, autocor = autocor_str
 ) 
 
 prior1 <- c(
@@ -648,9 +636,9 @@ prior1 <- c(
   , brms::set_prior("normal(0, 1)", class = "sd", group = "coupleID")
 
   #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 1.5)", class = "sderr", lb = 0)
+  #, brms::set_prior("cauchy(0, 1.5)", class = "sderr", lb = 0)
   
-  , autocor_prior
+  #, autocor_prior
 )
 
 brms::validate_prior(
@@ -677,7 +665,7 @@ pa_sub_zero_model <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_zero_part_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_zero_part_NOAR", suffix))
 )
 
 
@@ -731,7 +719,7 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = autocor_str
+  ##, autocor = autocor_str
 ) 
 
 prior1 <- c(
@@ -741,9 +729,9 @@ prior1 <- c(
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
   
   , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
-  , autocor_prior
+  #, autocor_prior
 )
 
 brms::validate_prior(
@@ -768,7 +756,7 @@ pa_sub_active_model <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_active_part_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_active_part_NOAR", suffix))
 )
 
 
@@ -837,7 +825,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
+  #, autocor = autocor_str
 )
 
 
@@ -851,7 +839,7 @@ prior1 <- c(
   , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
   #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
-  , autocor_prior
+  #, autocor_prior
 )
 
 brms::validate_prior(
@@ -877,7 +865,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_NOAR", suffix))
 )
 
 ```
@@ -939,7 +927,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
+  #, autocor = autocor_str
 )
 
 
@@ -952,7 +940,7 @@ prior1 <- c(
   , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
   #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
-  , autocor_prior
+  #, autocor_prior
 )
 
 brms::validate_prior(
@@ -978,7 +966,7 @@ mood_gauss <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_gauss_", suffix))
+  file = file.path("models_cache_brms", paste0("mood_gauss_NOAR", suffix))
 )
 
 
@@ -1045,7 +1033,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
+  #, autocor = autocor_str
 )
 
 
@@ -1056,9 +1044,9 @@ prior1 <- c(
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
   
   #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
-  , autocor_prior
+  #, autocor_prior
 )
 
 
@@ -1086,7 +1074,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("reactance_ordinal_", suffix))
+  file = file.path("models_cache_brms", paste0("reactance_ordinal_NOARNOAR_", suffix))
 )
 
 
@@ -1155,7 +1143,7 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
+  #, autocor = autocor_str
   )
 
 
@@ -1169,7 +1157,7 @@ prior1 <- c(
   #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
   #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
   
-  , autocor_prior
+  #, autocor_prior
 )
 
 
@@ -1198,7 +1186,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_", suffix))
+  file = file.path("models_cache_brms", paste0("is_reactance_NOARNOAR_", suffix))
   #, file_refit = 'always'
 )
 
@@ -1287,7 +1275,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack_final,
-  file.path("Output", "AllModels_experimental.xlsx"), 
+  file.path("Output", "AllModels_experimental_NOAR.xlsx"), 
   merge_option = 'both', 
   simplify_2nd_row = TRUE,
   colwidths = c(38, 7.2, 13.3, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
