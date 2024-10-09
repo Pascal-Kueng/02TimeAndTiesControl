@@ -388,9 +388,6 @@ check_brms <- function(
   
 
 
-
-
-
 DHARMa.check_brms <- function(model,        
                        integer = FALSE,   # integer response? (TRUE/FALSE)
                        plot = TRUE,       
@@ -418,13 +415,110 @@ DHARMa.check_brms <- function(model,
 }
 
 
+
+DHARMa.check_brms_ordinal <- function(model, plot = TRUE, debug = FALSE, ...) {
+  
+  # Extract data and posterior predictions
+  mdata <- brms::standata(model)
+  
+  if(debug) {
+    cat("Model family:", family(model)$family, "\n")
+    cat("Response variable levels:", levels(factor(mdata$Y)), "\n")
+  }
+  
+  # Get posterior predictions
+  latent_predictions <- try({
+    brms::posterior_epred(model, ndraws = 1000)
+  })
+  
+  if(inherits(latent_predictions, "try-error")) {
+    stop("Error in getting posterior predictions. Check if model is ordinal.")
+  }
+  
+  if(debug) {
+    cat("Dimensions of latent_predictions:", dim(latent_predictions), "\n")
+    cat("Class of latent_predictions:", class(latent_predictions), "\n")
+  }
+  
+  # Convert categorical responses to numeric
+  observed_numeric <- as.numeric(factor(mdata$Y))
+  
+  if(debug) {
+    cat("Range of observed_numeric:", range(observed_numeric), "\n")
+  }
+  
+  # For ordinal models, we need to convert the 3D array to a matrix
+  # Each row will be a simulation, each column an observation
+  sim_response <- try({
+    # Convert predictions to probabilities for each category
+    probs <- aperm(latent_predictions, c(1, 2, 3))
+    # Sample categories based on these probabilities
+    samples <- apply(probs, 1:2, function(x) sample(seq_along(x), size = 1, prob = x))
+    # Transpose to match DHARMa expectations
+    t(samples)
+  })
+  
+  if(inherits(sim_response, "try-error")) {
+    stop("Error in processing predictions. Check dimensions.")
+  }
+  
+  if(debug) {
+    cat("Dimensions of simulated response:", dim(sim_response), "\n")
+  }
+  
+  # Create fitted predicted response (expected category)
+  fitted_pred <- try({
+    # Calculate expected category for each observation
+    probs_mean <- apply(latent_predictions, 2:3, mean)
+    apply(probs_mean, 1, function(x) sum(seq_along(x) * x))
+  })
+  
+  if(inherits(fitted_pred, "try-error")) {
+    stop("Error in creating fitted predictions. Check dimensions.")
+  }
+  
+  # Create DHARMa object
+  dharma.obj <- try({
+    DHARMa::createDHARMa(
+      simulatedResponse = sim_response,
+      observedResponse = observed_numeric,
+      fittedPredictedResponse = fitted_pred,
+      integerResponse = TRUE,  # Changed to TRUE for ordinal responses
+      seed = 123
+    )
+  })
+  
+  if(inherits(dharma.obj, "try-error")) {
+    stop("Error in creating DHARMa object. Check all inputs.")
+  }
+  
+  if (isTRUE(plot)) {
+    plot(dharma.obj, ...)
+  }
+  
+  invisible(dharma.obj)
+}
+
+
+
+
 DHARMa.check_brms.all <- function(model, integer = FALSE, outliers_type = 'default', ...) {
-  model.check <- DHARMa.check_brms(model, integer = integer, plot = FALSE, ...)
+  
+  if ("factor" %in% class(model$data[[1]]) 
+      & 'ordered' %in% class(model$data[[1]])) {
+    model.check <- DHARMa.check_brms_ordinal(model, plot = FALSE, ...)
+  } else {
+    model.check <- DHARMa.check_brms(model, integer = integer, plot = FALSE, ...)
+  }
+  
   plot(model.check)
   try(testDispersion(model.check))
   try(testZeroInflation(model.check))
   try(testOutliers(model.check, type = outliers_type))
 }
+
+
+
 
 
 

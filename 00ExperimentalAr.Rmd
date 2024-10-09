@@ -1087,8 +1087,8 @@ reactance_ordinal <- my_brm(
   warmup = warmup,
   chains = 4,
   cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("reactance_ordinal_", suffix))
+  seed = 7777
+  , file = file.path("models_cache_brms", paste0("reactance_ordinal_", suffix))
 )
 
 
@@ -1098,6 +1098,7 @@ reactance_ordinal <- my_brm(
 ```{r check_reactance_ordinal}
 
 check_brms(reactance_ordinal)
+DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 ```
 
@@ -1200,9 +1201,8 @@ is_reactance <- my_brm(
   warmup = warmup,
   chains = 4,
   cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_", suffix))
-  #, file_refit = 'always'
+  seed = 7777
+  , file = file.path("models_cache_brms", paste0("is_reactance_", suffix))
 )
 
 
@@ -1212,7 +1212,6 @@ is_reactance <- my_brm(
 
 check_brms(is_reactance)
 DHARMa.check_brms.all(is_reactance, integer = FALSE)
-
 
 ```
 

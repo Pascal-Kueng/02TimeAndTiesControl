@@ -1084,6 +1084,7 @@ reactance_ordinal <- my_brm(
 ```{r check_reactance_ordinal}
 
 check_brms(reactance_ordinal)
+DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 ```
 
