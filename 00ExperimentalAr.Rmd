@@ -49,7 +49,7 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = FALSE
+shutdown = TRUE
 report_ordinal = FALSE
 
 options(
@@ -1054,12 +1054,6 @@ formula <- bf(
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
   #, brms::set_prior("normal(2, 1)", class = "Intercept", lb=0, ub=5)
-  , brms::set_prior("normal(2.5, 1)", class = "Intercept", coef = '1') # range of the
-  , brms::set_prior("normal(3.5, 2)", class = "Intercept", coef = '2') # range of
-  , brms::set_prior("normal(5, 2)", class = "Intercept", coef = '3') # range oftheoutcome
-  , brms::set_prior("normal(8, 3)", class = "Intercept", coef = '4') # range
-  , brms::set_prior("normal(12, 4)", class = "Intercept", coef = '5') # rangeoftheoutcomescale
-  
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
   
   #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
