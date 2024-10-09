@@ -1261,7 +1261,6 @@ all_models <- report_side_by_side(
   pa_sub,
   pa_obj_log,
   mood_gauss,
-  mood_skew,
   reactance_ordinal,
   is_reactance,
   
@@ -1279,7 +1278,6 @@ summary_all_models <- all_models %>%
     c(" ", "Subjective MVPA Hurdle Poisson" = 2, 
       "Device-Based MVPA Log (Gaussian)" = 2, 
       "Mood Gaussian" = 2,
-      "Mood Skewnormal" = 2,
       "Reactance Ordinal" = 2,
       "Reactance Dichotome" = 2)
   )
@@ -1290,7 +1288,7 @@ export_xlsx(
   file.path("Output", "AllModels_experimental.xlsx"), 
   merge_option = 'both', 
   simplify_2nd_row = TRUE,
-  colwidths = c(38, 7.2, 13.3, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
+  colwidths = c(38, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
   line_above_rows = c(1,2),
   line_below_rows = c(-1)
 )
