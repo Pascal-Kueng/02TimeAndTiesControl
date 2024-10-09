@@ -14,7 +14,7 @@ library(fs)
 notebooks <- c(
   #"01_Analysis_Script_FINAL.Rmd"
   "00ExperimentalAr.Rmd"
-  , "00ExperimentalNOAR"
+  , "00ExperimentalNOAR.Rmd"
   #, "00ExperimentalMa5000.Rmd"
   #, "00ExperimentalArma5000.Rmd"
   #"02_Analysis_Script_As_Preregistred.Rmd",
