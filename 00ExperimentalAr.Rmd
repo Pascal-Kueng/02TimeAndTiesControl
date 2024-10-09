@@ -1115,7 +1115,7 @@ summarize_brms(
   model_rows_random = model_rows_random_ordinal,
   model_rownames_fixed = model_rownames_fixed_ordinal,
   model_rownames_random = model_rownames_random_ordinal,
-  exponentiate = F,
+  exponentiate = T,
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack_ordinal)
 
