@@ -499,7 +499,7 @@ hist(log(df_double$pa_sub+00000000001), breaks = 40)
 
 ```
 
-
+## Hurdle Poisson Model
 ```{r pa_sub_poisson, results='hide', message=FALSE}
 
 
@@ -596,6 +596,317 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE)
 
 summarize_brms(
   pa_sub, 
+  model_rows_fixed = model_rows_fixed_hu,
+  model_rows_random = model_rows_random_hu,
+  model_rownames_fixed = model_rownames_fixed_hu,
+  model_rownames_random = model_rownames_random_hu,
+  exponentiate = T,
+  include_p_direction = T) %>%
+  print_df(rows_to_pack = rows_to_pack_hu
+)
+
+```
+
+
+Although the model fits the data well, the high number of large pareto-k values
+could indicate problems with the model, such as overfitting / overly
+complex model specification not supported by the data. 
+
+We expected that the autocorrelation might not be necessary, as we already
+account for dependency in the data via random effects and by including 
+"day" as a covariate. 
+
+## Hurdle Poisson Model
+```{r pa_sub_poisson_noar1, results='hide', message=FALSE}
+
+
+formula <- bf(
+  pa_sub ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID),
+  
+  hu = ~ persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = autocor_str
+) 
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
+  , brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  
+  #, brms::set_prior("normal(10, 10", class = "shape")
+  
+  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
+  
+  #, autocor_prior
+)
+
+brms::validate_prior(
+  prior1, 
+  formula = formula, 
+  data = df_double, 
+  family = hurdle_poisson()
+  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_sub_noar1 <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  #family = brms::hurdle_lognormal(), 
+  #family = brms::hurdle_negbinomial(), 
+  family = brms::hurdle_poisson(),
+  control = list(adapt_delta = 0.95),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_poisson_no_ar1", suffix))
+)
+
+
+```
+
+
+```{r check_pa_sub_poisson_noar1}
+
+check_brms(pa_sub_noar1, log_pp_check = TRUE)
+DHARMa.check_brms.all(pa_sub_noar1, integer = TRUE)
+
+```
+
+
+```{r report_pa_sub_poisson_noar1, results='asis'}
+
+summarize_brms(
+  pa_sub_noar1, 
+  model_rows_fixed = model_rows_fixed_hu,
+  model_rows_random = model_rows_random_hu,
+  model_rownames_fixed = model_rownames_fixed_hu,
+  model_rownames_random = model_rownames_random_hu,
+  exponentiate = T,
+  include_p_direction = T) %>%
+  print_df(rows_to_pack = rows_to_pack_hu
+)
+
+```
+
+
+
+
+Additionally, as a sensitivity analysis, we estimate the two part of the models separately. 
+
+## Two separate models
+
+### Modelling 0/1 
+The zero vs. 1 modelling part also has high pareto-k values, but reaches the 
+same conslucsions as the hurdle model.
+We tried further simplifying by removing the residual AR1 correlation structure,
+which led to a model with good pareto-k values, still arriving at the same
+conslusion as the original hurdle model:
+```{r pa_sub_separate_inactive, results='hide', message=FALSE}
+
+df_double$pa_sub_zero <- as.factor(ifelse(df_double$pa_sub > 0, 1, 0))
+
+formula <- bf(
+  pa_sub_zero ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = autocor_str
+) 
+
+prior1 <- c(
+    set_prior("normal(0, 1.5)", class = "b")
+  , brms::set_prior("normal(0, 5)", class = "Intercept") # for non-zero PA
+
+  , brms::set_prior("normal(0, 1)", class = "sd", group = "coupleID")
+
+  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
+  #, brms::set_prior("cauchy(0, 1.5)", class = "sderr", lb = 0)
+  
+  #, autocor_prior
+)
+
+brms::validate_prior(
+  prior1, 
+  formula = formula, 
+  data = df_double, 
+  family = bernoulli()
+  )
+
+
+pa_sub_zero_model <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  #family = brms::hurdle_lognormal(), 
+  #family = brms::hurdle_negbinomial(), 
+  family = brms::bernoulli(),
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_zero_part", suffix))
+)
+
+
+
+```
+
+
+```{r check_pa_sub_separate_inactive}
+
+check_brms(pa_sub_zero_model, log_pp_check = FALSE)
+DHARMa.check_brms.all(pa_sub_zero_model, integer = TRUE)
+
+```
+
+
+```{r report_pa_sub_separate_inactive, results='asis'}
+
+summarize_brms(
+  pa_sub_zero_model, 
+  model_rows_fixed = model_rows_fixed_hu,
+  model_rows_random = model_rows_random_hu,
+  model_rownames_fixed = model_rownames_fixed_hu,
+  model_rownames_random = model_rownames_random_hu,
+  exponentiate = T,
+  include_p_direction = T) %>%
+  print_df(rows_to_pack = rows_to_pack_hu
+)
+
+```
+
+
+### Modelling active Days
+```{r pa_sub_separate_active, results='hide', message=FALSE}
+
+# Only include active days
+df_double$pa_sub_non_zero <- ifelse(df_double$pa_sub > 0, df_double$pa_sub, NA)
+
+formula <- bf(
+  log(pa_sub_non_zero) ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = autocor_str
+) 
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
+
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  
+  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
+  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
+  
+  #, autocor_prior
+)
+
+brms::validate_prior(
+  prior1, 
+  formula = formula, 
+  data = df_double, 
+  family = gaussian()
+  )
+
+
+pa_sub_active_model <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_active_part", suffix))
+)
+
+
+
+```
+
+
+```{r check_pa_sub_separate_active}
+
+check_brms(pa_sub_active_model, log_pp_check = TRUE)
+DHARMa.check_brms.all(pa_sub, integer = TRUE)
+
+```
+
+
+```{r report_pa_sub_separate_active, results='asis'}
+
+summarize_brms(
+  pa_sub_active_model, 
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
@@ -814,100 +1125,9 @@ summarize_brms(
 
 ```
 
-### Skewnormal
-```{r mood_skew, results='hide', results='hide', message=FALSE}
-
-
-formula <- bf(
-  aff ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day +
-    
-    # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  , autocor = autocor_str
-)
-
-
-prior1 <- c(
-  brms::set_prior("normal(0, 5)", class = "b")
-  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6) # range of the outcome scale
-  
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  , autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = brms::skew_normal()
-  )
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-mood_skew <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = brms::skew_normal(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_skew_", suffix))
-)
-
-
-```
-
-
-```{r check_mood_skew}
-
-check_brms(mood_skew, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood_skew, integer = FALSE)
-
-```
-
-```{r report_mood_skew, results='asis'}
-
-summarize_brms(
-  mood_skew, 
-  model_rows_fixed = model_rows_fixed,
-  model_rows_random = model_rows_random,
-  model_rownames_fixed = model_rownames_fixed,
-  model_rownames_random = model_rownames_random,
-  exponentiate = F,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack)
-
-```
-
 
 
 ## Reactance
-
-<<<<<<< HEAD
-
-
 
 ```{r check_reactance}
 
@@ -919,10 +1139,6 @@ hist(log(df_double$reactance+0.1), breaks = 10)
 ```
 
 
-
-
-=======
->>>>>>> 0d898d9b9673eaec0dd31f96210525be7f35e6d3
 ### Ordinal
 
 
@@ -990,7 +1206,6 @@ reactance_ordinal <- my_brm(
   cores = 4,
   seed = 7777,
   file = file.path("models_cache_brms", paste0("reactance_ordinal_noar_", suffix))
-  , file_refit = 'always'
 )
 
 
