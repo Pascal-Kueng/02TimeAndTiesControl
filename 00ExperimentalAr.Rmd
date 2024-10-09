@@ -587,7 +587,7 @@ pa_sub <- my_brm(
 ```{r check_pa_sub_poisson}
 
 check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE)
+DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 
 ```
 
@@ -688,7 +688,7 @@ pa_sub_zero_model <- my_brm(
 ```{r check_pa_sub_separate_inactive}
 
 check_brms(pa_sub_zero_model, log_pp_check = FALSE)
-DHARMa.check_brms.all(pa_sub_zero_model, integer = TRUE)
+DHARMa.check_brms.all(pa_sub_zero_model, integer = TRUE, outliers_type = 'bootstrap')
 
 ```
 
@@ -779,7 +779,7 @@ pa_sub_active_model <- my_brm(
 ```{r check_pa_sub_separate_active}
 
 check_brms(pa_sub_active_model, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub_active_model, integer = TRUE)
+DHARMa.check_brms.all(pa_sub_active_model, integer = TRUE, outliers_type = 'bootstrap')
 
 ```
 
@@ -886,7 +886,7 @@ pa_obj_log <- my_brm(
 ```{r check_pa_obj_log_g}
 
 check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE)
+DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
 
 ```
 
@@ -1216,22 +1216,6 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 ```
 
-```{r check_is_reactance_kfold}
-
-library(future)
-plan(
-  multisession, workers = min(
-    c(5, future::availableCores()/2)
-  )
-)
-kfold(
-  is_reactance, 
-  K = 5,
-  chains = 1
-)
-plan(sequential)
-
-```
 
 ```{r report_is_reactance, results='asis'}
 

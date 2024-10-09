@@ -408,7 +408,7 @@ DHARMa.check_brms <- function(model,
       1,
       median),
     integerResponse = integer,
-    seed = 123, 
+    seed = 123
     )
   
   if (isTRUE(plot)) {
@@ -418,13 +418,12 @@ DHARMa.check_brms <- function(model,
 }
 
 
-DHARMa.check_brms.all <- function(model, integer = FALSE, ...) {
-  model.check <- DHARMa.check_brms(model, integer = integer, plot = FALSE)
+DHARMa.check_brms.all <- function(model, integer = FALSE, outliers_type = 'default', ...) {
+  model.check <- DHARMa.check_brms(model, integer = integer, plot = FALSE, ...)
   plot(model.check)
   try(testDispersion(model.check))
   try(testZeroInflation(model.check))
-  try(testOutliers(model.check))
-  return(model.check)
+  try(testOutliers(model.check, type = outliers_type))
 }
 
 
