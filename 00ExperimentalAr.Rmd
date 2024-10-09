@@ -905,6 +905,7 @@ summarize_brms(
 
 ## Reactance
 
+<<<<<<< HEAD
 
 
 
@@ -920,6 +921,8 @@ hist(log(df_double$reactance+0.1), breaks = 10)
 
 
 
+=======
+>>>>>>> 0d898d9b9673eaec0dd31f96210525be7f35e6d3
 ### Ordinal
 
 
