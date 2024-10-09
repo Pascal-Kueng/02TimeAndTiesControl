@@ -1013,9 +1013,11 @@ summarize_brms(
 ```{r check_reactance}
 
 range(df_double$reactance, na.rm = T) 
-hist(df_double$reactance, breaks = 7) 
+hist(df_double$reactance, breaks = 18) 
 
 hist(log(df_double$reactance+0.1), breaks = 10)
+
+hist(df_double$reactance[df_double$reactance>0], breaks = 18)
 
 ```
 
@@ -1116,6 +1118,123 @@ summarize_brms(
 ```{r testingdifferencecoefsordinal}
 
 hypothesis(reactance_ordinal, "pressure_self_cw > pushing_self_cw")
+
+```
+
+
+
+### Hurdle Ordinal
+
+```{r reactance_ordinal_hu, results='hide', message=FALSE}
+
+df_double$reactance_ordinal <- factor(df_double$reactance,
+                                      levels = 0:5, 
+                                      ordered = TRUE)
+
+formula <- bf(
+  reactance_ordinal ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID),
+  hu = ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  , autocor = autocor_str
+)
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  #, brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5) # range of the outcome scale
+  , brms::set_prior("normal(6, 6)", class = "Intercept", dpar = 'hu') # hurdle part
+
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  
+  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
+  , brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
+  
+  , autocor_prior
+)
+
+
+brms::validate_prior(
+  prior1, 
+  formula = formula, 
+  data = df_double, 
+  family = hurdle_cumulative() # HURDLE_CUMULATIVE
+  )
+
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+reactance_ordinal_hu <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::hurdle_cumulative(),
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("reactance_ordinal_hu_", suffix))
+)
+
+
+```
+
+
+```{r check_reactance_ordinal_hu}
+
+check_brms(reactance_ordinal_hu)
+
+```
+
+```{r report_reactance_ordinal_hu, results='asis'}
+
+summarize_brms(
+  reactance_ordinal_hu, 
+  model_rows_fixed = model_rows_fixed_ordinal,
+  model_rows_random = model_rows_random_ordinal,
+  model_rownames_fixed = model_rownames_fixed_ordinal,
+  model_rownames_random = model_rownames_random_ordinal,
+  exponentiate = T,
+  include_p_direction = T) %>%
+  print_df(rows_to_pack = rows_to_pack_ordinal)
+
+```
+
+```{r testingdifferencecoefsordinal_hu}
+
+hypothesis(reactance_ordinal_hu, "pressure_self_cw > pushing_self_cw")
 
 ```
 
