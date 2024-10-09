@@ -539,7 +539,10 @@ report_side_by_side <- function(..., model_rows_random = NULL, model_rows_fixed 
       'bernoulli', 
       'negbinomial',
       'cumulative', 
-      'hurdle_lognormal', 
+      'hurdle_lognormal',
+      'hurdle_poisson',
+      'hurdle_negbinomial',
+      'hurdle_cumulative',
       'lognormal',
       'skewnormal') | grepl('log', model_name)) {
       exponentiate <- TRUE
