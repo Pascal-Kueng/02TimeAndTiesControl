@@ -1073,8 +1073,8 @@ reactance_ordinal <- my_brm(
   warmup = warmup,
   chains = 4,
   cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("reactance_ordinal_NOARNOAR_", suffix))
+  seed = 7777
+  #, file = file.path("models_cache_brms", paste0("reactance_ordinal_NOARNOAR_", suffix))
 )
 
 
