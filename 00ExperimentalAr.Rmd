@@ -1216,6 +1216,23 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 ```
 
+```{r check_is_reactance_kfold}
+
+library(future)
+plan(
+  multisession, workers = min(
+    c(5, future::availableCores()/2)
+  )
+)
+kfold(
+  is_reactance, 
+  K = 5,
+  chains = 1
+)
+plan(sequential)
+
+```
+
 ```{r report_is_reactance, results='asis'}
 
 summarize_brms(
