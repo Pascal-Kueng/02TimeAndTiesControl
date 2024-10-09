@@ -499,7 +499,7 @@ hist(log(df_double$pa_sub+00000000001), breaks = 40)
 
 ```
 
-### poisson
+
 ```{r pa_sub_poisson, results='hide', message=FALSE}
 
 
@@ -614,6 +614,7 @@ summarize_brms(
 ```{r explore_pa_obj_dist}
 
 range(df_double$pa_obj, na.rm = T) 
+
 hist(df_double$pa_obj, breaks = 50)
 
 df_double$pa_obj_log <- log(df_double$pa_obj)
@@ -771,7 +772,7 @@ brms::validate_prior(
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
-mood <- my_brm(
+mood_gauss <- my_brm(
   mi = use_mi, 
   imputed_data = implist,
   
@@ -794,15 +795,15 @@ mood <- my_brm(
 
 ```{r check_mood_gauss}
 
-check_brms(mood, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood, integer = FALSE)
+check_brms(mood_gauss, log_pp_check = FALSE)
+DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 
 ```
 
 ```{r report_mood_gauss, results='asis'}
 
 summarize_brms(
-  mood, 
+  mood_gauss, 
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -858,7 +859,7 @@ brms::validate_prior(
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
-mood <- my_brm(
+mood_skew <- my_brm(
   mi = use_mi, 
   imputed_data = implist,
   
@@ -881,15 +882,15 @@ mood <- my_brm(
 
 ```{r check_mood_skew}
 
-check_brms(mood, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood, integer = FALSE)
+check_brms(mood_skew, log_pp_check = FALSE)
+DHARMa.check_brms.all(mood_skew, integer = FALSE)
 
 ```
 
 ```{r report_mood_skew, results='asis'}
 
 summarize_brms(
-  mood, 
+  mood_skew, 
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -909,8 +910,10 @@ summarize_brms(
 
 ```{r check_reactance}
 
-check_brms(reactance, log_pp_check = T)
-DHARMa.check_brms.all(reactance, integer = FALSE)
+range(df_double$reactance, na.rm = T) 
+hist(df_double$reactance, breaks = 7) 
+
+hist(log(df_double$reactance+0.1), breaks = 10)
 
 ```
 
@@ -1158,8 +1161,8 @@ if (report_ordinal) {
 all_models <- report_side_by_side(
   pa_sub,
   pa_obj_log,
-  mood,
-  reactance,
+  mood_gauss,
+  mood_skew,
   reactance_ordinal,
   is_reactance,
   
@@ -1174,10 +1177,10 @@ all_models <- report_side_by_side(
 summary_all_models <- all_models %>%
   print_df(rows_to_pack = rows_to_pack_final) %>%
   add_header_above(
-    c(" ", "Subjective MVPA Hurdle Lognormal" = 2, 
-      "Device-Based MVPA Lognormal" = 2, 
+    c(" ", "Subjective MVPA Hurdle Poisson" = 2, 
+      "Device-Based MVPA Log (Gaussian)" = 2, 
+      "Mood Gaussian" = 2,
       "Mood Skewnormal" = 2,
-      "Reactance Lognormal" = 2, 
       "Reactance Ordinal" = 2,
       "Reactance Dichotome" = 2)
   )
