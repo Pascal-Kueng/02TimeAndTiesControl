@@ -559,7 +559,7 @@ pa_sub <- my_brm(
   #family = brms::hurdle_lognormal(), 
   #family = brms::hurdle_negbinomial(), 
   family = brms::hurdle_poisson(),
-  control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.95, max_treedepth = 17),
   iter = iterations,
   warmup = warmup,
   chains = 4,
