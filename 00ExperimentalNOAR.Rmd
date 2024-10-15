@@ -559,13 +559,14 @@ pa_sub <- my_brm(
   #family = brms::hurdle_lognormal(), 
   #family = brms::hurdle_negbinomial(), 
   family = brms::hurdle_poisson(),
-  control = list(adapt_delta = 0.95, max_treedepth = 17),
+  control = list(adapt_delta = 0.95, max_treedepth = 15),
   iter = iterations,
   warmup = warmup,
   chains = 4,
   cores = 4,
   seed = 7777,
   file = file.path("models_cache_brms", paste0("pa_sub_hu_poisson_NOAR", suffix))
+  #, file_refit = 'always'
 )
 
 
