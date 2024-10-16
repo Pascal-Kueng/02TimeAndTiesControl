@@ -488,7 +488,7 @@ hist(log(df_double$pa_sub+00000000001), breaks = 40)
 ```
 
 ## Hurdle Poisson Model
-```{r pa_sub_poisson, results='hide', message=FALSE}
+```{r pa_sub_poisson, results='hide'}
 
 
 formula <- bf(
@@ -577,9 +577,12 @@ pa_sub <- my_brm(
 
 check_brms(pa_sub, log_pp_check = TRUE)
 DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
+#shinystan::launch_shinystan(pa_sub)
 
 ```
-
+In this instance, the warning about max treedepth is a false positive. We have set
+treedepth to 15, and when we check with shinystan, we see that treedepth is 
+continuously between 10 and 14.
 
 ```{r report_pa_sub_poisson, results='asis'}
 
