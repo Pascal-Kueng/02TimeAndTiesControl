@@ -1,0 +1,1264 @@
+---
+title: "APIM - Control"
+author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    theme: flatly
+    df_print: kable
+    toc: yes
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    toc_depth: 5
+    highlight: tango
+---
+
+
+```{r setup, warning=FALSE, message=FALSE, results='hide'}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(R.utils)
+library(wbCorr)
+library(readxl)
+library(kableExtra)
+library(brms)
+library(bayesplot)
+library(beepr)
+
+
+source(file.path('Functions', 'ReportModels.R'))
+source(file.path('Functions', 'PrettyTables.R'))
+source(file.path('Functions', 'ReportMeasures.R'))
+source(file.path('Functions', 'PrepareData.R'))
+
+
+```
+
+
+```{r set_options}
+
+system("shutdown /a")
+
+# Set options for analysis
+use_mi = FALSE
+shutdown = FALSE
+report_ordinal = FALSE
+
+options(
+  dplyr.print_max = 100, 
+  brms.backend = 'cmdstan',
+  brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
+  error = function() beepr::beep(sound = 5)
+)
+
+
+```
+
+
+```{r prepare_datasets, results='asis'}
+
+df <- openxlsx::read.xlsx(file.path('long.xlsx'))
+df_original <- df
+
+# Importantly, we do not recode pushing here. 
+df_double <- prepare_data(df, recode_pushing = FALSE, use_mi = use_mi)[[1]]
+
+```
+
+
+# Modelling
+
+```{r set_report_order_persuasion}
+
+# For indistinguishable Dyads
+model_rows_fixed <- c(
+    'Intercept', 
+    # '-- WITHIN PERSON MAIN EFFECTS --', 
+    'persuasion_self_cw', 
+    'persuasion_partner_cw', 
+    'pressure_self_cw', 
+    'pressure_partner_cw', 
+    'pushing_self_cw', 
+    'pushing_partner_cw', 
+    'day', 
+    'weartime_self_cw',
+    
+    # '-- BETWEEN PERSON MAIN EFFECTS',
+    'persuasion_self_cb',
+    'persuasion_partner_cb',
+    'pressure_self_cb',
+    'pressure_partner_cb',
+    'pushing_self_cb',
+    'pushing_partner_cb',
+    'weartime_self_cb'
+  )
+
+
+model_rows_fixed_ordinal <- c(
+  model_rows_fixed[1],
+  'Intercept[1]',
+  'Intercept[2]',
+  'Intercept[3]',
+  'Intercept[4]',
+  'Intercept[5]',
+  model_rows_fixed[2:length(model_rows_fixed)]
+)
+
+model_rows_random <- c(
+  # '--------------',
+  # '-- RANDOM EFFECTS --',
+  'sd(Intercept)', 
+  'sd(persuasion_self_cw)',
+  'sd(persuasion_partner_cw)',
+  'sd(pressure_self_cw)',
+  'sd(pressure_partner_cw)',
+  'sd(pushing_self_cw)',
+  'sd(pushing_partner_cw)',
+  # '-- CORRELATION STRUCTURE -- ', 
+  'ar[1]', 
+  'nu',
+  'shape',
+  'sderr',
+  'sigma'
+)
+
+model_rows_random_ordinal <- c(model_rows_random,'disc')
+
+```
+
+
+```{r set_display_names}
+
+# For indistinguishable Dyads
+model_rownames_fixed <- c(
+    'Intercept', 
+    # '-- WITHIN PERSON MAIN EFFECTS --', 
+    'Daily perceived persuasion target -> target', 
+    'Daily perceived persuasion target -> agent', 
+    'Daily perceived pressure target -> target', 
+    'Daily perceived pressure target -> agent', 
+    'Daily perceived pushing target -> target', 
+    'Daily perceived pushing target -> agent', 
+    'Day', 
+    'Daily weartime',
+    
+    # '-- BETWEEN PERSON MAIN EFFECTS',
+    'Mean perceived persuasion target -> target',
+    'Mean Perceived persuasion target -> agent',
+    'Mean Perceived pressure target -> target',
+    'Mean Perceived pressure target -> agent',
+    'Mean Perceived pushing target -> target',
+    'Mean Perceived pushing target -> agent',
+    'Mean weartime'
+  )
+
+
+model_rownames_fixed_ordinal <- c(
+  model_rownames_fixed[1],
+  'Intercept[1]',
+  'Intercept[2]',
+  'Intercept[3]',
+  'Intercept[4]',
+  'Intercept[5]',
+  model_rownames_fixed[2:length(model_rownames_fixed)]
+)
+
+model_rownames_random <- c(
+  # '--------------',
+  # '-- RANDOM EFFECTS --',
+  'sd(Intercept)', 
+  'sd(Daily perceived persuasion target -> target)', 
+  'sd(Daily perceived persuasion target -> agent)', 
+  'sd(Daily perceived pressure target -> target)', 
+  'sd(Daily perceived pressure target -> agent)', 
+  'sd(Daily perceived pushing target -> target)', 
+  'sd(Daily perceived pushing target -> agent)', 
+  # '-- CORRELATION STRUCTURE -- ', 
+  'ar[1]', 
+  'nu',
+  'shape',
+  'sderr',
+  'sigma'
+)
+
+model_rownames_random_ordinal <- c(model_rownames_random,'disc')
+
+
+```
+
+
+```{r parameters_for_printing}
+
+rows_to_pack <- list(
+  "Within-Person Effects" = c(2,9),
+  "Between-Person Effects" = c(10,16),
+  "Random Effects" = c(17, 23), 
+  "Additional Parameters" = c(24,28)
+  )
+
+
+rows_to_pack_ordinal <- list(
+  "Intercepts" = c(1,6),
+  "Within-Person Effects" = c(2+5,9+5),
+  "Between-Person Effects" = c(10+5,16+5),
+  "Random Effects" = c(17+5, 23+5), 
+  "Additional Parameters" = c(24+5,28+6)
+  )
+
+```
+
+
+# Modelling without Pushing
+
+## Subjective MVPA
+
+```{r explore_pa_sub_dist}
+
+range(df_double$pa_sub, na.rm = T) 
+hist(df_double$pa_sub, breaks = 100) 
+
+```
+
+Modelling using the gaussian family fails. 
+Due to the many zeros, transformations won't help estimating the models. We employ the negative binomial family. 
+
+```{r pa_sub, results='hide', message=FALSE, warning=FALSE}
+
+
+formula <- bf(
+  pa_sub ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b"),
+  brms::set_prior("normal(0, 50)", class = "Intercept", lb = 0),
+  
+  brms::set_prior("normal(0, 10)", class = "sd", group = "coupleID", lb = 0),
+  
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 20)", class = "shape"), 
+  brms::set_prior("cauchy(0, 10)", class='sderr')
+)
+
+#df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+pa_sub <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::negbinomial(),
+  #control = list(adapt_delta = 0.99),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_pa_sub")
+)
+
+
+
+```
+
+
+```{r check_pa_sub, warning=FALSE}
+
+pp_check(pa_sub, type='hist')
+pp_check(pa_sub)
+
+loo(pa_sub)
+plot(pa_sub, ask = FALSE)
+
+```
+
+
+```{r report_pa_sub, results='asis', warning=FALSE}
+
+summarize_brms(
+  pa_sub, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = T) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+
+
+## Device Based MVPA 
+
+```{r explore_pa_obj_dist}
+
+range(df_double$pa_obj, na.rm = T) 
+hist(df_double$pa_obj, breaks = 50)
+
+df_double$pa_obj_log <- log(df_double$pa_obj)
+
+hist(df_double$pa_obj_log, breaks = 50)
+
+```
+
+We tried negative binomial here as well for consistency, but the model did not 
+converge. Poisson also did not work. As we have no zeros in this distribution, 
+we log transform. 
+
+
+
+```{r pa_obj_log, results='hide', message=FALSE, warning=FALSE}
+
+formula <- bf(
+  pa_obj_log ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+
+    day + weartime_self_cw + weartime_self_cb +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b"),
+  brms::set_prior("normal(0, 50)", class = "Intercept", lb = 0),
+  
+  brms::set_prior("normal(0, 10)", class = "sd", group = "coupleID", lb = 0),
+  
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+)
+
+
+#df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+pa_obj_log <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.99),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_pa_obj_log")
+)
+
+
+```
+
+
+```{r check_pa_obj_log, warning=FALSE}
+# plotting with the first imputed dataset. 
+pp_check(pa_obj_log, type='hist')
+pp_check(pa_obj_log)
+
+loo(pa_obj_log)
+plot(pa_obj_log, ask = FALSE)
+
+```
+
+
+
+```{r report_pa_obj_log, results='asis', warning=FALSE}
+
+summarize_brms(
+  pa_obj_log, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = T) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+
+
+## Affect
+
+```{r explore_aff_dist}
+
+range(df_double$aff, na.rm = T) 
+hist(df_double$aff, breaks = 15)
+
+```
+
+
+
+```{r mood, results='hide', results='hide', message=FALSE, warning=FALSE}
+
+
+formula <- bf(
+  aff ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b"),
+  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=6), # range of the outcome scale
+  
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
+
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+  
+)
+
+
+df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+mood <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_mood")
+)
+
+
+```
+
+
+```{r check_mood, warning=FALSE}
+
+pp_check(mood, type='hist')
+pp_check(mood)
+
+loo(mood)
+plot(mood, ask = FALSE)
+
+```
+
+```{r report_mood, results='asis', warning=FALSE}
+
+summarize_brms(
+  mood, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = F) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+
+## reactance
+
+```{r explore_reactance_dist}
+
+range(df_double$reactance, na.rm = T) 
+hist(df_double$reactance, breaks = 6)
+
+```
+
+
+
+```{r reactance, results='hide', message=FALSE, warning=FALSE}
+
+
+formula <- bf(
+  reactance ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b"),
+  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
+  
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
+
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+)
+
+
+df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+reactance <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_reactance")
+
+)
+
+
+```
+
+
+```{r check_reactance, warning=FALSE}
+
+pp_check(reactance, type='hist')
+pp_check(reactance)
+
+loo(reactance)
+plot(reactance, ask = FALSE)
+
+summary(reactance)
+
+```
+
+```{r report_reactance, results='asis', warning=FALSE}
+
+summarize_brms(
+  reactance, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = F) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+### Binary Version
+
+```{r is_reactance, results='hide', message=FALSE, warning=FALSE}
+
+introduce_binary_reactance <- function(data) {
+  data$is_reactance <- factor(data$reactance > 0, levels = c(FALSE, TRUE), labels = c(0, 1))
+  return(data)
+}
+
+
+df_double <- introduce_binary_reactance(df_double)
+if (use_mi) {
+  for (i in seq_along(implist)) {
+    implist[[i]] <- introduce_binary_reactance(implist[[i]])
+  }
+}
+
+formula <- bf(
+  is_reactance ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b"),
+  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
+  
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
+
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1)
+  #brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+)
+
+
+df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+is_reactance <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = bernoulli(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_is_reactance")
+
+)
+
+
+```
+
+```{r check_is_reactance, warning=FALSE}
+
+pp_check(is_reactance, type='hist')
+pp_check(is_reactance)
+
+try(loo(is_reactance))
+plot(is_reactance, ask = FALSE)
+
+```
+
+```{r report_is_reactance, results='asis', warning=FALSE}
+
+summarize_brms(
+  is_reactance, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = T) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+# Report All Models without Pushing
+
+```{r report_sidebyside_1, warning=FALSE}
+
+if (report_ordinal) {
+  model_rows_random_final <- model_rows_random_ordinal
+  model_rows_fixed_final <- model_rows_fixed_ordinal
+  model_rownames_fixed_final <- model_rownames_fixed_ordinal
+  model_rownames_random_final <- model_rownames_random_ordinal
+  rows_to_pack_final <- rows_to_pack_ordinal
+} else {
+  model_rows_random_final <- model_rows_random
+  model_rows_fixed_final <- model_rows_fixed
+  model_rownames_fixed_final <- model_rownames_fixed
+  model_rownames_random_final <- model_rownames_random
+  rows_to_pack_final <- rows_to_pack
+}
+
+
+
+all_models <- report_side_by_side(
+  pa_sub,
+  pa_obj_log,
+  mood,
+  reactance,
+  is_reactance,
+  
+  model_rows_random = model_rows_random_final,
+  model_rows_fixed = model_rows_fixed_final,
+  model_rownames_random = model_rownames_random_final,
+  model_rownames_fixed = model_rownames_fixed_final
+) 
+
+
+# pretty printing
+summary_all_models <- all_models %>%
+  print_df(rows_to_pack = rows_to_pack_final) %>%
+  add_header_above(
+    c(" ", "Subjective MVPA" = 2, 
+      "Device-Based MVPA" = 2, 
+      "Mood" = 2,
+      "Reactance Gaussian" = 2, 
+      "Reactance Dichotome" = 2)
+  )
+
+export_xlsx(summary_all_models, 
+            rows_to_pack = rows_to_pack_final,
+            file.path("Output", "SensitivityExcludePushing", "AllModels_noPushing.xlsx"),
+            merge_option = 'both', 
+            simplify_2nd_row = TRUE,
+            colwidths = c(40, 7.4, 12.85, 7.4, 12.85,7.4, 12.85,7.4, 12.85,7.4, 12.85),
+            line_above_rows = c(1,2,3,21),
+            line_below_rows = c(-1))
+
+summary_all_models
+
+```
+
+
+
+# Modelling ONLY Pushing
+Without recoding NAs.
+
+## Subjective MVPA
+
+```{r pa_sub_onlyp, results='hide', message=FALSE, warning=FALSE}
+
+
+formula <- bf(
+  pa_sub ~ 
+    pushing_self_cw + pushing_partner_cw +
+    
+    pushing_self_cb + pushing_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (pushing_self_cw + pushing_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b"),
+  brms::set_prior("normal(0, 50)", class = "Intercept", lb = 0),
+  
+  brms::set_prior("normal(0, 10)", class = "sd", group = "coupleID", lb = 0),
+  
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 20)", class = "shape"), 
+  brms::set_prior("cauchy(0, 10)", class='sderr')
+)
+
+#df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+pa_sub <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::negbinomial(),
+  #control = list(adapt_delta = 0.99),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_pa_sub_onlyp")
+)
+
+
+
+```
+
+
+```{r check_pa_sub_onlyp, warning=FALSE}
+
+pp_check(pa_sub, type='hist')
+pp_check(pa_sub)
+
+loo(pa_sub)
+plot(pa_sub, ask = FALSE)
+
+```
+
+
+```{r report_pa_sub_onlyp, results='asis', warning=FALSE}
+
+summarize_brms(
+  pa_sub, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = T) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+
+
+## Device Based MVPA 
+
+
+```{r pa_obj_log_onlyp, results='hide', message=FALSE, warning=FALSE}
+
+formula <- bf(
+  pa_obj_log ~ 
+    pushing_self_cw + pushing_partner_cw +
+    
+    pushing_self_cb + pushing_partner_cb +
+
+    day + weartime_self_cw + weartime_self_cb +
+    
+    # Random effects
+    (pushing_self_cw + pushing_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b"),
+  brms::set_prior("normal(0, 50)", class = "Intercept", lb = 0),
+  
+  brms::set_prior("normal(0, 10)", class = "sd", group = "coupleID", lb = 0),
+  
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+)
+
+
+#df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+pa_obj_log <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.99),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_pa_obj_log_onlyp")
+)
+
+
+```
+
+
+```{r check_pa_obj_log_onlyp, warning=FALSE}
+# plotting with the first imputed dataset. 
+pp_check(pa_obj_log, type='hist')
+pp_check(pa_obj_log)
+
+loo(pa_obj_log)
+plot(pa_obj_log, ask = FALSE)
+
+```
+
+
+
+```{r report_pa_obj_log_onlyp, results='asis', warning=FALSE}
+
+summarize_brms(
+  pa_obj_log, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = T) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+
+
+## Affect
+
+
+```{r mood_onlyp, results='hide', results='hide', message=FALSE, warning=FALSE}
+
+
+formula <- bf(
+  aff ~ 
+    pushing_self_cw + pushing_partner_cw +
+    
+    pushing_self_cb + pushing_partner_cb +
+    
+    day +
+    
+    # Random effects
+    (pushing_self_cw + pushing_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b"),
+  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=6), # range of the outcome scale
+  
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
+
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+  
+)
+
+
+df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+mood <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_mood_onlyp")
+)
+
+
+```
+
+
+```{r check_mood_onlyp, warning=FALSE}
+
+pp_check(mood, type='hist')
+pp_check(mood)
+
+loo(mood)
+plot(mood, ask = FALSE)
+
+```
+
+```{r report_mood_onlyp, results='asis', warning=FALSE}
+
+summarize_brms(
+  mood, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = F) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+
+## reactance
+
+
+```{r reactance_onlyp, results='hide', message=FALSE, warning=FALSE}
+
+
+formula <- bf(
+  reactance ~ 
+    pushing_self_cw + pushing_partner_cw +
+    
+    pushing_self_cb + pushing_partner_cb +
+
+    day +
+    
+    # Random effects
+    (persuasion_self_cw + persuasion_partner_cw | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b"),
+  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
+  
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
+
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+)
+
+
+df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+reactance <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_reactance_onlyp")
+)
+
+
+```
+
+
+```{r check_reactance_onlyp, warning=FALSE}
+
+pp_check(reactance, type='hist')
+pp_check(reactance)
+
+loo(reactance)
+plot(reactance, ask = FALSE)
+
+summary(reactance)
+
+```
+
+```{r report_reactance_onlyp, results='asis', warning=FALSE}
+
+summarize_brms(
+  reactance, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = F) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+
+### Binary Version
+
+```{r is_reactance_onlyp, results='hide', message=FALSE, warning=FALSE}
+
+introduce_binary_reactance <- function(data) {
+  data$is_reactance <- factor(data$reactance > 0, levels = c(FALSE, TRUE), labels = c(0, 1))
+  return(data)
+}
+
+
+
+df_double <- introduce_binary_reactance(df_double)
+if (use_mi) {
+  for (i in seq_along(implist)) {
+    implist[[i]] <- introduce_binary_reactance(implist[[i]])
+  }
+}
+
+formula <- bf(
+  is_reactance ~ 
+    pushing_self_cw + pushing_partner_cw +
+    
+    pushing_self_cb + pushing_partner_cb +
+
+    day +
+    
+    # Random effects
+    (pushing_self_cw + pushing_partner_cw +
+    
+    pushing_self_cb + pushing_partner_cb | coupleID),
+
+  autocor = ~ ar(time = day, gr = coupleID:userID, p = 1)
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b"),
+  brms::set_prior("normal(0, 20)", class = "Intercept", lb=0, ub=5), # range of the outcome scale
+  
+  brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0),
+
+  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1)
+  #brms::set_prior("cauchy(0, 10)", class = "sigma", lb = 0)
+)
+
+
+df_minimal <- df_double[, c("userID", all.vars(as.formula(formula)))]
+
+is_reactance <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = bernoulli(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = 5000,
+  warmup = 2000,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", "exclude_pushing_is_reactance_onlyp")
+)
+
+
+```
+
+```{r check_is_reactance_onlyp, warning=FALSE}
+
+pp_check(is_reactance, type='hist')
+pp_check(is_reactance)
+
+try(loo(is_reactance))
+plot(is_reactance, ask = FALSE)
+
+```
+
+```{r report_is_reactance_onlyp, results='asis', warning=FALSE}
+
+summarize_brms(
+  is_reactance, 
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = T) %>%
+  print_df(rows_to_pack = rows_to_pack)
+
+```
+
+# Report All Models Pushing Only
+
+```{r report_sidebyside_2, warning=FALSE}
+
+
+if (report_ordinal) {
+  model_rows_random_final <- model_rows_random_ordinal
+  model_rows_fixed_final <- model_rows_fixed_ordinal
+  model_rownames_fixed_final <- model_rownames_fixed_ordinal
+  model_rownames_random_final <- model_rownames_random_ordinal
+  rows_to_pack_final <- rows_to_pack_ordinal
+} else {
+  model_rows_random_final <- model_rows_random
+  model_rows_fixed_final <- model_rows_fixed
+  model_rownames_fixed_final <- model_rownames_fixed
+  model_rownames_random_final <- model_rownames_random
+  rows_to_pack_final <- rows_to_pack
+}
+
+
+
+all_models <- report_side_by_side(
+  pa_sub,
+  pa_obj_log,
+  mood,
+  reactance,
+  is_reactance,
+  
+  model_rows_random = model_rows_random_final,
+  model_rows_fixed = model_rows_fixed_final,
+  model_rownames_random = model_rownames_random_final,
+  model_rownames_fixed = model_rownames_fixed_final
+) 
+
+
+# pretty printing
+summary_all_models <- all_models %>%
+  print_df(rows_to_pack = rows_to_pack_final) %>%
+  add_header_above(
+    c(" ", "Subjective MVPA" = 2, 
+      "Device-Based MVPA" = 2, 
+      "Mood" = 2,
+      "Reactance Gaussian" = 2, 
+      "Reactance Dichotome" = 2)
+  )
+
+export_xlsx(summary_all_models, 
+            rows_to_pack = rows_to_pack_final,
+            file.path("Output", "SensitivityExcludePushing", "AllModels_onlyPushing.xlsx"),
+            merge_option = 'both', 
+            simplify_2nd_row = TRUE,
+            colwidths = c(40, 7.4, 12.85, 7.4, 12.85,7.4, 12.85,7.4, 12.85,7.4, 12.85),
+            line_above_rows = c(1,2,3,21),
+            line_below_rows = c(-1))
+
+summary_all_models
+
+
+```
+
+
+```{r report_system, results='asis'}
+
+report::report_system()
+report::cite_packages()
+
+```
+
+
+```{r shut_system_down, results='hide', echo=FALSE, message=FALSE, warning=FALSE}
+
+if (shutdown) {
+  system("shutdown /s /t 180")
+}
+
+beepr::beep(sound = 3)
+
+
+```
+
+
+
+
