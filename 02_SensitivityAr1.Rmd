@@ -605,6 +605,35 @@ summarize_brms(
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
+mcmc_plot(pa_sub,
+          variable = c(
+            'b_persuasion_self_cw',
+            'b_persuasion_partner_cw',
+            'b_pressure_self_cw',
+            'b_pressure_partner_cw',
+            'b_pushing_self_cw',
+            'b_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
+
+
+
+mcmc_plot(pa_sub,
+          variable = c(
+            'b_hu_persuasion_self_cw',
+            'b_hu_persuasion_partner_cw',
+            'b_hu_pressure_self_cw',
+            'b_hu_pressure_partner_cw',
+            'b_hu_pushing_self_cw',
+            'b_hu_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
+
+
 ```
 
 
@@ -706,6 +735,22 @@ summarize_brms(
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
+
+mcmc_plot(pa_sub_zero_model,
+          variable = c(
+            'b_persuasion_self_cw',
+            'b_persuasion_partner_cw',
+            'b_pressure_self_cw',
+            'b_pressure_partner_cw',
+            'b_pushing_self_cw',
+            'b_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
+
+
+
 ```
 
 
@@ -796,6 +841,20 @@ summarize_brms(
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack_hu
 )
+
+
+mcmc_plot(pa_sub_active_model,
+          variable = c(
+            'b_persuasion_self_cw',
+            'b_persuasion_partner_cw',
+            'b_pressure_self_cw',
+            'b_pressure_partner_cw',
+            'b_pushing_self_cw',
+            'b_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
 
 ```
 
@@ -904,6 +963,21 @@ summarize_brms(
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
+
+mcmc_plot(pa_obj_log,
+          variable = c(
+            'b_persuasion_self_cw',
+            'b_persuasion_partner_cw',
+            'b_pressure_self_cw',
+            'b_pressure_partner_cw',
+            'b_pushing_self_cw',
+            'b_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
+
+
 ```
 
 
@@ -1003,6 +1077,20 @@ summarize_brms(
   exponentiate = F,
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack)
+
+mcmc_plot(mood_gauss,
+          variable = c(
+            'b_persuasion_self_cw',
+            'b_persuasion_partner_cw',
+            'b_pressure_self_cw',
+            'b_pressure_partner_cw',
+            'b_pushing_self_cw',
+            'b_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
+
 
 ```
 
@@ -1112,6 +1200,20 @@ summarize_brms(
   exponentiate = T,
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack_ordinal)
+
+
+mcmc_plot(reactance_ordinal,
+          variable = c(
+            'b_persuasion_self_cw',
+            'b_persuasion_partner_cw',
+            'b_pressure_self_cw',
+            'b_pressure_partner_cw',
+            'b_pushing_self_cw',
+            'b_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
 
 ```
 
@@ -1226,6 +1328,20 @@ summarize_brms(
   exponentiate = T,
   include_p_direction = T) %>%
   print_df(rows_to_pack = rows_to_pack)
+
+
+mcmc_plot(is_reactance,
+          variable = c(
+            'b_persuasion_self_cw',
+            'b_persuasion_partner_cw',
+            'b_pressure_self_cw',
+            'b_pressure_partner_cw',
+            'b_pushing_self_cw',
+            'b_pushing_partner_cw'
+          ),
+          #regex = TRUE,
+          type = 'areas',
+          prob = 0.95)
 
 ```
 

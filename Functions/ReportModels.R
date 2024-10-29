@@ -95,137 +95,6 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
 }
 
 
-# Functions to facilitate reporting
-summarize_brms <- function(model, short_version = FALSE, 
-                           exponentiate = FALSE, 
-                           model_rows_fixed = NULL, 
-                           model_rows_random = NULL,
-                           model_rownames_fixed = NULL,
-                           model_rownames_random = NULL,
-                           p_direction = FALSE) {
-  
-  summ_og <- summary(model)
-  summ <- summ_og$fixed
-  rands <- summ_og$random[[1]][grep('sd\\(', rownames(summ_og$random[[1]])), ]
-  
-  ar1sterr <- summ_og$cor_pars
-  sdresid <- summ_og$spec_pars
-  
-  rands <- rbind(rands, ar1sterr, sdresid)
-  
-  # Get rows that we need
-  if (is.null(model_rows_fixed)) {
-    model_rows_fixed <- rownames(summ)
-  }
-  if (is.null(model_rows_random)) {
-    model_rows_random <- rownames(rands)
-  }
-  
-  summ <- summ[model_rows_fixed, ]
-  rands <- format(round(rands[model_rows_random, ], 2), nsmall = 2)
-  
-  Rhat <- format(round(summ$Rhat, 3), nsmall = 3)
-  
-  summ$Est.Error <- format(round(summ$Est.Error, 2), nsmall=2)
-  summ$Bulk_ESS <- format(round(summ$Bulk_ESS, 2), nsmall=2)
-  summ$Tail_ESS <- format(round(summ$Tail_ESS, 2), nsmall=2)
-  
-  #exponentiate if needed
-  if (exponentiate) {
-    summ$Estimate <- exp(summ$Estimate)
-  }
-  
-  # Add stars based on Credible Interval
-  significance <- ifelse(
-    (summ$`l-95% CI` > 0 & summ$`u-95% CI` > 0) | 
-      (summ$`l-95% CI` < 0 & summ$`u-95% CI` < 0), 
-    '*', 
-    '')
-  
-  # exponentiate CI
-  if (exponentiate) {
-    summ$`u-95% CI`<- exp(summ$`u-95% CI`)
-    summ$`l-95% CI` <- exp(summ$`l-95% CI`)
-  }
-  
-  
-  
-  # Round CI
-  summ$`l-95% CI` <- format(round(summ$`l-95% CI`, 2), nsmall = 2)
-  summ$`u-95% CI` <- format(round(summ$`u-95% CI`, 2), nsmall = 2)
-  
-  
-  summ$Estimate <- ifelse( 
-    is.na(summ$Estimate), 
-    NA, 
-    paste0(
-      format(round(summ$Estimate,2), nsmall=2), 
-      significance
-    )
-  )
-  
-  
-  # Rename "Estimate" column correctly
-  if (exponentiate) {
-    if (model$family[[1]] %in% c('bernoulli', 'cumulative')) {
-      correct_name <- 'OR'
-    } else if (model$family[[1]] %in% c('negbinomial')) {
-      correct_name <- 'IRR'
-    } else {
-      correct_name <- 'exp(Est.)'
-      warning(
-        "Coefficients were exponentiated. Double check if this was intended."
-      )
-    }
-    
-  } else {
-    correct_name <- 'b'
-  }
-  
-  colnames(summ)[1] <- correct_name
-  colnames(rands)[1] <- correct_name
-  
-  
-  # Add rhat rounded to 3 digits back
-  summ$Rhat <- Rhat
-  
-  # Add back all rownames
-  if (!is.null(model_rownames_fixed)) {
-    rownames(summ) <- model_rownames_fixed
-  } else if(!is.null(model_rows_fixed)) {
-    rownames(summ) <- model_rows_fixed
-  }
-  
-  if (!is.null(model_rownames_random)) {
-    rownames(rands) <- model_rownames_random
-  } else if (!is.null(model_rows_random)) {
-    rownames(rands) <- model_rows_random
-  }
-  
-  # Add random effects to fixed effects df. 
-  fullrep <- rbind(summ, rands)
-  
-  # if we have multiple imputed datasets, Rhat values are not meaningful, so we remove them
-  summ$Rhat <- NA
-  
-  # We are finished, if we want the full table
-  if (!short_version) {
-    return(fullrep[ , c(1, 3, 4, 5, 6, 7)])
-  }
-  
-  
-  fullrep$`95% CI` <-  ifelse(
-    is.na(fullrep[correct_name]) |
-      is.na(fullrep$`u-95% CI`) |
-      grepl("NA", fullrep$`u-95% CI`) |
-      grepl("^\\s*NA\\s*$", fullrep[correct_name]),
-    NA,
-    paste0("[", fullrep$`l-95% CI`, ", ", fullrep$`u-95% CI`, "]")
-  )
-  
-  return(fullrep[ , c(1, 8)])
-}
-
 
 
 # New untested version:
@@ -235,8 +104,7 @@ summarize_brms <- function(model,
                            model_rows_fixed = NULL,
                            model_rows_random = NULL,
                            model_rownames_fixed = NULL,
-                           model_rownames_random = NULL,
-                           include_p_direction = FALSE) {
+                           model_rownames_random = NULL) {
   
   # Extract summaries
   summ_og <- summary(model)
@@ -245,24 +113,26 @@ summarize_brms <- function(model,
   random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars)
   
   # Add p_direction to fixed effects
-  if (include_p_direction) {
-
-    p_dir <- as.data.frame(bayestestR::p_direction(
-      model,
-      effects = 'fixed', 
-      component = 'conditional'
-      )
-    )
-    
-    p_dir <- p_dir$pd
-    
-    if (length(p_dir) != nrow(fixed_effects)) {
-      stop("Number of variables in p_direction and fixed_effects do not match.")
-    } 
-    
-    fixed_effects$p_direction <- round(p_dir, 3)
-    random_effects$p_direction <- NA
-  }
+  p_dir <- as.data.frame(bayestestR::p_direction(
+    model,
+    effects = 'fixed', 
+    component = 'conditional'
+  ))
+  
+  p_dir <- p_dir$pd
+  
+  if (length(p_dir) != nrow(fixed_effects)) {
+    stop("Number of variables in p_direction and fixed_effects do not match.")
+  } 
+  
+  fixed_effects$p_direction <- round(p_dir, 3)
+  random_effects$p_direction <- NA
+  
+  
+  
+  
+  
+  
   # Select rows
   model_rows_fixed <- model_rows_fixed %||% rownames(fixed_effects)
   model_rows_random <- model_rows_random %||% rownames(random_effects)
@@ -332,10 +202,7 @@ summarize_brms <- function(model,
   full_results <- rbind(fixed_effects, random_effects)
   
   if (!short_version) {
-    if (include_p_direction) {
-      return(full_results[, c(1, 3:8)])
-    }
-    return(full_results[, c(1, 3:7)])
+    return(full_results[, c(1, 3:8)])
   }
   
   # Create short version with CI

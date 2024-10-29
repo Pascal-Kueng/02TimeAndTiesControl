@@ -526,7 +526,8 @@ formula <- bf(
 ) 
 
 prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b")
+  brms::set_prior("normal(0, 1.5)", class = "b")
+  , brms::set_prior("normal(0, 2.5", class = "b", dpar = "hu")
   , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
   , brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
   
@@ -592,8 +593,7 @@ summarize_brms(
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
@@ -625,6 +625,11 @@ mcmc_plot(pa_sub,
           type = 'areas',
           prob = 0.95)
 
+bayesfac <- bayestestR::bayesfactor(
+  pa_sub,
+  effects = "fixed"
+)
+bayesfac
 
 ```
 
@@ -722,8 +727,7 @@ summarize_brms(
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
@@ -828,8 +832,7 @@ summarize_brms(
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
@@ -950,8 +953,7 @@ summarize_brms(
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
 mcmc_plot(pa_obj_log,
@@ -1063,8 +1065,7 @@ summarize_brms(
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = F,
-  include_p_direction = T) %>%
+  exponentiate = F) %>%
   print_df(rows_to_pack = rows_to_pack)
 
 mcmc_plot(mood_gauss,
@@ -1184,8 +1185,7 @@ summarize_brms(
   model_rows_random = model_rows_random_ordinal,
   model_rownames_fixed = model_rownames_fixed_ordinal,
   model_rownames_random = model_rownames_random_ordinal,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack_ordinal)
 
 
@@ -1307,8 +1307,7 @@ summarize_brms(
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
 mcmc_plot(is_reactance,

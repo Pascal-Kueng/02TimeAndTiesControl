@@ -1,11 +1,2 @@
-Knit failures log - 2024-10-09 03:54:11.18997 
-
-Failed to knit: 00ExperimentalAr.Rmd
-Error: 
-The following priors do not correspond to any model parameter: 
-<lower=0> sderr ~ cauchy(0, 2)
-<lower=-1,upper=1> ar ~ cauchy(0, 5)
-Function 'default_prior' might be helpful to you.
-
-
+Knit failures log - 2024-10-29 13:09:40.844517 
 
