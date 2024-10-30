@@ -219,6 +219,136 @@ summarize_brms <- function(model,
 }
 
 
+#### untested new version
+# Updated function to include Bayes Factor column
+summarize_brms <- function(model, 
+                           short_version = FALSE,
+                           exponentiate = FALSE,
+                           model_rows_fixed = NULL,
+                           model_rows_random = NULL,
+                           model_rownames_fixed = NULL,
+                           model_rownames_random = NULL) {
+  
+  # Extract summaries
+  summ_og <- summary(model)
+  fixed_effects <- summ_og$fixed
+  random_effects <- summ_og$random[[1]][grep('sd\\(', rownames(summ_og$random[[1]])), ]
+  random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars)
+  
+  # Add p_direction to fixed effects
+  p_dir <- as.data.frame(bayestestR::p_direction(
+    model,
+    effects = 'fixed', 
+    component = 'conditional'
+  ))
+  
+  p_dir <- p_dir$pd
+  
+  if (length(p_dir) != nrow(fixed_effects)) {
+    stop("Number of variables in p_direction and fixed_effects do not match.")
+  } 
+  
+  fixed_effects$p_direction <- round(p_dir, 3)
+  random_effects$p_direction <- NA
+  
+  # Calculate Bayes Factor for fixed effects
+  #bayesfac <- bayestestR::bayesfactor(
+  #  model,
+  #  effects = "fixed",
+  #  component = 'conditional'
+  #)
+  fixed_effects$Bayes_Factor <- ifelse(
+    exp(bayesfac$log_BF) > 100, 
+    '>100', 
+    sprintf("%.3f", exp(bayesfac$log_BF))
+  )
+  
+  random_effects$Bayes_Factor <- NA
+  # Select rows
+  model_rows_fixed <- model_rows_fixed %||% rownames(fixed_effects)
+  model_rows_random <- model_rows_random %||% rownames(random_effects)
+  
+  fixed_effects <- fixed_effects[model_rows_fixed, ]
+  random_effects <- format(round(random_effects[model_rows_random, ], 2), nsmall = 2)
+  
+  # Format fixed effects
+  format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
+  
+  fixed_effects$Est.Error <- format_number(fixed_effects$Est.Error)
+  fixed_effects$Bulk_ESS <- format_number(fixed_effects$Bulk_ESS)
+  fixed_effects$Tail_ESS <- format_number(fixed_effects$Tail_ESS)
+  Rhat <- format_number(fixed_effects$Rhat, 3)
+  
+  # Add significance stars
+  is_significant <- function(low, high) {
+    (low > 0 & high > 0) | (low < 0 & high < 0)
+  }
+  significance <- ifelse(
+    is_significant(fixed_effects$`l-95% CI`, fixed_effects$`u-95% CI`),
+    '*', 
+    ''
+  )
+  
+  # Handle exponentiation
+  if (exponentiate) {
+    fixed_effects$Estimate <- exp(fixed_effects$Estimate)
+    fixed_effects$`u-95% CI` <- exp(fixed_effects$`u-95% CI`)
+    fixed_effects$`l-95% CI` <- exp(fixed_effects$`l-95% CI`)
+  }
+  
+  # Format CIs
+  fixed_effects$`l-95% CI` <- format_number(fixed_effects$`l-95% CI`)
+  fixed_effects$`u-95% CI` <- format_number(fixed_effects$`u-95% CI`)
+  
+  # Format estimates with significance
+  fixed_effects$Estimate <- ifelse(
+    is.na(fixed_effects$Estimate),
+    NA,
+    paste0(format_number(fixed_effects$Estimate), significance)
+  )
+  
+  # Determine correct column name
+  correct_name <- if (exponentiate) {
+    if (model$family[[1]] %in% c('bernoulli', 'cumulative')) {
+      'OR'
+    } else if (model$family[[1]] == 'negbinomial') {
+      'IRR'
+    } else {
+      warning("Coefficients were exponentiated. Double check if this was intended.")
+      'exp(Est.)'
+    }
+  } else {
+    'b'
+  }
+  
+  # Rename columns
+  colnames(fixed_effects)[1] <- colnames(random_effects)[1] <- correct_name
+  
+  # Handle row names
+  if (!is.null(model_rownames_fixed)) rownames(fixed_effects) <- model_rownames_fixed
+  if (!is.null(model_rownames_random)) rownames(random_effects) <- model_rownames_random
+  
+  # Combine fixed and random effects
+  fixed_effects$Rhat <- Rhat
+  full_results <- rbind(fixed_effects, random_effects)
+  
+  if (!short_version) {
+    return(full_results[, c(1, 3:8, 9)])
+  }
+  
+  # Create short version with CI
+  full_results$`95% CI` <- ifelse(
+    is.na(full_results[[correct_name]]) | 
+      is.na(full_results$`u-95% CI`) | 
+      grepl("NA", full_results$`u-95% CI`) | 
+      grepl("^\\s*NA\\s*$", full_results[[correct_name]]),
+    NA,
+    paste0("[", full_results$`l-95% CI`, ", ", full_results$`u-95% CI`, "]")
+  )
+  
+  return(full_results[, c(1, 8)])
+}
+
 
 
 #### Check Models
@@ -243,7 +373,7 @@ check_brms <- function(
     transform = log1p
 ) { 
   rstan::check_hmc_diagnostics(model$fit)
-  plot(model, ask = FALSE, nvariables = 2)
+  plot(model, ask = FALSE, nvariables = 3)
   plot(pp_check(model, type = 'ecdf_overlay'))
   plot(pp_check(model))
   

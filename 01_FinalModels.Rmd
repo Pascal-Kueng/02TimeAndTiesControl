@@ -583,7 +583,7 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 ```
 In this instance, the warning about max treedepth is a false positive. We have set
 treedepth to 15, and when we check with shinystan, we see that treedepth is 
-continuously between 10 and 14.
+consistently between 10 and 14.
 
 ```{r report_pa_sub_poisson, results='asis'}
 
@@ -625,10 +625,12 @@ mcmc_plot(pa_sub,
           type = 'areas',
           prob = 0.95)
 
+
 bayesfac <- bayestestR::bayesfactor(
   pa_sub,
   effects = "fixed"
 )
+
 bayesfac
 
 ```
