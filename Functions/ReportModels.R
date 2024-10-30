@@ -252,18 +252,34 @@ summarize_brms <- function(model,
   random_effects$p_direction <- NA
   
   # Calculate Bayes Factor for fixed effects
-  #bayesfac <- bayestestR::bayesfactor(
-  #  model,
-  #  effects = "fixed",
-  #  component = 'conditional'
-  #)
+  bayesfac <- bayestestR::bayesfactor(
+    model,
+    effects = "fixed"
+  )
   fixed_effects$Bayes_Factor <- ifelse(
     exp(bayesfac$log_BF) > 100, 
     '>100', 
     sprintf("%.3f", exp(bayesfac$log_BF))
   )
   
+  # Add evidence interpretation using case_when for clarity
+  fixed_effects <- fixed_effects %>%
+    mutate(
+      Evidence = case_when(
+        exp(bayesfac$log_BF) > 100          ~ "Overwhelming Evidence",
+        exp(bayesfac$log_BF) > 30           ~ "Very Strong Evidence",
+        exp(bayesfac$log_BF) > 10           ~ "Strong Evidence",
+        exp(bayesfac$log_BF) > 3            ~ "Moderate Evidence",
+        exp(bayesfac$log_BF) > 1            ~ "Weak Evidence",
+        exp(bayesfac$log_BF) > 0.3          ~ "Weak Evidence for Null",
+        exp(bayesfac$log_BF) > 0.1          ~ "Moderate Evidence for Null",
+        exp(bayesfac$log_BF) > 0.03         ~ "Strong Evidence for Null",
+        TRUE                                ~ "Very Strong Evidence for Null"
+      )
+    )
+  
   random_effects$Bayes_Factor <- NA
+  random_effects$Evidence <- NA
   # Select rows
   model_rows_fixed <- model_rows_fixed %||% rownames(fixed_effects)
   model_rows_random <- model_rows_random %||% rownames(random_effects)
@@ -333,7 +349,7 @@ summarize_brms <- function(model,
   full_results <- rbind(fixed_effects, random_effects)
   
   if (!short_version) {
-    return(full_results[, c(1, 3:8, 9)])
+    return(full_results[, c(1, 3:10)])
   }
   
   # Create short version with CI

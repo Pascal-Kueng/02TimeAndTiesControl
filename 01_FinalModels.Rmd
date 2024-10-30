@@ -626,13 +626,6 @@ mcmc_plot(pa_sub,
           prob = 0.95)
 
 
-bayesfac <- bayestestR::bayesfactor(
-  pa_sub,
-  effects = "fixed"
-)
-
-bayesfac
-
 ```
 
 
