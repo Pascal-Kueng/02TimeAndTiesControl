@@ -227,7 +227,8 @@ summarize_brms <- function(model,
                            model_rows_fixed = NULL,
                            model_rows_random = NULL,
                            model_rownames_fixed = NULL,
-                           model_rownames_random = NULL) {
+                           model_rownames_random = NULL,
+                           plot_which_bayes_factor = c()) {
   
   # Extract summaries
   summ_og <- summary(model)
@@ -248,7 +249,7 @@ summarize_brms <- function(model,
     stop("Number of variables in p_direction and fixed_effects do not match.")
   } 
   
-  fixed_effects$p_direction <- round(p_dir, 3)
+  fixed_effects$p_direction <- format(round(p_dir, 3), nsmall = 2)
   random_effects$p_direction <- NA
   
   # Calculate Bayes Factor for fixed effects

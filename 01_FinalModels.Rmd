@@ -64,7 +64,7 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 5000
+iterations = 5000 # use 40'000
 warmup = 2000
 
 # NO AR!!!
@@ -623,9 +623,11 @@ mcmc_plot(pa_sub,
           ),
           #regex = TRUE,
           type = 'areas',
-          prob = 0.95)
+          prob = 0.95
+          )
 
-
+conditional_effects(pa_sub, effects = 'persuasion_self_cw')
+marginaleffects::plot_slopes(pa_sub, variables = 'persuasion_self_cw', condition = 'coupleID')
 ```
 
 
@@ -701,8 +703,6 @@ pa_sub_zero_model <- my_brm(
   file = file.path("models_cache_brms", paste0("pa_sub_hu_zero_part_NOAR", suffix))
 )
 
-
-
 ```
 
 
@@ -726,7 +726,7 @@ summarize_brms(
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
-mcmc_plot(pa_sub_zero_model,
+brms::mcmc_plot(pa_sub_zero_model,
           variable = c(
             'b_persuasion_self_cw',
             'b_persuasion_partner_cw',
@@ -739,6 +739,12 @@ mcmc_plot(pa_sub_zero_model,
           type = 'areas',
           prob = 0.95)
 
+plot(
+  bayestestR::p_direction(pa_sub_zero_model),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
 
 
 ```
@@ -843,6 +849,15 @@ mcmc_plot(pa_sub_active_model,
           #regex = TRUE,
           type = 'areas',
           prob = 0.95)
+
+plot(
+  bayestestR::p_direction(pa_sub_active_model),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
+
+
 
 
 ```
@@ -964,6 +979,16 @@ mcmc_plot(pa_obj_log,
           type = 'areas',
           prob = 0.95)
 
+plot(
+  bayestestR::p_direction(pa_obj_log),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
+
+
+
+
 ```
 
 
@@ -1075,6 +1100,16 @@ mcmc_plot(mood_gauss,
           #regex = TRUE,
           type = 'areas',
           prob = 0.95)
+
+plot(
+  bayestestR::p_direction(mood_gauss),
+  priors = TRUE
+)  + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
+
+
+
 
 ```
 
@@ -1197,6 +1232,16 @@ mcmc_plot(reactance_ordinal,
           type = 'areas',
           prob = 0.95)
 
+
+plot(
+  bayestestR::p_direction(reactance_ordinal),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-6, 6)) +
+  theme_bw()
+
+
+
 ```
 
 
@@ -1318,6 +1363,24 @@ mcmc_plot(is_reactance,
           type = 'areas',
           prob = 0.95)
 
+plot(
+  bayestestR::p_direction(is_reactance),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-6, 6)) +
+  theme_bw()
+
+```
+```{r}
+conditional_effects(
+  is_reactance,
+  effects = 'pressure_self_cw',
+  ask = FALSE
+)
+
+marginaleffects::avg_slopes(
+  is_reactance
+)
 ```
 
 
