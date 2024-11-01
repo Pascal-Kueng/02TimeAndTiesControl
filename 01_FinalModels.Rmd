@@ -648,6 +648,20 @@ conditional_spaghetti(
 
 ```
 
+```{r pa_sub_lognormal_marginaleffects}
+
+marginaleffects::avg_predictions(pa_sub)
+marginaleffects::avg_slopes(
+  pa_sub, 
+  variables = c('persuasion_self_cw',
+              'persuasion_partner_cw',
+              'pressure_self_cw',
+              'pressure_partner_cw',
+              'pushing_self_cw',
+              'pushing_partner_cw')
+  )
+
+```
 
 Additionally, as a sensitivity analysis, we estimate the two part of the models separately. 
 
@@ -777,6 +791,20 @@ conditional_spaghetti(
 
 ```
 
+```{r pa_sub_zero_marginaleffects}
+
+marginaleffects::avg_predictions(pa_sub_zero_model)
+marginaleffects::avg_slopes(
+  pa_sub_zero_model, 
+  variables = c('persuasion_self_cw',
+              'persuasion_partner_cw',
+              'pressure_self_cw',
+              'pressure_partner_cw',
+              'pushing_self_cw',
+              'pushing_partner_cw')
+  )
+
+```
 
 ### Modelling active Days
 ```{r pa_sub_separate_active, results='hide', message=FALSE}
@@ -897,7 +925,20 @@ conditional_spaghetti(
 
 ```
 
+```{r pa_sub_active_model_marginaleffects}
 
+marginaleffects::avg_predictions(pa_sub_active_model)
+marginaleffects::avg_slopes(
+  pa_sub_active_model, 
+  variables = c('persuasion_self_cw',
+              'persuasion_partner_cw',
+              'pressure_self_cw',
+              'pressure_partner_cw',
+              'pushing_self_cw',
+              'pushing_partner_cw')
+  )
+
+```
 
 ## Device Based MVPA 
 
@@ -1026,8 +1067,22 @@ plot(
 
 ```
 
+# Nothing significant, no plots
 
+#```{r pa_obj_log_model_marginaleffects}
 
+marginaleffects::avg_predictions(pa_obj_log)
+marginaleffects::avg_slopes(
+  pa_obj_log, 
+  variables = c('persuasion_self_cw',
+              'persuasion_partner_cw',
+              'pressure_self_cw',
+              'pressure_partner_cw',
+              'pushing_self_cw',
+              'pushing_partner_cw')
+  )
+
+#```
 
 
 ## Affect
@@ -1154,6 +1209,16 @@ conditional_spaghetti(
 ```
 
 
+
+```{r mood_gauss_marginaleffects}
+
+marginaleffects::avg_predictions(mood_gauss)
+marginaleffects::avg_slopes(
+  mood_gauss, 
+  variables = c('pushing_partner_cw')
+  )
+
+```
 
 ## Reactance
 
@@ -1284,14 +1349,21 @@ conditional_spaghetti(
   reactance_ordinal, 
   effects = c('persuasion_self_cw', 'pressure_self_cw')
   , group_var = 'coupleID'
-  , n_groups = 10,
-  plot_full_range = TRUE
+  , n_groups = 10
   )
 
 
 ```
 
+```{r reactance_ordinal_marginaleffects}
 
+marginaleffects::avg_predictions(reactance_ordinal)
+marginaleffects::avg_slopes(
+  reactance_ordinal, 
+  variables = c('persuasion_self_cw', 'pressure_self_cw')
+  )
+
+```
 
 ### Binary 
 
@@ -1427,6 +1499,17 @@ conditional_spaghetti(
 
 ```
 
+
+```{r is_reactance_marginaleffects}
+
+marginaleffects::avg_predictions(is_reactance)
+marginaleffects::avg_slopes(
+  is_reactance, 
+  variables = c('pressure_self_cw',
+              'pushing_self_cw')
+  )
+
+```
 
 ```{r testingdifferencecoefsbinary}
 
