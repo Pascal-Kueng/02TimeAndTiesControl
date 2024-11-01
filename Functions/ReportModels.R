@@ -548,7 +548,7 @@ plot_general_model <- function(
     # Calculate credible intervals
     ci_bounds_fixed <- sapply(predictor_range, function(x_val) {
       lp <- fixed_intercept_samples + fixed_slope_samples * x_val
-      if (model$family$family == 'lognormal') {
+      if (grepl("lognormal", model$family$family)) {
         # For each sample, compute expected value
         response_samples <- exp(lp + 0.5 * sigma_samples^2)
       } else {
@@ -672,7 +672,7 @@ plot_general_model <- function(
         
         # Generate individual-level predictions
         lp <- individual_intercept + individual_slope * predictor_range_group
-        if (model$family$family == 'lognormal') {
+        if (grepl("lognormal", model$family$family)) {
           # Expected value for lognormal
           response <- exp(lp + 0.5 * sigma_central^2)
         } else {
@@ -744,7 +744,7 @@ plot_hurdle_model <- function(
   posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
   
   # Extract sigma samples if necessary
-  if (model$family$family == 'lognormal') {
+  if (grepl("lognormal", model$family$family)) {
     sigma_samples <- posterior_samples$sigma
   }
   
@@ -815,7 +815,7 @@ plot_hurdle_model <- function(
       fixed_slope_central_count <- median(fixed_slope_samples_count)
       fixed_intercept_central_hurdle <- median(fixed_intercept_samples_hurdle)
       fixed_slope_central_hurdle <- median(fixed_slope_samples_hurdle)
-      if (model$family$family == 'lognormal') {
+      if (grepl("lognormal", model$family$family)) {
         sigma_central <- median(sigma_samples)
       }
     } else {
@@ -824,7 +824,7 @@ plot_hurdle_model <- function(
       fixed_slope_central_count <- mean(fixed_slope_samples_count)
       fixed_intercept_central_hurdle <- mean(fixed_intercept_samples_hurdle)
       fixed_slope_central_hurdle <- mean(fixed_slope_samples_hurdle)
-      if (model$family$family == 'lognormal') {
+      if (grepl("lognormal", model$family$family)) {
         sigma_central <- mean(sigma_samples)
       }
     }
@@ -834,7 +834,7 @@ plot_hurdle_model <- function(
     linear_predictor_hurdle <- fixed_intercept_central_hurdle + fixed_slope_central_hurdle * predictor_range
     
     # Apply inverse link functions
-    if (model$family$family == 'lognormal') {
+    if (grepl("lognormal", model$family$family)) {
       mu_count <- exp(linear_predictor_count + 0.5 * sigma_central^2)
     } else {
       mu_count <- reverse_link_count(linear_predictor_count)
@@ -870,7 +870,7 @@ plot_hurdle_model <- function(
     # Calculate credible intervals for each component
     ci_bounds_count <- sapply(predictor_range, function(x_val) {
       lp <- fixed_intercept_samples_count + fixed_slope_samples_count * x_val
-      if (model$family$family == 'lognormal') {
+      if (grepl("lognormal", model$family$family)) {
         response_samples <- exp(lp + 0.5 * sigma_samples^2)
       } else {
         response_samples <- reverse_link_count(lp)
@@ -898,7 +898,7 @@ plot_hurdle_model <- function(
     ci_bounds_combined <- sapply(predictor_range, function(x_val) {
       lp_count <- fixed_intercept_samples_count + fixed_slope_samples_count * x_val
       lp_hurdle <- fixed_intercept_samples_hurdle + fixed_slope_samples_hurdle * x_val
-      if (model$family$family == 'lognormal') {
+      if (grepl("lognormal", model$family$family)) {
         mu_count_samples <- exp(lp_count + 0.5 * sigma_samples^2)
       } else {
         mu_count_samples <- reverse_link_count(lp_count)
@@ -930,7 +930,7 @@ plot_hurdle_model <- function(
       labs(
         title = paste("Count Component:", x_lab),
         x = x_lab,
-        y = ifelse(model$family$family == 'lognormal',
+        y = ifelse(grepl("lognormal", model$family$family),
                    "Expected Value Given Positive Outcome",
                    "Expected Count Given Positive Outcome")
       ) +
@@ -1104,7 +1104,7 @@ plot_hurdle_model <- function(
         # Generate individual-level predictions
         # For count component
         lp_count <- individual_intercept_count + individual_slope_count * predictor_range_group
-        if (model$family$family == 'lognormal') {
+        if (grepl("lognormal", model$family$family)) {
           mu_count <- exp(lp_count + 0.5 * sigma_central^2)
         } else {
           mu_count <- reverse_link_count(lp_count)
