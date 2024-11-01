@@ -64,8 +64,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 5000 # use 40'000
-warmup = 2000
+iterations = 43000 # use 40'000
+warmup = 3000
 
 # NO AR!!!
 #corstr = 'ar'

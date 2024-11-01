@@ -723,7 +723,7 @@ plot_general_model <- function(
 
 
 
-# Function for hurdle and zero-inflated models (corrected and complete)
+# Function for hurdle and zero-inflated models (corrected to handle random effects properly)
 plot_hurdle_model <- function(
     model,
     effects,
@@ -915,8 +915,6 @@ plot_hurdle_model <- function(
     fixed_predictions_combined$upper <- apply(ci_bounds_combined, 2, quantile, probs = 0.975)
     
     # Create plots for each component
-    
-    # Count Component Plot
     p_count <- ggplot() +
       geom_ribbon(
         data = fixed_predictions_count,
@@ -943,7 +941,6 @@ plot_hurdle_model <- function(
         panel.grid.minor = element_blank()
       )
     
-    # Hurdle Component Plot
     p_hurdle <- ggplot() +
       geom_ribbon(
         data = fixed_predictions_hurdle,
@@ -968,7 +965,6 @@ plot_hurdle_model <- function(
         panel.grid.minor = element_blank()
       )
     
-    # Combined Expected Value Plot
     p_combined <- ggplot() +
       geom_ribbon(
         data = fixed_predictions_combined,
@@ -993,6 +989,196 @@ plot_hurdle_model <- function(
         panel.grid.minor = element_blank()
       )
     
+    # If group_var is provided, add random effects
+    if (!is.null(group_var)) {
+      # Extract random effects for count component, including .draw
+      random_effects_prefix_count <- paste0("r_", group_var)
+      random_effects_pattern_count <- paste0("r_", group_var, "\\[(.*),(.+)]")
+      random_effects_count <- posterior_samples %>%
+        select(.draw, starts_with(random_effects_prefix_count)) %>%
+        select(-matches(paste0("__", hurdle_component))) %>% # Exclude hurdle component random effects
+        pivot_longer(
+          cols = -c(.draw),
+          names_to = c("group_level", ".value"),
+          names_pattern = random_effects_pattern_count
+        ) %>%
+        mutate(group_level = as.character(group_level))
+      
+      # Random effects for hurdle component, including .draw
+      random_effects_prefix_hurdle <- paste0("r_", group_var, "__", hurdle_component)
+      random_effects_pattern_hurdle <- paste0("r_", group_var, "__", hurdle_component, "\\[(.*),(.+)]")
+      random_effects_hurdle <- posterior_samples %>%
+        select(.draw, starts_with(random_effects_prefix_hurdle)) %>%
+        pivot_longer(
+          cols = -c(.draw),
+          names_to = c("group_level", ".value"),
+          names_pattern = random_effects_pattern_hurdle
+        ) %>%
+        mutate(group_level = as.character(group_level))
+      
+      # Adjust column names to distinguish between count and hurdle components
+      names(random_effects_count)[-(1:2)] <- paste0(names(random_effects_count)[-(1:2)], "_count")
+      names(random_effects_hurdle)[-(1:2)] <- paste0(names(random_effects_hurdle)[-(1:2)], "_hurdle")
+      
+      # Merge random effects from both components using .draw and group_level
+      random_effects <- full_join(random_effects_count, random_effects_hurdle, by = c("group_level", ".draw"))
+      
+      # Handle missing random effects
+      random_slope_name <- e
+      if (!paste0(random_slope_name, "_count") %in% names(random_effects)) {
+        random_effects[[paste0(random_slope_name, "_count")]] <- 0
+      }
+      if (!paste0(random_slope_name, "_hurdle") %in% names(random_effects)) {
+        random_effects[[paste0(random_slope_name, "_hurdle")]] <- 0
+      }
+      if (!"Intercept_count" %in% names(random_effects)) {
+        random_effects$Intercept_count <- 0
+      }
+      if (!"Intercept_hurdle" %in% names(random_effects)) {
+        random_effects$Intercept_hurdle <- 0
+      }
+      
+      # Determine which group levels to include
+      unique_groups <- unique(random_effects$group_level)
+      if (!is.null(n_groups)) {
+        if (n_groups < length(unique_groups)) {
+          if (!is.null(seed)) {
+            set.seed(seed)  # Set seed for reproducibility
+          }
+          selected_groups <- sample(unique_groups, n_groups)
+        } else {
+          selected_groups <- unique_groups
+        }
+      } else {
+        selected_groups <- unique_groups
+      }
+      
+      # Filter random effects to include only selected group levels
+      random_effects <- random_effects %>% filter(group_level %in% selected_groups)
+      
+      # Generate individual-level predictions
+      individual_predictions <- do.call(rbind, lapply(selected_groups, function(j) {
+        # Filter for the posterior samples of this specific group
+        individual_samples <- random_effects %>% filter(group_level == j)
+        
+        # Compute the combined intercept and slope for this group
+        if (robust) {
+          # Use median for robust summaries
+          individual_intercept_count <- fixed_intercept_central_count + median(individual_samples$Intercept_count, na.rm = TRUE)
+          individual_slope_count <- fixed_slope_central_count + median(individual_samples[[paste0(e, "_count")]], na.rm = TRUE)
+          individual_intercept_hurdle <- fixed_intercept_central_hurdle + median(individual_samples$Intercept_hurdle, na.rm = TRUE)
+          individual_slope_hurdle <- fixed_slope_central_hurdle + median(individual_samples[[paste0(e, "_hurdle")]], na.rm = TRUE)
+        } else {
+          # Use mean for traditional summaries
+          individual_intercept_count <- fixed_intercept_central_count + mean(individual_samples$Intercept_count, na.rm = TRUE)
+          individual_slope_count <- fixed_slope_central_count + mean(individual_samples[[paste0(e, "_count")]], na.rm = TRUE)
+          individual_intercept_hurdle <- fixed_intercept_central_hurdle + mean(individual_samples$Intercept_hurdle, na.rm = TRUE)
+          individual_slope_hurdle <- fixed_slope_central_hurdle + mean(individual_samples[[paste0(e, "_hurdle")]], na.rm = TRUE)
+        }
+        
+        # Determine predictor range for this group
+        if (plot_full_range) {
+          # Use the full predictor range
+          predictor_range_group <- predictor_range
+        } else {
+          # Get the data for this group
+          group_data <- model$data[model$data[[group_var]] == j, ]
+          
+          # Check if there is data for this group
+          if (nrow(group_data) == 0) {
+            return(NULL)
+          }
+          
+          # Get the range of predictor 'e' for this group
+          min_e <- min(group_data[[e]], na.rm = TRUE)
+          max_e <- max(group_data[[e]], na.rm = TRUE)
+          
+          # Handle case where min and max are the same
+          if (min_e == max_e) {
+            predictor_range_group <- min_e
+          } else {
+            predictor_range_group <- seq(min_e, max_e, length.out = 100)
+          }
+        }
+        
+        # Generate individual-level predictions
+        # For count component
+        lp_count <- individual_intercept_count + individual_slope_count * predictor_range_group
+        if (model$family$family == 'lognormal') {
+          mu_count <- exp(lp_count + 0.5 * sigma_central^2)
+        } else {
+          mu_count <- reverse_link_count(lp_count)
+        }
+        
+        # For hurdle component
+        lp_hurdle <- individual_intercept_hurdle + individual_slope_hurdle * predictor_range_group
+        prob_zero <- reverse_link_hurdle(lp_hurdle)
+        prob_positive <- 1 - prob_zero
+        
+        # Expected value
+        expected_value <- prob_positive * mu_count
+        
+        # Apply custom transformation if provided
+        if (!is.null(transform_fn)) {
+          mu_count <- transform_fn(mu_count)
+          prob_positive <- transform_fn(prob_positive)
+          expected_value <- transform_fn(expected_value)
+        }
+        
+        # Return data frames for each component
+        data.frame(
+          group_level = j,
+          x_value = predictor_range_group,
+          mu_count = mu_count,
+          prob_positive = prob_positive,
+          expected_value = expected_value
+        )
+      }))
+      
+      # Remove any NULL elements (in case some groups had no data)
+      individual_predictions <- individual_predictions %>% filter(!is.na(expected_value))
+      
+      # Add individual lines to the plots
+      # For count component
+      p_count <- p_count +
+        geom_line(
+          data = individual_predictions,
+          aes(x = x_value, y = mu_count, group = group_level),
+          color = "grey50",
+          size = 0.3,
+          alpha = 0.8
+        ) +
+        labs(
+          title = paste("Conditional Fixed and Random Effects (Count Component):", x_lab)
+        )
+      
+      # For hurdle component
+      p_hurdle <- p_hurdle +
+        geom_line(
+          data = individual_predictions,
+          aes(x = x_value, y = prob_positive, group = group_level),
+          color = "grey50",
+          size = 0.3,
+          alpha = 0.8
+        ) +
+        labs(
+          title = paste("Conditional Fixed and Random Effects (Hurdle Component):", x_lab)
+        )
+      
+      # For combined expected value
+      p_combined <- p_combined +
+        geom_line(
+          data = individual_predictions,
+          aes(x = x_value, y = expected_value, group = group_level),
+          color = "grey50",
+          size = 0.3,
+          alpha = 0.8
+        ) +
+        labs(
+          title = paste("Conditional Fixed and Random Effects (Combined):", x_lab)
+        )
+    }
+    
     # Apply x and y limits if specified
     if (!is.null(x_limits)) {
       p_count <- p_count + xlim(x_limits)
@@ -1013,8 +1199,6 @@ plot_hurdle_model <- function(
   
   return(plots_list)
 }
-
-
 
 
 
