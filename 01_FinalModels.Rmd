@@ -633,7 +633,18 @@ plot(
   #coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
-conditional_spaghetti(pa_sub, effects = c('persuasion_self_cw', 'pressure_self_cw'))
+conditional_spaghetti(
+  pa_sub, 
+  effects = c('persuasion_self_cw',
+              'persuasion_partner_cw',
+              'pressure_self_cw',
+              'pressure_partner_cw',
+              'pushing_self_cw',
+              'pushing_partner_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
+)
+
 
 ```
 
@@ -753,7 +764,16 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
-conditional_spaghetti(pa_sub_zero_model, effects = c('persuasion_self_cw', 'pressure_self_cw'))
+conditional_spaghetti(
+  pa_sub_zero_model, 
+  effects = c('persuasion_self_cw',
+              'persuasion_partner_cw',
+              'pressure_partner_cw',
+              'pushing_self_cw',
+              'pushing_partner_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
+)
 
 ```
 
@@ -868,9 +888,10 @@ plot(
 
 conditional_spaghetti(
   pa_sub_active_model, 
-  effects = c('persuasion_self_cw', 'pressure_self_cw'), 
+  effects = c('pressure_self_cw'),
+  transform_fn = function(x) {exp(x)},
   group_var = 'coupleID',
-  transform_fn = function(x) {exp(x)}
+  plot_full_range = TRUE
 )
 
 ```
@@ -1000,12 +1021,7 @@ plot(
   theme_bw()
 
 
-conditional_spaghetti(
-  pa_obj_log, 
-  effects = c('persuasion_self_cw', 'pressure_self_cw'), 
-  group_var = 'coupleID',
-  transform_fn = function(x) {exp(x)}
-)
+# Nothing significant, no plots
 
 ```
 
@@ -1126,7 +1142,13 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
-conditional_spaghetti(mood_gauss, effects = c('persuasion_self_cw', 'pressure_self_cw'))
+
+conditional_spaghetti(
+  mood_gauss, 
+  effects = c('pushing_partner_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
+)
 
 ```
 
@@ -1392,20 +1414,13 @@ plot(
   theme_bw()
 
 
-conditional_spaghetti(is_reactance, effects = c('persuasion_self_cw', 'pressure_self_cw'))
-
-
-```
-```{r}
-conditional_effects(
-  is_reactance,
-  effects = 'pressure_self_cw',
-  ask = FALSE
+conditional_spaghetti(
+  is_reactance, 
+  effects = c('pressure_self_cw', 'pushing_self_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
 )
 
-marginaleffects::avg_slopes(
-  is_reactance
-)
 ```
 
 
