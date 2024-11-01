@@ -67,7 +67,6 @@
 # ```
 
 
-
 # Function for modelling where we can specify whether to use MI or not. 
 my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
   if (mi) {
@@ -94,10 +93,11 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
   }
 }
 
+###########################################################################
+####################### REPORT MODELS #####################################
+###########################################################################
 
 
-
-# New untested version:
 summarize_brms <- function(model, 
                            short_version = FALSE,
                            exponentiate = FALSE,
@@ -368,8 +368,305 @@ summarize_brms <- function(model,
 
 
 
-#### Check Models
 
+
+############################################################################
+############################ PLOT EFFECTS ##################################
+############################################################################
+
+conditional_spaghetti <- function(
+    model,                    # a brmsfit object
+    effects,                  # character vector of variable names
+    group_var = NULL,         # character of variable name
+    n_groups = NULL,          # if NULL all slopes are plotted, else n random samples are plotted
+    seed = 45,                # seed for random samples
+    robust = TRUE,            # TRUE takes the median, FALSE the mean from the samples of the posterior
+    plot_full_range = FALSE,  # Plot over full predictor range if TRUE instead of range with data
+    x_limits = NULL,          # vector with lower and upper bound of x-axis (optional)
+    y_limits = NULL,          # vector with lower and upper bound of y-axis (optional)
+    x_label = NULL,           # character
+    y_label = NULL,           # character
+    transform_fn = NULL       # function to transform values after inverse link
+) {
+  if (!inherits(model, 'brmsfit')) {
+    stop("Only brmsfit objects supported")
+  }
+  
+  # Check for required packages
+  if (!requireNamespace("dplyr", quietly = TRUE)) {
+    stop("Package 'dplyr' is required but not installed.")
+  }
+  if (!requireNamespace("tidyr", quietly = TRUE)) {
+    stop("Package 'tidyr' is required but not installed.")
+  }
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("Package 'ggplot2' is required but not installed.")
+  }
+  if (!requireNamespace("posterior", quietly = TRUE)) {
+    stop("Package 'posterior' is required but not installed.")
+  }
+  
+  # Set up labels
+  if (is.null(x_label)) {
+    x_label <- effects
+  }
+  
+  # Determine default y_label based on family and link
+  if (is.null(y_label)) {
+    if ((model$family$family %in% c("binomial", "bernoulli")) && model$family$link == "logit") {
+      y_label <- 'Probability'
+    } else if (model$family$family == "gaussian" && model$family$link == "identity") {
+      y_label <- 'Outcome'
+    } else if ((model$family$family %in% c("poisson", "negbinomial")) && model$family$link == "log") {
+      y_label <- 'Count'
+    } else {
+      y_label <- 'Response'
+    }
+  }
+  
+  # Define inverse link functions for different links
+  reverse_link <- function(x) { x } # Default to identity link
+  
+  # Prepare transformations based on link and family
+  if (model$family$link == 'logit') {
+    reverse_link <- function(x) {
+      exp(x) / (1 + exp(x))
+    }
+  } else if (model$family$link == 'probit') {
+    reverse_link <- function(x) {
+      pnorm(x)
+    }
+  } else if (model$family$link == 'log') {
+    reverse_link <- function(x) {
+      exp(x)
+    }
+  } else if (model$family$link == 'identity') {
+    reverse_link <- function(x) {
+      x
+    }
+  } else if (model$family$link == 'inverse') {
+    reverse_link <- function(x) {
+      1 / x
+    }
+  } else if (model$family$link == 'cloglog') {
+    reverse_link <- function(x) {
+      1 - exp(-exp(x))
+    }
+  } else {
+    stop("Link function not recognized or not supported.")
+  }
+  
+  # Extract posterior samples for fixed effects
+  posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
+  
+  for (i in seq_along(effects)) {
+    e <- effects[[i]]
+    
+    # Define a range of values for the predictor across all data
+    predictor_range <- seq(min(model$data[[e]], na.rm = TRUE), max(model$data[[e]], na.rm = TRUE), length.out = 100)
+    
+    # Extract fixed intercept and slope samples
+    fixed_intercept_samples <- posterior_samples$b_Intercept
+    fixed_slope_samples <- posterior_samples[[paste0("b_", e)]]
+    
+    # Handle cases where the effect is not in the fixed effects
+    if (is.null(fixed_slope_samples)) {
+      stop(paste("Effect", e, "not found in fixed effects."))
+    }
+    
+    # Choose mean or median based on the 'robust' argument
+    if (robust) {
+      # Use median for robust summaries
+      fixed_intercept_central <- median(fixed_intercept_samples)
+      fixed_slope_central <- median(fixed_slope_samples)
+    } else {
+      # Use mean for traditional summaries
+      fixed_intercept_central <- mean(fixed_intercept_samples)
+      fixed_slope_central <- mean(fixed_slope_samples)
+    }
+    
+    
+    # Generate fixed effect predictions across the predictor range
+    fixed_predictions <- data.frame(x_value = predictor_range)
+    linear_predictor <- fixed_intercept_central + fixed_slope_central * predictor_range
+    
+    # Apply inverse link and custom transformation if provided
+    if (is.null(transform_fn)) {
+      fixed_predictions$response <- reverse_link(linear_predictor)
+    } else {
+      fixed_predictions$response <- transform_fn(reverse_link(linear_predictor))
+    }
+    
+    # Calculate credible intervals for the fixed effect line
+    ci_bounds_fixed <- sapply(predictor_range, function(x_val) {
+      lp <- fixed_intercept_samples + fixed_slope_samples * x_val
+      if (is.null(transform_fn)) {
+        reverse_link(lp)
+      } else {
+        transform_fn(reverse_link(lp))
+      }
+    })
+    fixed_predictions$lower <- apply(ci_bounds_fixed, 2, quantile, probs = 0.025)
+    fixed_predictions$upper <- apply(ci_bounds_fixed, 2, quantile, probs = 0.975)
+    
+    # Initialize ggplot
+    p <- ggplot2::ggplot() +
+      # Add CI ribbon for the fixed effect
+      ggplot2::geom_ribbon(
+        data = fixed_predictions,
+        ggplot2::aes(x = x_value, ymin = lower, ymax = upper),
+        fill = "navy", alpha = 0.1
+      ) +
+      # Add fixed effect line
+      ggplot2::geom_line(
+        data = fixed_predictions,
+        ggplot2::aes(x = x_value, y = response),
+        color = "navy",
+        size = 1.3
+      ) +
+      ggplot2::labs(
+        title = paste("Fixed Effects:", x_label[[i]]),
+        x = x_label[[i]],
+        y = y_label
+      ) +
+      ggplot2::theme_bw(base_size = 12) +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(face = "bold", size = 14, hjust = 0.5),
+        axis.title = ggplot2::element_text(face = "bold"),
+        panel.grid.minor = ggplot2::element_blank()
+      )
+    
+    # If group_var is provided, add random effects
+    if (!is.null(group_var)) {
+      # Build the pattern for random effects variable names
+      random_effects_prefix <- paste0("r_", group_var)
+      random_effects_pattern <- paste0("r_", group_var, "\\[(.*),(.+)]")
+      random_effects <- posterior_samples %>%
+        dplyr::select(dplyr::starts_with(random_effects_prefix)) %>%
+        tidyr::pivot_longer(
+          cols = dplyr::everything(),
+          names_to = c("group_level", ".value"),
+          names_pattern = random_effects_pattern
+        ) %>%
+        dplyr::mutate(group_level = as.character(group_level)) %>%
+        dplyr::select(group_level, Intercept, dplyr::starts_with(e)) # Extract only intercepts and slopes for effect `e`
+      
+      # Handle cases where random effects for 'e' are not present
+      random_slope_name <- e
+      if (!random_slope_name %in% names(random_effects)) {
+        # If random slope for 'e' is not present, set it to zero
+        random_effects[[random_slope_name]] <- 0
+      }
+      
+      # Determine which group levels to include
+      unique_groups <- unique(random_effects$group_level)
+      if (!is.null(n_groups)) {
+        if (n_groups < length(unique_groups)) {
+          if (!is.null(seed)) {
+            set.seed(seed)  # Set seed for reproducibility
+          }
+          selected_groups <- sample(unique_groups, n_groups)
+        } else {
+          selected_groups <- unique_groups
+        }
+      } else {
+        selected_groups <- unique_groups
+      }
+      
+      # Filter random effects to include only selected group levels
+      random_effects <- random_effects %>% dplyr::filter(group_level %in% selected_groups)
+      
+      # Generate individual-level predictions based on the robust setting
+      individual_predictions <- do.call(rbind, lapply(selected_groups, function(j) {
+        # Filter for the posterior samples of this specific individual
+        individual_samples <- random_effects %>% dplyr::filter(group_level == j)
+        
+        # Compute the combined intercept and slope for this individual
+        if (robust) {
+          # Use median for robust summaries
+          individual_intercept <- fixed_intercept_central + median(individual_samples$Intercept)
+          individual_slope <- fixed_slope_central + median(individual_samples[[random_slope_name]])
+        } else {
+          # Use mean for traditional summaries
+          individual_intercept <- fixed_intercept_central + mean(individual_samples$Intercept)
+          individual_slope <- fixed_slope_central + mean(individual_samples[[random_slope_name]])
+        }
+        
+        # Determine predictor range for this group
+        if (plot_full_range) {
+          # Use the full predictor range
+          predictor_range_group <- predictor_range
+        } else {
+          # Get the data for this group
+          group_data <- model$data[model$data[[group_var]] == j, ]
+          
+          # Check if there is data for this group
+          if (nrow(group_data) == 0) {
+            return(NULL)
+          }
+          
+          # Get the range of predictor 'e' for this group
+          min_e <- min(group_data[[e]], na.rm = TRUE)
+          max_e <- max(group_data[[e]], na.rm = TRUE)
+          
+          # Handle case where min and max are the same
+          if (min_e == max_e) {
+            predictor_range_group <- min_e
+          } else {
+            predictor_range_group <- seq(min_e, max_e, length.out = 100)
+          }
+        }
+        
+        # Generate individual-level predictions
+        lp <- individual_intercept + individual_slope * predictor_range_group
+        if (is.null(transform_fn)) {
+          response <- reverse_link(lp)
+        } else {
+          response <- transform_fn(reverse_link(lp))
+        }
+        data.frame(
+          group_level = j,
+          x_value = predictor_range_group,
+          response = response
+        )
+      }))
+      
+      # Remove any NULL elements (in case some groups had no data)
+      individual_predictions <- individual_predictions %>% dplyr::filter(!is.na(response))
+      
+      # Add individual lines to the plot
+      p <- p +
+        ggplot2::geom_line(
+          data = individual_predictions,
+          ggplot2::aes(x = x_value, y = response, group = group_level),
+          color = "grey50",
+          size = 0.3,
+          alpha = 0.8
+        ) +
+        ggplot2::labs(
+          title = paste("Conditional Fixed and Random Effects:", x_label[[i]])
+        )
+    }
+    
+    # Apply x and y limits if specified
+    if (!is.null(x_limits)) {
+      p <- p + ggplot2::xlim(x_limits)
+    }
+    if (!is.null(y_limits)) {
+      p <- p + ggplot2::ylim(y_limits)
+    }
+    
+    # Plot final result
+    print(p)
+    gc()
+  }
+}
+
+
+
+##############################################################################
+############################ Check Models ####################################
+##############################################################################
 pp_check_transformed <- function(model, transform = log1p) {
   # only for univariate models
   outcome_variable <- strsplit(as.character(formula(model)), " ~ ")[[1]][1]

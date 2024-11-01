@@ -541,12 +541,12 @@ prior1 <- c(
   #, autocor_prior
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = hurdle_poisson()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = hurdle_poisson()
+#  )
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -678,12 +678,12 @@ prior1 <- c(
   #, autocor_prior
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = bernoulli()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = bernoulli()
+#  )
 
 
 pa_sub_zero_model <- my_brm(
@@ -748,9 +748,7 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
-
-conditional_effects(pa_sub_zero_model, effects = 'persuasion_self_cw')
-conditional_effects(pa_sub_zero_model, effects = 'pressure_self_cw')
+conditional_spaghetti(pa_sub_zero_model, effects = c('persuasion_self_cw', 'pressure_self_cw'))
 
 ```
 
@@ -792,12 +790,12 @@ prior1 <- c(
   #, autocor_prior
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = gaussian()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = gaussian()
+#  )
 
 
 pa_sub_active_model <- my_brm(
@@ -863,9 +861,12 @@ plot(
   theme_bw()
 
 
-conditional_effects(pa_sub_active_model, effects = 'persuasion_self_cw')
-conditional_effects(pa_sub_active_model, effects = 'pressure_self_cw')
-
+conditional_spaghetti(
+  pa_sub_active_model, 
+  effects = c('persuasion_self_cw', 'pressure_self_cw'), 
+  group_var = 'coupleID',
+  transform_fn = function(x) {exp(x)}
+)
 
 ```
 
@@ -924,12 +925,12 @@ prior1 <- c(
   #, autocor_prior
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = gaussian()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = gaussian()
+#  )
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -994,9 +995,12 @@ plot(
   theme_bw()
 
 
-conditional_effects(pa_obj_log, effects = 'persuasion_self_cw')
-conditional_effects(pa_obj_log, effects = 'pressure_self_cw')
-
+conditional_spaghetti(
+  pa_obj_log, 
+  effects = c('persuasion_self_cw', 'pressure_self_cw'), 
+  group_var = 'coupleID',
+  transform_fn = function(x) {exp(x)}
+)
 
 ```
 
@@ -1049,12 +1053,12 @@ prior1 <- c(
   #, autocor_prior
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = gaussian()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = gaussian()
+#  )
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -1117,9 +1121,7 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
-
-conditional_effects(mood_gauss, effects = 'persuasion_self_cw')
-conditional_effects(mood_gauss, effects = 'pressure_self_cw')
+conditional_spaghetti(mood_gauss, effects = c('persuasion_self_cw', 'pressure_self_cw'))
 
 ```
 
@@ -1179,12 +1181,12 @@ prior1 <- c(
 )
 
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = cumulative() # HURDLE_CUMULATIVE
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = cumulative() # HURDLE_CUMULATIVE
+#  )
 
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
@@ -1254,6 +1256,9 @@ plot(
 conditional_effects(reactance_ordinal, effects = 'persuasion_self_cw', categorical = TRUE)
 conditional_effects(reactance_ordinal, effects = 'pressure_self_cw', categorical = TRUE)
 
+#conditional_spaghetti(reactance_ordinal, effects = c('persuasion_self_cw', 'pressure_self_cw'), group_var = 'coupleID')
+
+
 ```
 
 
@@ -1311,12 +1316,12 @@ prior1 <- c(
 )
 
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = bernoulli()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = bernoulli()
+#  )
 
 
 
@@ -1383,8 +1388,8 @@ plot(
   theme_bw()
 
 
-conditional_effects(is_reactance, effects = 'persuasion_self_cw')
-conditional_effects(is_reactance, effects = 'pressure_self_cw')
+conditional_spaghetti(is_reactance, effects = c('persuasion_self_cw', 'pressure_self_cw'))
+
 
 ```
 ```{r}
