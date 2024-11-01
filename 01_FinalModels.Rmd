@@ -1146,7 +1146,6 @@ hist(log(df_double$reactance+0.1), breaks = 10)
 
 ### Ordinal
 
-
 ```{r reactance_ordinal, results='hide', message=FALSE}
 
 df_double$reactance_ordinal <- factor(df_double$reactance,
