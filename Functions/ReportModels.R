@@ -406,12 +406,28 @@ conditional_spaghetti <- function(
   library(tidyr)
   library(ggplot2)
   
-  # Determine if the model is a hurdle or zero-inflated model
+  # Determine if the model is a hurdle, zero-inflated, or cumulative model
   is_hurdle_model <- grepl("^hurdle_", model$family$family)
   is_zi_model <- grepl("^zero_inflated_", model$family$family)
+  is_cumulative_model <- model$family$family == 'cumulative'
   
   # Call appropriate plotting function based on model type
-  if (is_hurdle_model || is_zi_model) {
+  if (is_cumulative_model) {
+    plots <- plot_cumulative_model(
+      model = model,
+      effects = effects,
+      group_var = group_var,
+      n_groups = n_groups,
+      seed = seed,
+      robust = robust,
+      plot_full_range = plot_full_range,
+      x_limits = x_limits,
+      y_limits = y_limits,
+      x_label = x_label,
+      y_label = y_label,
+      transform_fn = transform_fn
+    )
+  } else if (is_hurdle_model || is_zi_model) {
     plots <- plot_hurdle_model(
       model = model,
       effects = effects,
@@ -446,6 +462,7 @@ conditional_spaghetti <- function(
   # Return the plots
   return(plots)
 }
+
 
 
 
@@ -1202,9 +1219,335 @@ plot_hurdle_model <- function(
 
 
 
+
+
+# Updated function for cumulative models with random effects
+plot_cumulative_model <- function(
+    model,
+    effects,
+    group_var,
+    n_groups,
+    seed,
+    robust,
+    plot_full_range,
+    x_limits,
+    y_limits,
+    x_label,
+    y_label,
+    transform_fn
+) {
+  plots_list <- list()
+  
+  # Extract posterior samples
+  posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
+  
+  # Extract threshold names
+  threshold_names <- grep('^b_Intercept\\[', names(posterior_samples), value = TRUE)
+  thresholds_samples <- posterior_samples[, threshold_names]
+  thresholds_samples <- as.matrix(thresholds_samples)
+  
+  # Number of categories (K)
+  K <- length(threshold_names) + 1
+  
+  # Define inverse link functions
+  inverse_link_functions <- list(
+    logit = plogis,
+    probit = pnorm,
+    cloglog = function(x) 1 - exp(-exp(x)),
+    cauchit = function(x) 0.5 + atan(x)/pi,
+    identity = function(x) x
+  )
+  reverse_link <- inverse_link_functions[[model$family$link]]
+  if (is.null(reverse_link)) {
+    stop("Link function not recognized or not supported.")
+  }
+  
+  for (i in seq_along(effects)) {
+    e <- effects[[i]]
+    
+    # Define a range of values for the predictor across all data
+    predictor_range <- seq(min(model$data[[e]], na.rm = TRUE), max(model$data[[e]], na.rm = TRUE), length.out = 100)
+    
+    # Set up labels
+    x_lab <- ifelse(is.null(x_label), e, x_label[[i]])
+    y_lab <- ifelse(is.null(y_label), 'Probability', y_label)
+    
+    # Extract fixed slope samples
+    beta_samples <- posterior_samples[[paste0("b_", e)]]
+    
+    # Handle cases where the effect is not in the fixed effects
+    if (is.null(beta_samples)) {
+      stop(paste("Effect", e, "not found in fixed effects.")
+      )
+    }
+    
+    n_samples <- nrow(thresholds_samples)
+    
+    # Initialize list to store probabilities for each category
+    probabilities <- vector("list", K)
+    for (k in 1:K) {
+      probabilities[[k]] <- data.frame(
+        x_value = predictor_range,
+        median = NA,
+        lower = NA,
+        upper = NA
+      )
+    }
+    
+    # Loop over predictor values for fixed effects
+    for (xi in seq_along(predictor_range)) {
+      x_val <- predictor_range[xi]
+      
+      # Compute linear predictor for all samples
+      eta_s <- beta_samples * x_val
+      
+      # Compute cumulative probabilities for each threshold
+      cdf_s <- matrix(NA, nrow = n_samples, ncol = K + 1)
+      cdf_s[, 1] <- 0  # P(Y <= 0) = 0
+      cdf_s[, K + 1] <- 1  # P(Y <= K) = 1
+      
+      for (k in 1:(K - 1)) {
+        threshold_k_s <- thresholds_samples[, k]
+        cdf_s[, k + 1] <- reverse_link(threshold_k_s - eta_s)
+      }
+      
+      # Compute category probabilities
+      for (k in 1:K) {
+        P_Yk_s <- cdf_s[, k + 1] - cdf_s[, k]
+        if (!is.null(transform_fn)) {
+          P_Yk_s <- transform_fn(P_Yk_s)
+        }
+        # Summarize across samples
+        if (robust) {
+          median_PYk <- median(P_Yk_s)
+        } else {
+          median_PYk <- mean(P_Yk_s)
+        }
+        lower_PYk <- quantile(P_Yk_s, probs = 0.025)
+        upper_PYk <- quantile(P_Yk_s, probs = 0.975)
+        
+        # Store in probabilities list
+        probabilities[[k]]$median[xi] <- median_PYk
+        probabilities[[k]]$lower[xi] <- lower_PYk
+        probabilities[[k]]$upper[xi] <- upper_PYk
+      }
+    }
+    
+    # Combine data for plotting fixed effects
+    plot_data <- do.call(rbind, lapply(1:K, function(k) {
+      data.frame(
+        x_value = probabilities[[k]]$x_value,
+        median = probabilities[[k]]$median,
+        lower = probabilities[[k]]$lower,
+        upper = probabilities[[k]]$upper,
+        category = factor(k)
+      )
+    }))
+    
+    # Initialize ggplot
+    p <- ggplot(plot_data, aes(x = x_value, y = median, color = category, fill = category)) +
+      # Add CI ribbon
+      geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.1, color = NA) +
+      # Add median lines
+      geom_line(size = 1.2) +
+      labs(
+        title = paste("Predicted Probabilities by Category:", x_lab),
+        x = x_lab,
+        y = y_lab,
+        color = "Category",
+        fill = "Category"
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        axis.title = element_text(face = "bold"),
+        panel.grid.minor = element_blank()
+      )
+    
+    # If group_var is provided, add random effects
+    if (!is.null(group_var)) {
+      # Handle random effects
+      random_effects_prefix <- paste0("r_", group_var)
+      random_effects_pattern <- paste0("r_", group_var, "\\[(.*),(.+)]")
+      random_effects <- posterior_samples %>%
+        select(starts_with(random_effects_prefix)) %>%
+        pivot_longer(
+          cols = everything(),
+          names_to = c("group_level", ".value"),
+          names_pattern = random_effects_pattern
+        ) %>%
+        mutate(group_level = as.character(group_level)) %>%
+        select(group_level, Intercept, starts_with(e))
+      
+      # Handle cases where random effects for 'e' are not present
+      if (!e %in% names(random_effects)) {
+        # If random slope for 'e' is not present, set it to zero
+        random_effects[[e]] <- 0
+      }
+      if (!"Intercept" %in% names(random_effects)) {
+        random_effects$Intercept <- 0
+      }
+      
+      # Determine which group levels to include
+      unique_groups <- unique(random_effects$group_level)
+      if (!is.null(n_groups)) {
+        if (n_groups < length(unique_groups)) {
+          if (!is.null(seed)) {
+            set.seed(seed)  # Set seed for reproducibility
+          }
+          selected_groups <- sample(unique_groups, n_groups)
+        } else {
+          selected_groups <- unique_groups
+        }
+      } else {
+        selected_groups <- unique_groups
+      }
+      
+      # Filter random effects to include only selected group levels
+      random_effects <- random_effects %>% filter(group_level %in% selected_groups)
+      
+      # Generate individual-level predictions
+      individual_predictions <- do.call(rbind, lapply(selected_groups, function(j) {
+        # Filter for the posterior samples of this specific group
+        individual_samples <- random_effects %>% filter(group_level == j)
+        
+        # Combine fixed and random effects for slopes
+        beta_j_samples <- beta_samples + individual_samples[[e]]
+        
+        # Since thresholds are typically fixed across groups, we use the fixed thresholds
+        # If your model includes random thresholds, additional adjustments are needed
+        
+        # Determine predictor range for this group
+        if (plot_full_range) {
+          # Use the full predictor range
+          predictor_range_group <- predictor_range
+        } else {
+          # Get the data for this group
+          group_data <- model$data[model$data[[group_var]] == j, ]
+          
+          # Check if there is data for this group
+          if (nrow(group_data) == 0) {
+            return(NULL)
+          }
+          
+          # Get the range of predictor 'e' for this group
+          min_e <- min(group_data[[e]], na.rm = TRUE)
+          max_e <- max(group_data[[e]], na.rm = TRUE)
+          
+          # Handle case where min and max are the same
+          if (min_e == max_e) {
+            predictor_range_group <- min_e
+          } else {
+            predictor_range_group <- seq(min_e, max_e, length.out = 100)
+          }
+        }
+        
+        # Initialize list to store probabilities for each category
+        probabilities_j <- vector("list", K)
+        for (k in 1:K) {
+          probabilities_j[[k]] <- data.frame(
+            x_value = predictor_range_group,
+            median = NA,
+            lower = NA,
+            upper = NA,
+            group_level = j
+          )
+        }
+        
+        # Loop over predictor values
+        for (xi in seq_along(predictor_range_group)) {
+          x_val <- predictor_range_group[xi]
+          
+          # Compute linear predictor for all samples
+          eta_s <- beta_j_samples * x_val
+          
+          # Compute cumulative probabilities for each threshold
+          cdf_s <- matrix(NA, nrow = n_samples, ncol = K + 1)
+          cdf_s[, 1] <- 0  # P(Y <= 0) = 0
+          cdf_s[, K + 1] <- 1  # P(Y <= K) = 1
+          
+          for (k in 1:(K - 1)) {
+            threshold_k_s <- thresholds_samples[, k]
+            cdf_s[, k + 1] <- reverse_link(threshold_k_s - eta_s)
+          }
+          
+          # Compute category probabilities
+          for (k in 1:K) {
+            P_Yk_s <- cdf_s[, k + 1] - cdf_s[, k]
+            if (!is.null(transform_fn)) {
+              P_Yk_s <- transform_fn(P_Yk_s)
+            }
+            # Summarize across samples
+            if (robust) {
+              median_PYk <- median(P_Yk_s)
+            } else {
+              median_PYk <- mean(P_Yk_s)
+            }
+            lower_PYk <- quantile(P_Yk_s, probs = 0.025)
+            upper_PYk <- quantile(P_Yk_s, probs = 0.975)
+            
+            # Store in probabilities list
+            probabilities_j[[k]]$median[xi] <- median_PYk
+            probabilities_j[[k]]$lower[xi] <- lower_PYk
+            probabilities_j[[k]]$upper[xi] <- upper_PYk
+          }
+        }
+        
+        # Combine data for plotting
+        plot_data_j <- do.call(rbind, lapply(1:K, function(k) {
+          data.frame(
+            x_value = probabilities_j[[k]]$x_value,
+            median = probabilities_j[[k]]$median,
+            lower = probabilities_j[[k]]$lower,
+            upper = probabilities_j[[k]]$upper,
+            category = factor(k),
+            group_level = j
+          )
+        }))
+        
+        return(plot_data_j)
+      }))
+      
+      # Remove any NULL elements (in case some groups had no data)
+      individual_predictions <- individual_predictions %>% filter(!is.na(median))
+      
+      # Add individual lines to the plot
+      p <- p +
+        geom_line(
+          data = individual_predictions,
+          aes(x = x_value, y = median, group = interaction(group_level, category)),
+          color = "grey50",
+          size = 0.3,
+          alpha = 0.8
+        ) +
+        labs(
+          title = paste("Conditional Fixed and Random Effects:", x_lab)
+        )
+    }
+    
+    # Apply x and y limits if specified
+    if (!is.null(x_limits)) {
+      p <- p + xlim(x_limits)
+    }
+    if (!is.null(y_limits)) {
+      p <- p + ylim(y_limits)
+    }
+    
+    # Store the plot
+    plots_list[[e]] <- p
+  }
+  
+  return(plots_list)
+}
+
+
+
 ##############################################################################
 ############################ Check Models ####################################
 ##############################################################################
+
+
+
 pp_check_transformed <- function(model, transform = log1p) {
   # only for univariate models
   outcome_variable <- strsplit(as.character(formula(model)), " ~ ")[[1]][1]

@@ -1280,10 +1280,13 @@ plot(
   theme_bw()
 
 
-conditional_effects(reactance_ordinal, effects = 'persuasion_self_cw', categorical = TRUE)
-conditional_effects(reactance_ordinal, effects = 'pressure_self_cw', categorical = TRUE)
-
-#conditional_spaghetti(reactance_ordinal, effects = c('persuasion_self_cw', 'pressure_self_cw'), group_var = 'coupleID')
+conditional_spaghetti(
+  reactance_ordinal, 
+  effects = c('persuasion_self_cw', 'pressure_self_cw')
+  , group_var = 'coupleID'
+  , n_groups = 10,
+  plot_full_range = TRUE
+  )
 
 
 ```
