@@ -545,8 +545,8 @@ prior1 <- c(
 #  prior1, 
 #  formula = formula, 
 #  data = df_double, 
-#  family = hurdle_poisson()
-#  )
+#  family = hurdle_lognormal()
+#)
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -557,16 +557,16 @@ pa_sub <- my_brm(
   formula = formula, 
   prior = prior1,
   data = df_double, 
-  #family = brms::hurdle_lognormal(), 
+  family = brms::hurdle_lognormal(), 
   #family = brms::hurdle_negbinomial(), 
-  family = brms::hurdle_poisson(),
-  control = list(adapt_delta = 0.95, max_treedepth = 15),
+  #family = brms::hurdle_poisson(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
   iter = iterations,
   warmup = warmup,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_poisson_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_NOAR", suffix))
   #, file_refit = 'always'
 )
 
@@ -626,9 +626,14 @@ mcmc_plot(pa_sub,
           prob = 0.95
           )
 
-conditional_effects(pa_sub, effects = 'persuasion_self_cw')
-conditional_effects(pa_sub, effects = 'pressure_self_cw')
+plot(
+  bayestestR::p_direction(pa_sub),
+  priors = TRUE
+) + 
+  #coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
 
+conditional_spaghetti(pa_sub, effects = c('persuasion_self_cw', 'pressure_self_cw'))
 
 ```
 

@@ -664,6 +664,588 @@ conditional_spaghetti <- function(
 
 
 
+
+
+
+####################
+
+
+
+# Main function
+conditional_spaghetti <- function(
+    model,                    # a brmsfit object
+    effects,                  # character vector of variable names
+    group_var = NULL,         # character of variable name
+    n_groups = NULL,          # if NULL all slopes are plotted, else n random samples are plotted
+    seed = 45,                # seed for random samples
+    robust = TRUE,            # TRUE takes the median, FALSE the mean from the samples of the posterior
+    plot_full_range = FALSE,  # Plot over full predictor range if TRUE instead of range with data
+    x_limits = NULL,          # vector with lower and upper bound of x-axis (optional)
+    y_limits = NULL,          # vector with lower and upper bound of y-axis (optional)
+    x_label = NULL,           # character
+    y_label = NULL,           # character
+    transform_fn = NULL       # function to transform values after inverse link
+) {
+  if (!inherits(model, 'brmsfit')) {
+    stop("Only brmsfit objects supported")
+  }
+  
+  # Check for required packages
+  required_packages <- c("dplyr", "tidyr", "tidyverse", "ggplot2", "posterior")
+  for (pkg in required_packages) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      stop(paste("Package", pkg, "is required but not installed."))
+    }
+  }
+  
+  library(dplyr)
+  library(tidyr)
+  library(ggplot2)
+  
+  # Determine if the model is a hurdle or zero-inflated model
+  is_hurdle_model <- grepl("^hurdle_", model$family$family)
+  is_zi_model <- grepl("^zero_inflated_", model$family$family)
+  
+  # Call appropriate plotting function based on model type
+  if (is_hurdle_model || is_zi_model) {
+    plots <- plot_hurdle_model(
+      model = model,
+      effects = effects,
+      group_var = group_var,
+      n_groups = n_groups,
+      seed = seed,
+      robust = robust,
+      plot_full_range = plot_full_range,
+      x_limits = x_limits,
+      y_limits = y_limits,
+      x_label = x_label,
+      y_label = y_label,
+      transform_fn = transform_fn
+    )
+  } else {
+    plots <- plot_general_model(
+      model = model,
+      effects = effects,
+      group_var = group_var,
+      n_groups = n_groups,
+      seed = seed,
+      robust = robust,
+      plot_full_range = plot_full_range,
+      x_limits = x_limits,
+      y_limits = y_limits,
+      x_label = x_label,
+      y_label = y_label,
+      transform_fn = transform_fn
+    )
+  }
+  
+  # Return the plots
+  return(plots)
+}
+
+
+
+# Function for general models
+plot_general_model <- function(
+    model,
+    effects,
+    group_var,
+    n_groups,
+    seed,
+    robust,
+    plot_full_range,
+    x_limits,
+    y_limits,
+    x_label,
+    y_label,
+    transform_fn
+) {
+  plots_list <- list()
+  
+  # Extract posterior samples for fixed effects
+  posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
+  
+  for (i in seq_along(effects)) {
+    e <- effects[[i]]
+    
+    # Define a range of values for the predictor across all data
+    predictor_range <- seq(min(model$data[[e]], na.rm = TRUE), max(model$data[[e]], na.rm = TRUE), length.out = 100)
+    
+    # Set up labels
+    x_lab <- ifelse(is.null(x_label), e, x_label[[i]])
+    y_lab <- ifelse(is.null(y_label), 'Response', y_label)
+    
+    # Define inverse link function
+    inverse_link_functions <- list(
+      logit = plogis,
+      probit = pnorm,
+      cloglog = function(x) 1 - exp(-exp(x)),
+      identity = function(x) x,
+      log = exp,
+      inverse = function(x) 1 / x
+    )
+    reverse_link <- inverse_link_functions[[model$family$link]]
+    if (is.null(reverse_link)) {
+      stop("Link function not recognized or not supported.")
+    }
+    
+    # Extract fixed intercept and slope samples
+    fixed_intercept_samples <- posterior_samples$b_Intercept
+    fixed_slope_samples <- posterior_samples[[paste0("b_", e)]]
+    
+    # Handle cases where the effect is not in the fixed effects
+    if (is.null(fixed_slope_samples)) {
+      stop(paste("Effect", e, "not found in fixed effects."))
+    }
+    
+    # Choose mean or median based on the 'robust' argument
+    if (robust) {
+      # Use median for robust summaries
+      fixed_intercept_central <- median(fixed_intercept_samples)
+      fixed_slope_central <- median(fixed_slope_samples)
+    } else {
+      # Use mean for traditional summaries
+      fixed_intercept_central <- mean(fixed_intercept_samples)
+      fixed_slope_central <- mean(fixed_slope_samples)
+    }
+    
+    # Generate fixed effect predictions across the predictor range
+    linear_predictor <- fixed_intercept_central + fixed_slope_central * predictor_range
+    
+    # Apply inverse link and custom transformation if provided
+    response <- reverse_link(linear_predictor)
+    if (!is.null(transform_fn)) {
+      response <- transform_fn(response)
+    }
+    fixed_predictions <- data.frame(
+      x_value = predictor_range,
+      response = response
+    )
+    
+    # Calculate credible intervals
+    ci_bounds_fixed <- sapply(predictor_range, function(x_val) {
+      lp <- fixed_intercept_samples + fixed_slope_samples * x_val
+      response_samples <- reverse_link(lp)
+      if (!is.null(transform_fn)) {
+        response_samples <- transform_fn(response_samples)
+      }
+      response_samples
+    })
+    fixed_predictions$lower <- apply(ci_bounds_fixed, 2, quantile, probs = 0.025)
+    fixed_predictions$upper <- apply(ci_bounds_fixed, 2, quantile, probs = 0.975)
+    
+    # Initialize ggplot
+    p <- ggplot() +
+      # Add CI ribbon for the fixed effect
+      geom_ribbon(
+        data = fixed_predictions,
+        aes(x = x_value, ymin = lower, ymax = upper),
+        fill = "navy", alpha = 0.1
+      ) +
+      # Add fixed effect line
+      geom_line(
+        data = fixed_predictions,
+        aes(x = x_value, y = response),
+        color = "navy",
+        size = 1.3
+      ) +
+      labs(
+        title = paste("Fixed Effects:", x_lab),
+        x = x_lab,
+        y = y_lab
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        axis.title = element_text(face = "bold"),
+        panel.grid.minor = element_blank()
+      )
+    
+    # If group_var is provided, add random effects
+    if (!is.null(group_var)) {
+      # Handle random effects as before
+      random_effects_prefix <- paste0("r_", group_var)
+      random_effects_pattern <- paste0("r_", group_var, "\\[(.*),(.+)]")
+      random_effects <- posterior_samples %>%
+        select(starts_with(random_effects_prefix)) %>%
+        pivot_longer(
+          cols = everything(),
+          names_to = c("group_level", ".value"),
+          names_pattern = random_effects_pattern
+        ) %>%
+        mutate(group_level = as.character(group_level)) %>%
+        select(group_level, Intercept, starts_with(e))
+      
+      # Handle cases where random effects for 'e' are not present
+      random_slope_name <- e
+      if (!random_slope_name %in% names(random_effects)) {
+        # If random slope for 'e' is not present, set it to zero
+        random_effects[[random_slope_name]] <- 0
+      }
+      
+      # Determine which group levels to include
+      unique_groups <- unique(random_effects$group_level)
+      if (!is.null(n_groups)) {
+        if (n_groups < length(unique_groups)) {
+          if (!is.null(seed)) {
+            set.seed(seed)  # Set seed for reproducibility
+          }
+          selected_groups <- sample(unique_groups, n_groups)
+        } else {
+          selected_groups <- unique_groups
+        }
+      } else {
+        selected_groups <- unique_groups
+      }
+      
+      # Filter random effects to include only selected group levels
+      random_effects <- random_effects %>% filter(group_level %in% selected_groups)
+      
+      # Generate individual-level predictions
+      individual_predictions <- do.call(rbind, lapply(selected_groups, function(j) {
+        # Filter for the posterior samples of this specific group
+        individual_samples <- random_effects %>% filter(group_level == j)
+        
+        # Compute the combined intercept and slope for this group
+        if (robust) {
+          # Use median for robust summaries
+          individual_intercept <- fixed_intercept_central + median(individual_samples$Intercept, na.rm = TRUE)
+          individual_slope <- fixed_slope_central + median(individual_samples[[random_slope_name]], na.rm = TRUE)
+        } else {
+          # Use mean for traditional summaries
+          individual_intercept <- fixed_intercept_central + mean(individual_samples$Intercept, na.rm = TRUE)
+          individual_slope <- fixed_slope_central + mean(individual_samples[[random_slope_name]], na.rm = TRUE)
+        }
+        
+        # Determine predictor range for this group
+        if (plot_full_range) {
+          # Use the full predictor range
+          predictor_range_group <- predictor_range
+        } else {
+          # Get the data for this group
+          group_data <- model$data[model$data[[group_var]] == j, ]
+          
+          # Check if there is data for this group
+          if (nrow(group_data) == 0) {
+            return(NULL)
+          }
+          
+          # Get the range of predictor 'e' for this group
+          min_e <- min(group_data[[e]], na.rm = TRUE)
+          max_e <- max(group_data[[e]], na.rm = TRUE)
+          
+          # Handle case where min and max are the same
+          if (min_e == max_e) {
+            predictor_range_group <- min_e
+          } else {
+            predictor_range_group <- seq(min_e, max_e, length.out = 100)
+          }
+        }
+        
+        # Generate individual-level predictions
+        lp <- individual_intercept + individual_slope * predictor_range_group
+        response <- reverse_link(lp)
+        if (!is.null(transform_fn)) {
+          response <- transform_fn(response)
+        }
+        data.frame(
+          group_level = j,
+          x_value = predictor_range_group,
+          response = response
+        )
+      }))
+      
+      # Remove any NULL elements (in case some groups had no data)
+      individual_predictions <- individual_predictions %>% filter(!is.na(response))
+      
+      # Add individual lines to the plot
+      p <- p +
+        geom_line(
+          data = individual_predictions,
+          aes(x = x_value, y = response, group = group_level),
+          color = "grey50",
+          size = 0.3,
+          alpha = 0.8
+        ) +
+        labs(
+          title = paste("Conditional Fixed and Random Effects:", x_lab)
+        )
+    }
+    
+    # Apply x and y limits if specified
+    if (!is.null(x_limits)) {
+      p <- p + xlim(x_limits)
+    }
+    if (!is.null(y_limits)) {
+      p <- p + ylim(y_limits)
+    }
+    
+    # Store the plot
+    plots_list[[e]] <- p
+  }
+  
+  return(plots_list)
+}
+
+
+
+
+# Function for hurdle and zero-inflated models
+# Function for hurdle and zero-inflated models (corrected)
+plot_hurdle_model <- function(
+    model,
+    effects,
+    group_var,
+    n_groups,
+    seed,
+    robust,
+    plot_full_range,
+    x_limits,
+    y_limits,
+    x_label,
+    y_label,
+    transform_fn
+) {
+  plots_list <- list()
+  
+  # Extract posterior samples for fixed effects
+  posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
+  
+  for (i in seq_along(effects)) {
+    e <- effects[[i]]
+    
+    # Define a range of values for the predictor across all data
+    predictor_range <- seq(min(model$data[[e]], na.rm = TRUE), max(model$data[[e]], na.rm = TRUE), length.out = 100)
+    
+    # Set up labels
+    x_lab <- ifelse(is.null(x_label), e, x_label[[i]])
+    y_lab <- ifelse(is.null(y_label), 'Response', y_label)
+    
+    # Identify the hurdle or zero-inflation component
+    if (grepl("^hurdle_", model$family$family)) {
+      hurdle_component <- "hu"
+      model_type <- "hurdle"
+    } else {
+      hurdle_component <- "zi"
+      model_type <- "zero_inflated"
+    }
+    
+    # Get link functions for both components
+    count_link <- model$family$link
+    if (!is.null(model$formula$auxiliary[[hurdle_component]]$link)) {
+      hurdle_link <- model$formula$auxiliary[[hurdle_component]]$link
+    } else {
+      # Default link for hurdle/zi component is 'logit' in brms
+      hurdle_link <- "logit"
+    }
+    
+    # Define inverse link functions
+    inverse_link_functions <- list(
+      logit = plogis,
+      probit = pnorm,
+      cloglog = function(x) 1 - exp(-exp(x)),
+      identity = function(x) x,
+      log = exp,
+      inverse = function(x) 1 / x
+    )
+    reverse_link_count <- inverse_link_functions[[count_link]]
+    reverse_link_hurdle <- inverse_link_functions[[hurdle_link]]
+    if (is.null(reverse_link_count) || is.null(reverse_link_hurdle)) {
+      stop("Unsupported link function in one of the model components.")
+    }
+    
+    # Extract fixed intercept and slope samples for count component
+    fixed_intercept_samples_count <- posterior_samples$b_Intercept
+    fixed_slope_samples_count <- posterior_samples[[paste0("b_", e)]]
+    
+    # Extract fixed intercept and slope samples for hurdle component
+    fixed_intercept_samples_hurdle <- posterior_samples[[paste0("b_", hurdle_component, "_Intercept")]]
+    fixed_slope_samples_hurdle <- posterior_samples[[paste0("b_", hurdle_component, "_", e)]]
+    
+    # Handle cases where the effect is not in the fixed effects
+    if (is.null(fixed_slope_samples_count)) {
+      stop(paste("Effect", e, "not found in fixed effects for count component."))
+    }
+    if (is.null(fixed_slope_samples_hurdle)) {
+      # If the effect is not in the hurdle component, set slope to zero
+      fixed_slope_samples_hurdle <- rep(0, length(fixed_intercept_samples_hurdle))
+    }
+    
+    # Choose mean or median based on the 'robust' argument
+    if (robust) {
+      # Use median for robust summaries
+      fixed_intercept_central_count <- median(fixed_intercept_samples_count)
+      fixed_slope_central_count <- median(fixed_slope_samples_count)
+      fixed_intercept_central_hurdle <- median(fixed_intercept_samples_hurdle)
+      fixed_slope_central_hurdle <- median(fixed_slope_samples_hurdle)
+    } else {
+      # Use mean for traditional summaries
+      fixed_intercept_central_count <- mean(fixed_intercept_samples_count)
+      fixed_slope_central_count <- mean(fixed_slope_samples_count)
+      fixed_intercept_central_hurdle <- mean(fixed_intercept_samples_hurdle)
+      fixed_slope_central_hurdle <- mean(fixed_slope_samples_hurdle)
+    }
+    
+    # Generate linear predictors
+    linear_predictor_count <- fixed_intercept_central_count + fixed_slope_central_count * predictor_range
+    linear_predictor_hurdle <- fixed_intercept_central_hurdle + fixed_slope_central_hurdle * predictor_range
+    
+    # Apply inverse link functions
+    mu_count <- reverse_link_count(linear_predictor_count)
+    prob_zero <- reverse_link_hurdle(linear_predictor_hurdle)  # P(Y = 0)
+    
+    # For expected value, we need (1 - P(Y = 0))
+    prob_positive <- 1 - prob_zero  # P(Y > 0)
+    
+    # Expected value
+    expected_value <- prob_positive * mu_count
+    
+    # Apply custom transformation if provided
+    if (!is.null(transform_fn)) {
+      mu_count <- transform_fn(mu_count)
+      prob_zero <- transform_fn(prob_zero)
+      prob_positive <- transform_fn(prob_positive)
+      expected_value <- transform_fn(expected_value)
+    }
+    
+    # Create data frames for each component
+    fixed_predictions_count <- data.frame(
+      x_value = predictor_range,
+      response = mu_count
+    )
+    fixed_predictions_hurdle <- data.frame(
+      x_value = predictor_range,
+      response = prob_positive
+    )
+    fixed_predictions_combined <- data.frame(
+      x_value = predictor_range,
+      response = expected_value
+    )
+    
+    # Calculate credible intervals for each component
+    ci_bounds_count <- sapply(predictor_range, function(x_val) {
+      lp_count <- fixed_intercept_samples_count + fixed_slope_samples_count * x_val
+      mu_count_samples <- reverse_link_count(lp_count)
+      if (!is.null(transform_fn)) {
+        mu_count_samples <- transform_fn(mu_count_samples)
+      }
+      mu_count_samples
+    })
+    fixed_predictions_count$lower <- apply(ci_bounds_count, 2, quantile, probs = 0.025)
+    fixed_predictions_count$upper <- apply(ci_bounds_count, 2, quantile, probs = 0.975)
+    
+    ci_bounds_hurdle <- sapply(predictor_range, function(x_val) {
+      lp_hurdle <- fixed_intercept_samples_hurdle + fixed_slope_samples_hurdle * x_val
+      prob_zero_samples <- reverse_link_hurdle(lp_hurdle)
+      prob_positive_samples <- 1 - prob_zero_samples
+      if (!is.null(transform_fn)) {
+        prob_positive_samples <- transform_fn(prob_positive_samples)
+      }
+      prob_positive_samples
+    })
+    fixed_predictions_hurdle$lower <- apply(ci_bounds_hurdle, 2, quantile, probs = 0.025)
+    fixed_predictions_hurdle$upper <- apply(ci_bounds_hurdle, 2, quantile, probs = 0.975)
+    
+    ci_bounds_combined <- sapply(predictor_range, function(x_val) {
+      lp_count <- fixed_intercept_samples_count + fixed_slope_samples_count * x_val
+      lp_hurdle <- fixed_intercept_samples_hurdle + fixed_slope_samples_hurdle * x_val
+      mu_count_samples <- reverse_link_count(lp_count)
+      prob_zero_samples <- reverse_link_hurdle(lp_hurdle)
+      prob_positive_samples <- 1 - prob_zero_samples
+      expected_value_samples <- prob_positive_samples * mu_count_samples
+      if (!is.null(transform_fn)) {
+        expected_value_samples <- transform_fn(expected_value_samples)
+      }
+      expected_value_samples
+    })
+    fixed_predictions_combined$lower <- apply(ci_bounds_combined, 2, quantile, probs = 0.025)
+    fixed_predictions_combined$upper <- apply(ci_bounds_combined, 2, quantile, probs = 0.975)
+    
+    # Create plots for each component
+    p_count <- ggplot() +
+      geom_ribbon(
+        data = fixed_predictions_count,
+        aes(x = x_value, ymin = lower, ymax = upper),
+        fill = "blue", alpha = 0.1
+      ) +
+      geom_line(
+        data = fixed_predictions_count,
+        aes(x = x_value, y = response),
+        color = "blue",
+        size = 1.3
+      ) +
+      labs(
+        title = paste("Count Component:", x_lab),
+        x = x_lab,
+        y = "Expected Count Given Positive Outcome"
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        axis.title = element_text(face = "bold"),
+        panel.grid.minor = element_blank()
+      )
+    
+    p_hurdle <- ggplot() +
+      geom_ribbon(
+        data = fixed_predictions_hurdle,
+        aes(x = x_value, ymin = lower, ymax = upper),
+        fill = "green", alpha = 0.1
+      ) +
+      geom_line(
+        data = fixed_predictions_hurdle,
+        aes(x = x_value, y = response),
+        color = "green",
+        size = 1.3
+      ) +
+      labs(
+        title = paste(ifelse(model_type == "hurdle", "Probability of Positive Outcome", "Probability of Not Zero-Inflated"), ":", x_lab),
+        x = x_lab,
+        y = "Probability"
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        axis.title = element_text(face = "bold"),
+        panel.grid.minor = element_blank()
+      )
+    
+    p_combined <- ggplot() +
+      geom_ribbon(
+        data = fixed_predictions_combined,
+        aes(x = x_value, ymin = lower, ymax = upper),
+        fill = "purple", alpha = 0.1
+      ) +
+      geom_line(
+        data = fixed_predictions_combined,
+        aes(x = x_value, y = response),
+        color = "purple",
+        size = 1.3
+      ) +
+      labs(
+        title = paste("Combined Expected Value:", x_lab),
+        x = x_lab,
+        y = y_lab
+      ) +
+      theme_bw(base_size = 12) +
+      theme(
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+        axis.title = element_text(face = "bold"),
+        panel.grid.minor = element_blank()
+      )
+    
+    # Store the plots
+    plots_list[[paste0(e, "_count")]] <- p_count
+    plots_list[[paste0(e, "_hurdle")]] <- p_hurdle
+    plots_list[[paste0(e, "_combined")]] <- p_combined
+  }
+  
+  return(plots_list)
+}
+
+
+
+
 ##############################################################################
 ############################ Check Models ####################################
 ##############################################################################
