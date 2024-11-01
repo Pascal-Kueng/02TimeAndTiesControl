@@ -627,7 +627,9 @@ mcmc_plot(pa_sub,
           )
 
 conditional_effects(pa_sub, effects = 'persuasion_self_cw')
-marginaleffects::plot_slopes(pa_sub, variables = 'persuasion_self_cw', condition = 'coupleID')
+conditional_effects(pa_sub, effects = 'pressure_self_cw')
+
+
 ```
 
 
@@ -747,6 +749,9 @@ plot(
   theme_bw()
 
 
+conditional_effects(pa_sub_zero_model, effects = 'persuasion_self_cw')
+conditional_effects(pa_sub_zero_model, effects = 'pressure_self_cw')
+
 ```
 
 
@@ -858,6 +863,8 @@ plot(
   theme_bw()
 
 
+conditional_effects(pa_sub_active_model, effects = 'persuasion_self_cw')
+conditional_effects(pa_sub_active_model, effects = 'pressure_self_cw')
 
 
 ```
@@ -987,6 +994,8 @@ plot(
   theme_bw()
 
 
+conditional_effects(pa_obj_log, effects = 'persuasion_self_cw')
+conditional_effects(pa_obj_log, effects = 'pressure_self_cw')
 
 
 ```
@@ -1109,7 +1118,8 @@ plot(
   theme_bw()
 
 
-
+conditional_effects(mood_gauss, effects = 'persuasion_self_cw')
+conditional_effects(mood_gauss, effects = 'pressure_self_cw')
 
 ```
 
@@ -1241,6 +1251,8 @@ plot(
   theme_bw()
 
 
+conditional_effects(reactance_ordinal, effects = 'persuasion_self_cw', categorical = TRUE)
+conditional_effects(reactance_ordinal, effects = 'pressure_self_cw', categorical = TRUE)
 
 ```
 
@@ -1369,6 +1381,10 @@ plot(
 ) + 
   coord_cartesian(xlim = c(-6, 6)) +
   theme_bw()
+
+
+conditional_effects(is_reactance, effects = 'persuasion_self_cw')
+conditional_effects(is_reactance, effects = 'pressure_self_cw')
 
 ```
 ```{r}
