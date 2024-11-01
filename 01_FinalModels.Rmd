@@ -64,8 +64,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 43000 # use 40'000
-warmup = 3000
+iterations = 5000 # use 40'000
+warmup = 2000
 
 # NO AR!!!
 #corstr = 'ar'
@@ -487,8 +487,8 @@ hist(log(df_double$pa_sub+00000000001), breaks = 40)
 
 ```
 
-## Hurdle Poisson Model
-```{r pa_sub_poisson, results='hide'}
+## Hurdle Lognormal Model
+```{r pa_sub_lognormal, results='hide'}
 
 
 formula <- bf(
@@ -574,7 +574,7 @@ pa_sub <- my_brm(
 ```
 
 
-```{r check_pa_sub_poisson}
+```{r check_pa_sub_lognormal}
 
 check_brms(pa_sub, log_pp_check = TRUE)
 DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
@@ -585,7 +585,7 @@ In this instance, the warning about max treedepth is a false positive. We have s
 treedepth to 15, and when we check with shinystan, we see that treedepth is 
 consistently between 10 and 14.
 
-```{r report_pa_sub_poisson, results='asis'}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   pa_sub, 
@@ -732,7 +732,7 @@ DHARMa.check_brms.all(pa_sub_zero_model, integer = TRUE, outliers_type = 'bootst
 ```
 
 
-```{r report_pa_sub_separate_inactive, results='asis'}
+```{r report_pa_sub_separate_inactive, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   pa_sub_zero_model, 
@@ -853,7 +853,8 @@ DHARMa.check_brms.all(pa_sub_active_model, integer = TRUE, outliers_type = 'boot
 ```
 
 
-```{r report_pa_sub_separate_active, results='asis'}
+```{r report_pa_sub_separate_active, results='asis', fig.width=8, fig.height=6, dpi=300}
+
 
 summarize_brms(
   pa_sub_active_model, 
@@ -1111,7 +1112,7 @@ DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 
 ```
 
-```{r report_mood_gauss, results='asis'}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   mood_gauss, 
@@ -1245,7 +1246,7 @@ DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 ```
 
-```{r report_reactance_ordinal, results='asis'}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1382,7 +1383,7 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 ```
 
-```{r report_is_reactance, results='asis'}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   is_reactance, 
@@ -1471,7 +1472,7 @@ all_models <- report_side_by_side(
 summary_all_models <- all_models %>%
   print_df(rows_to_pack = rows_to_pack_final) %>%
   add_header_above(
-    c(" ", "Subjective MVPA Hurdle Poisson" = 2, 
+    c(" ", "Subjective MVPA Hurdle Lognormal" = 2, 
       "Device-Based MVPA Log (Gaussian)" = 2, 
       "Mood Gaussian" = 2,
       "Reactance Ordinal" = 2,
