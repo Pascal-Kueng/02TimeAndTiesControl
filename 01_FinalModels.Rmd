@@ -1350,6 +1350,7 @@ conditional_spaghetti(
   effects = c('persuasion_self_cw', 'pressure_self_cw')
   , group_var = 'coupleID'
   , n_groups = 10
+  , plot_full_range = T
   )
 
 

@@ -1277,8 +1277,7 @@ plot_cumulative_model <- function(
     
     # Handle cases where the effect is not in the fixed effects
     if (is.null(beta_samples)) {
-      stop(paste("Effect", e, "not found in fixed effects.")
-      )
+      stop(paste("Effect", e, "not found in fixed effects."))
     }
     
     n_samples <- nrow(thresholds_samples)
@@ -1369,6 +1368,8 @@ plot_cumulative_model <- function(
       # Handle random effects
       random_effects_prefix <- paste0("r_", group_var)
       random_effects_pattern <- paste0("r_", group_var, "\\[(.*),(.+)]")
+      
+      # Extract random effects columns
       random_effects <- posterior_samples %>%
         select(starts_with(random_effects_prefix)) %>%
         pivot_longer(
@@ -1376,16 +1377,11 @@ plot_cumulative_model <- function(
           names_to = c("group_level", ".value"),
           names_pattern = random_effects_pattern
         ) %>%
-        mutate(group_level = as.character(group_level)) %>%
-        select(group_level, Intercept, starts_with(e))
+        mutate(group_level = as.character(group_level))
       
-      # Handle cases where random effects for 'e' are not present
+      # Handle cases where random effects components are not present
       if (!e %in% names(random_effects)) {
-        # If random slope for 'e' is not present, set it to zero
         random_effects[[e]] <- 0
-      }
-      if (!"Intercept" %in% names(random_effects)) {
-        random_effects$Intercept <- 0
       }
       
       # Determine which group levels to include
@@ -1411,11 +1407,11 @@ plot_cumulative_model <- function(
         # Filter for the posterior samples of this specific group
         individual_samples <- random_effects %>% filter(group_level == j)
         
+        # Get random intercepts for this group
+        random_intercepts <- individual_samples$Intercept
+        
         # Combine fixed and random effects for slopes
         beta_j_samples <- beta_samples + individual_samples[[e]]
-        
-        # Since thresholds are typically fixed across groups, we use the fixed thresholds
-        # If your model includes random thresholds, additional adjustments are needed
         
         # Determine predictor range for this group
         if (plot_full_range) {
@@ -1458,8 +1454,8 @@ plot_cumulative_model <- function(
         for (xi in seq_along(predictor_range_group)) {
           x_val <- predictor_range_group[xi]
           
-          # Compute linear predictor for all samples
-          eta_s <- beta_j_samples * x_val
+          # Compute linear predictor for all samples, now including random intercepts
+          eta_s <- beta_j_samples * x_val + random_intercepts
           
           # Compute cumulative probabilities for each threshold
           cdf_s <- matrix(NA, nrow = n_samples, ncol = K + 1)
@@ -1539,6 +1535,8 @@ plot_cumulative_model <- function(
   
   return(plots_list)
 }
+
+
 
 
 
