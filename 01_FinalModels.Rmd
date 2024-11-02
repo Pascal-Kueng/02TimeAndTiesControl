@@ -1349,14 +1349,13 @@ conditional_spaghetti(
   reactance_ordinal, 
   effects = c('persuasion_self_cw', 'pressure_self_cw')
   , group_var = 'coupleID'
-  #, n_groups = 10
+  #, n_groups = 15
   , plot_full_range = T
 )
 
 
 ```
 
-only plotting 10 random participant's random effects to make the plot readable. 
 
 
 ```{r reactance_ordinal_marginaleffects}

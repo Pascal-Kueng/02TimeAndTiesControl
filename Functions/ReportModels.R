@@ -585,13 +585,13 @@ plot_general_model <- function(
       geom_ribbon(
         data = fixed_predictions,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "navy", alpha = 0.1
+        fill = "blue4", alpha = 0.1
       ) +
       # Add fixed effect line
       geom_line(
         data = fixed_predictions,
         aes(x = x_value, y = response),
-        color = "navy",
+        color = "blue4",
         size = 1.3
       ) +
       labs(
@@ -713,7 +713,7 @@ plot_general_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = response, group = group_level),
-          color = "navy",
+          color = "blue4",
           size = 0.3,
           alpha = 0.3
         ) +
@@ -936,12 +936,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_count,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "blue", alpha = 0.1
+        fill = "blue3", alpha = 0.1
       ) +
       geom_line(
         data = fixed_predictions_count,
         aes(x = x_value, y = response),
-        color = "blue",
+        color = "blue3",
         size = 1.3
       ) +
       labs(
@@ -962,12 +962,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_hurdle,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "green", alpha = 0.1
+        fill = "green3", alpha = 0.1
       ) +
       geom_line(
         data = fixed_predictions_hurdle,
         aes(x = x_value, y = response),
-        color = "green",
+        color = "green3",
         size = 1.3
       ) +
       labs(
@@ -1161,7 +1161,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
-          color = "navy",
+          color = "blue3",
           size = 0.3,
           alpha = 0.3
         ) +
@@ -1174,7 +1174,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
-          color = "navy",
+          color = "green3",
           size = 0.3,
           alpha = 0.3
         ) +
@@ -1187,7 +1187,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
-          color = "navy",
+          color = "purple",
           size = 0.3,
           alpha = 0.3
         ) +
@@ -1520,7 +1520,7 @@ plot_cumulative_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = median, group = interaction(group_level, category), color = category),
           size = 0.3,
-          alpha = 0.5
+          alpha = 0.3
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects:", x_lab)
