@@ -713,9 +713,9 @@ plot_general_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = response, group = group_level),
-          color = "grey50",
+          color = "navy",
           size = 0.3,
-          alpha = 0.8
+          alpha = 0.3
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects:", x_lab)
@@ -1161,9 +1161,9 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
-          color = "grey50",
+          color = "navy",
           size = 0.3,
-          alpha = 0.8
+          alpha = 0.3
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects (Count Component):", x_lab)
@@ -1174,9 +1174,9 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
-          color = "grey50",
+          color = "navy",
           size = 0.3,
-          alpha = 0.8
+          alpha = 0.3
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects (Hurdle Component):", x_lab)
@@ -1187,9 +1187,9 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
-          color = "grey50",
+          color = "navy",
           size = 0.3,
-          alpha = 0.8
+          alpha = 0.3
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects (Combined):", x_lab)
@@ -1343,12 +1343,19 @@ plot_cumulative_model <- function(
       )
     }))
     
+    # Get default ggplot colors for categories
+    num_categories <- K
+    default_colors <- scales::hue_pal()(num_categories)
+    
     # Initialize ggplot
     p <- ggplot(plot_data, aes(x = x_value, y = median, color = category, fill = category)) +
       # Add CI ribbon
       geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.1, color = NA) +
       # Add median lines
-      geom_line(size = 1.2) +
+      geom_line(size = 1.3) +
+      # Set manual colors for categories
+      scale_color_manual(values = default_colors) +
+      scale_fill_manual(values = default_colors) +
       labs(
         title = paste("Predicted Probabilities by Category:", x_lab),
         x = x_lab,
@@ -1507,14 +1514,13 @@ plot_cumulative_model <- function(
       # Remove any NULL elements (in case some groups had no data)
       individual_predictions <- individual_predictions %>% filter(!is.na(median))
       
-      # Add individual lines to the plot
+      # Add individual lines to the plot, now using category-specific colors
       p <- p +
         geom_line(
           data = individual_predictions,
-          aes(x = x_value, y = median, group = interaction(group_level, category)),
-          color = "grey50",
+          aes(x = x_value, y = median, group = interaction(group_level, category), color = category),
           size = 0.3,
-          alpha = 0.8
+          alpha = 0.5
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects:", x_lab)
@@ -1535,8 +1541,6 @@ plot_cumulative_model <- function(
   
   return(plots_list)
 }
-
-
 
 
 
