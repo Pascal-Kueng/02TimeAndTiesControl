@@ -126,8 +126,8 @@ summarize_brms <- function(model,
     stop("Number of variables in p_direction and fixed_effects do not match.")
   } 
   
-  fixed_effects$p_direction <- format(round(p_dir, 3), nsmall = 2)
-  random_effects$p_direction <- NA
+  fixed_effects$p_dir <- format(round(p_dir, 3), nsmall = 2)
+  random_effects$p_dir <- NA
   
   # Calculate Bayes Factor for fixed effects
   if (bayesfactor) {
@@ -136,7 +136,7 @@ summarize_brms <- function(model,
       model,
       effects = "fixed"
     )
-    fixed_effects$Bayes_Factor <- ifelse(
+    fixed_effects$BF <- ifelse(
       exp(bayesfac$log_BF) > 100, 
       '>100', 
       sprintf("%.3f", exp(bayesfac$log_BF))
@@ -145,7 +145,7 @@ summarize_brms <- function(model,
     # Add evidence interpretation using case_when for clarity
     fixed_effects <- fixed_effects %>%
       mutate(
-        Evidence = case_when(
+        BF_Evidence = case_when(
           exp(bayesfac$log_BF) > 100          ~ "Overwhelming Evidence",
           exp(bayesfac$log_BF) > 30           ~ "Very Strong Evidence",
           exp(bayesfac$log_BF) > 10           ~ "Strong Evidence",
@@ -158,8 +158,8 @@ summarize_brms <- function(model,
         )
       )
     
-    random_effects$Bayes_Factor <- NA
-    random_effects$Evidence <- NA
+    random_effects$BF <- NA
+    random_effects$BF_Evidence <- NA
   } 
   # Select rows
   model_rows_fixed <- model_rows_fixed %||% rownames(fixed_effects)
@@ -243,9 +243,68 @@ summarize_brms <- function(model,
     paste0("[", full_results$`l-95% CI`, ", ", full_results$`u-95% CI`, "]")
   )
   
-  return(full_results[, c(1, 8)])
+  if (bayesfactor) {
+    return(full_results[, c(1, length(full_results), length(full_results) - 3, length(full_results) - 2, length(full_results) - 1)])
+  } else {
+    return(full_results[, c(1, length(full_results), length(full_results) - 1)])
+  }
 }
 
+
+
+
+# Function to report all models side by side.
+report_side_by_side <- function(
+    ...,
+    bayesfactor = FALSE,
+    model_rows_random = NULL, 
+    model_rows_fixed = NULL,
+    model_rownames_fixed = NULL, 
+    model_rownames_random = NULL) {
+  models <- list(...)
+  model_names <- sapply(substitute(list(...))[-1], deparse)
+  names(models) <- model_names
+  
+  side_by_side <- NULL
+  for (i in seq_along(models)) {
+    model <- models[[i]]
+    model_name <- model_names[i]
+    print(model_name)
+    if (model$family[[1]] %in% c(
+      'bernoulli', 
+      'negbinomial',
+      'cumulative', 
+      'hurdle_lognormal',
+      'hurdle_poisson',
+      'hurdle_negbinomial',
+      'hurdle_cumulative',
+      'lognormal',
+      'skewnormal') | grepl('log', model_name)) {
+      exponentiate <- TRUE
+    } else {
+      exponentiate <- FALSE
+    }
+    model_summary <- summarize_brms(
+      model, 
+      short_version = TRUE, 
+      bayesfactor = bayesfactor,
+      exponentiate = exponentiate, 
+      model_rows_random = model_rows_random,
+      model_rows_fixed = model_rows_fixed,
+      model_rownames_fixed = model_rownames_fixed,
+      model_rownames_random = model_rownames_random
+    )
+    
+    colnames(model_summary) <- paste(colnames(model_summary), model_name)
+    
+    if (is.null(side_by_side)) {
+      side_by_side <- model_summary
+    } else {
+      side_by_side <- cbind(side_by_side, model_summary)
+    }
+  }
+  return(side_by_side)
+}
 
 
 
@@ -1594,52 +1653,4 @@ DHARMa.check_brms.all <- function(model, integer = FALSE, outliers_type = 'defau
 
 
 
-
-
-
-# Function to report all models side by side.
-report_side_by_side <- function(..., model_rows_random = NULL, model_rows_fixed = NULL,
-                                model_rownames_fixed = NULL, model_rownames_random = NULL) {
-  models <- list(...)
-  model_names <- sapply(substitute(list(...))[-1], deparse)
-  names(models) <- model_names
-  
-  side_by_side <- NULL
-  for (i in seq_along(models)) {
-    model <- models[[i]]
-    model_name <- model_names[i]
-    print(model_name)
-    if (model$family[[1]] %in% c(
-      'bernoulli', 
-      'negbinomial',
-      'cumulative', 
-      'hurdle_lognormal',
-      'hurdle_poisson',
-      'hurdle_negbinomial',
-      'hurdle_cumulative',
-      'lognormal',
-      'skewnormal') | grepl('log', model_name)) {
-      exponentiate <- TRUE
-    } else {
-      exponentiate <- FALSE
-    }
-    model_summary <- summarize_brms(
-      model, short_version = TRUE, 
-      exponentiate = exponentiate, 
-      model_rows_random = model_rows_random,
-      model_rows_fixed = model_rows_fixed,
-      model_rownames_fixed = model_rownames_fixed,
-      model_rownames_random = model_rownames_random
-    )
-    
-    colnames(model_summary) <- paste(colnames(model_summary), model_name)
-    
-    if (is.null(side_by_side)) {
-      side_by_side <- model_summary
-    } else {
-      side_by_side <- cbind(side_by_side, model_summary)
-    }
-  }
-  return(side_by_side)
-}
 

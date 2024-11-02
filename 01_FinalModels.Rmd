@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
 
-
 library(tidyverse)
 library(R.utils)
 library(wbCorr)
@@ -1542,6 +1541,7 @@ if (report_ordinal) {
 }
 
 
+bayesfactor = TRUE
 
 all_models <- report_side_by_side(
   pa_sub,
@@ -1550,6 +1550,7 @@ all_models <- report_side_by_side(
   reactance_ordinal,
   is_reactance,
   
+  bayesfactor = bayesfactor,
   model_rows_random = model_rows_random_final,
   model_rows_fixed = model_rows_fixed_final,
   model_rownames_random = model_rownames_random_final,
@@ -1558,28 +1559,61 @@ all_models <- report_side_by_side(
 
 
 # pretty printing
-summary_all_models <- all_models %>%
-  print_df(rows_to_pack = rows_to_pack_final) %>%
-  add_header_above(
-    c(" ", "Subjective MVPA Hurdle Lognormal" = 2, 
-      "Device-Based MVPA Log (Gaussian)" = 2, 
-      "Mood Gaussian" = 2,
-      "Reactance Ordinal" = 2,
-      "Reactance Dichotome" = 2)
+if (bayesfactor) {
+  summary_all_models <- all_models %>%
+    print_df(rows_to_pack = rows_to_pack_final) %>%
+    add_header_above(
+      c(" ", "Subjective MVPA Hurdle Lognormal" = 5, 
+        "Device-Based MVPA Log (Gaussian)" = 5, 
+        "Mood Gaussian" = 5,
+        "Reactance Ordinal" = 5,
+        "Reactance Dichotome" = 5)
+    )
+
+  export_xlsx(
+    summary_all_models, 
+    rows_to_pack = rows_to_pack_final,
+    file.path("Output", "AllModels_experimental_noAR.xlsx"), 
+    merge_option = 'both', 
+    simplify_2nd_row = TRUE,
+    colwidths = c(38, 
+                  7.2,13.3,7.2,7.2,24,
+                  7.2,13.3,7.2,7.2,24,
+                  7.2,13.3,7.2,7.2,24,
+                  7.2,13.3,7.2,7.2,24,
+                  7.2,13.3,7.2,7.2,24),
+    line_above_rows = c(1,2),
+    line_below_rows = c(-1)
   )
+} else {
+  summary_all_models <- all_models %>%
+    print_df(rows_to_pack = rows_to_pack_final) %>%
+    add_header_above(
+      c(" ", "Subjective MVPA Hurdle Lognormal" = 3, 
+        "Device-Based MVPA Log (Gaussian)" = 3, 
+        "Mood Gaussian" = 3,
+        "Reactance Ordinal" = 3,
+        "Reactance Dichotome" = 3)
+    )
 
-export_xlsx(
-  summary_all_models, 
-  rows_to_pack = rows_to_pack_final,
-  file.path("Output", "AllModels_experimental_noAR.xlsx"), 
-  merge_option = 'both', 
-  simplify_2nd_row = TRUE,
-  colwidths = c(38, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
-  line_above_rows = c(1,2),
-  line_below_rows = c(-1)
-)
-
-summary_all_models
+  export_xlsx(
+    summary_all_models, 
+    rows_to_pack = rows_to_pack_final,
+    file.path("Output", "AllModels_experimental_noAR.xlsx"), 
+    merge_option = 'both', 
+    simplify_2nd_row = TRUE,
+    colwidths = c(38, 
+                  7.2,13.3,7.2,
+                  7.2,13.3,7.2,
+                  7.2,13.3,7.2,
+                  7.2,13.3,7.2,
+                  7.2,13.3,7.2),
+    line_above_rows = c(1,2),
+    line_below_rows = c(-1)
+  )
+}
+  
+print(summary_all_models)
 
 ```
 
