@@ -64,7 +64,7 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 5000 # 10'000 per chain to achieve 40'000
+iterations = 12000 # 10'000 per chain to achieve 40'000
 warmup = 2000
 
 # NO AR!!!
@@ -578,12 +578,9 @@ pa_sub <- my_brm(
 
 check_brms(pa_sub, log_pp_check = TRUE)
 DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
-#shinystan::launch_shinystan(pa_sub)
 
 ```
-In this instance, the warning about max treedepth is a false positive. We have set
-treedepth to 15, and when we check with shinystan, we see that treedepth is 
-consistently between 10 and 14.
+
 
 ```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
@@ -651,15 +648,7 @@ conditional_spaghetti(
 ```{r pa_sub_lognormal_marginaleffects}
 
 marginaleffects::avg_predictions(pa_sub)
-marginaleffects::avg_slopes(
-  pa_sub, 
-  variables = c('persuasion_self_cw',
-              'persuasion_partner_cw',
-              'pressure_self_cw',
-              'pressure_partner_cw',
-              'pushing_self_cw',
-              'pushing_partner_cw')
-  )
+
 
 ```
 
@@ -799,15 +788,6 @@ conditional_spaghetti(
 ```{r pa_sub_zero_marginaleffects}
 
 marginaleffects::avg_predictions(pa_sub_zero_model)
-marginaleffects::avg_slopes(
-  pa_sub_zero_model, 
-  variables = c('persuasion_self_cw',
-              'persuasion_partner_cw',
-              'pressure_self_cw',
-              'pressure_partner_cw',
-              'pushing_self_cw',
-              'pushing_partner_cw')
-  )
 
 ```
 
@@ -937,15 +917,6 @@ conditional_spaghetti(
 ```{r pa_sub_active_model_marginaleffects}
 
 marginaleffects::avg_predictions(pa_sub_active_model)
-marginaleffects::avg_slopes(
-  pa_sub_active_model, 
-  variables = c('persuasion_self_cw',
-              'persuasion_partner_cw',
-              'pressure_self_cw',
-              'pressure_partner_cw',
-              'pushing_self_cw',
-              'pushing_partner_cw')
-  )
 
 ```
 
@@ -1214,10 +1185,6 @@ conditional_spaghetti(
 ```{r mood_gauss_marginaleffects}
 
 marginaleffects::avg_predictions(mood_gauss)
-marginaleffects::avg_slopes(
-  mood_gauss, 
-  variables = c('pushing_partner_cw')
-  )
 
 ```
 
@@ -1367,10 +1334,6 @@ conditional_spaghetti(
 ```{r reactance_ordinal_marginaleffects}
 
 marginaleffects::avg_predictions(reactance_ordinal)
-marginaleffects::avg_slopes(
-  reactance_ordinal, 
-  variables = c('persuasion_self_cw', 'pressure_self_cw')
-  )
 
 ```
 
@@ -1517,11 +1480,6 @@ conditional_spaghetti(
 ```{r is_reactance_marginaleffects}
 
 marginaleffects::avg_predictions(is_reactance)
-marginaleffects::avg_slopes(
-  is_reactance, 
-  variables = c('pressure_self_cw',
-              'pushing_self_cw')
-  )
 
 ```
 
@@ -1535,7 +1493,7 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 # Report All Models
 
-```{r report_sidebyside}
+```{r report_sidebyside, results = 'asis'}
 
 
 if (report_ordinal) {

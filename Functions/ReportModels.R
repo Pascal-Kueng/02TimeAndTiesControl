@@ -531,7 +531,7 @@ plot_general_model <- function(
         data = fixed_predictions,
         aes(x = x_value, y = response),
         color = "blue4",
-        size = 1.3
+        linewidth = 1.3
       ) +
       labs(
         title = paste("Fixed Effects:", x_lab),
@@ -653,7 +653,7 @@ plot_general_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = response, group = group_level),
           color = "blue4",
-          size = 0.3,
+          linewidth = 0.3,
           alpha = 0.3
         ) +
         labs(
@@ -881,7 +881,7 @@ plot_hurdle_model <- function(
         data = fixed_predictions_count,
         aes(x = x_value, y = response),
         color = "blue3",
-        size = 1.3
+        linewidth = 1.3
       ) +
       labs(
         title = paste("Count Component:", x_lab),
@@ -907,7 +907,7 @@ plot_hurdle_model <- function(
         data = fixed_predictions_hurdle,
         aes(x = x_value, y = response),
         color = "green3",
-        size = 1.3
+        linewidth = 1.3
       ) +
       labs(
         title = paste(ifelse(model_type == "hurdle", "Probability of Positive Outcome", "Probability of Not Zero-Inflated"), ":", x_lab),
@@ -931,7 +931,7 @@ plot_hurdle_model <- function(
         data = fixed_predictions_combined,
         aes(x = x_value, y = response),
         color = "purple",
-        size = 1.3
+        linewidth = 1.3
       ) +
       labs(
         title = paste("Combined Expected Value:", x_lab),
@@ -1101,7 +1101,7 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
           color = "blue3",
-          size = 0.3,
+          linewidth = 0.3,
           alpha = 0.3
         ) +
         labs(
@@ -1114,7 +1114,7 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
           color = "green3",
-          size = 0.3,
+          linewidth = 0.3,
           alpha = 0.3
         ) +
         labs(
@@ -1127,7 +1127,7 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
           color = "purple",
-          size = 0.3,
+          linewidth = 0.3,
           alpha = 0.3
         ) +
         labs(
@@ -1291,7 +1291,7 @@ plot_cumulative_model <- function(
       # Add CI ribbon
       geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.1, color = NA) +
       # Add median lines
-      geom_line(size = 1.3) +
+      geom_line(linewidth = 1.3) +
       # Set manual colors for categories
       scale_color_manual(values = default_colors) +
       scale_fill_manual(values = default_colors) +
@@ -1458,7 +1458,7 @@ plot_cumulative_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = median, group = interaction(group_level, category), color = category),
-          size = 0.3,
+          linewidth = 0.3,
           alpha = 0.3
         ) +
         labs(
