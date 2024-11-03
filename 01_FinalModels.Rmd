@@ -623,6 +623,12 @@ plot(
   #coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
+
+plot(
+  bayestestR::rope(pa_sub),
+) + theme_bw()
+
+
 conditional_spaghetti(
   pa_sub, 
   effects = c('persuasion_self_cw',
@@ -945,14 +951,9 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-
+  , brms::set_prior("normal(0, 50)", class = "Intercept") 
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
   , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
 )
 
 #brms::validate_prior(
@@ -1070,14 +1071,9 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 5)", class = "b")
-  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6) # range of the outcome scale
-  
+  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6)
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
   , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
 )
 
 #brms::validate_prior(
@@ -1212,14 +1208,7 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
-  #, brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5) # range of the outcome scale
-  
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
 )
 
 
@@ -1361,14 +1350,8 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5) # range of the outcome scale
-  
+  , brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5) 
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
 )
 
 
