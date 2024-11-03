@@ -108,6 +108,8 @@ summarize_brms <- function(model,
                            bayesfactor = TRUE,
                            rope_range = NULL) {
   
+  format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
+  
   # Extract summaries
   summ_og <- summary(model)
   fixed_effects <- summ_og$fixed
@@ -117,22 +119,27 @@ summarize_brms <- function(model,
   # Add p_direction to fixed effects
   p_dir <- as.data.frame(bayestestR::p_direction(
     model,
-    effects = 'fixed', 
-    component = 'conditional'
+    effects = 'fixed'
+  ))
+  fixed_effects$pd <- paste0(format_number(p_dir$pd*100,0), "%")
+  random_effects$pd <- NA
+  
+  # Add ROPE
+  rope_df <- as.data.frame(bayestestR::rope(
+    model,
+    effects = 'fixed',
+    range = rope_range,
+    verbose = FALSE
   ))
   
-  p_dir <- p_dir$pd
+  fixed_effects$ROPE_lower <- rope_df$ROPE_low
+  fixed_effects$ROPE_upper <- rope_df$ROPE_high
   
-  if (length(p_dir) != nrow(fixed_effects)) {
-    stop("Number of variables in p_direction and fixed_effects do not match.")
-  } 
-  
-  fixed_effects$p_dir <- format(round(p_dir, 3), nsmall = 2)
-  random_effects$p_dir <- NA
+  random_effects$ROPE_lower <- NA
+  random_effects$ROPE_upper <- NA
   
   # Calculate Bayes Factor for fixed effects
   if (bayesfactor) {
-    
     bayesfac <- bayestestR::bayesfactor(
       model,
       effects = "fixed"
@@ -142,7 +149,7 @@ summarize_brms <- function(model,
       '>100', 
       sprintf("%.3f", exp(bayesfac$log_BF))
     )
-  
+    
     # Add evidence interpretation using case_when for clarity
     fixed_effects <- fixed_effects %>%
       mutate(
@@ -162,47 +169,78 @@ summarize_brms <- function(model,
     random_effects$BF <- NA
     random_effects$BF_Evidence <- NA
   } 
-  # Select rows
-  model_rows_fixed <- model_rows_fixed %||% rownames(fixed_effects)
-  model_rows_random <- model_rows_random %||% rownames(random_effects)
   
-  fixed_effects <- fixed_effects[model_rows_fixed, ]
-  random_effects <- format(round(random_effects[model_rows_random, ], 2), nsmall = 2)
-  
-  # Format fixed effects
-  format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
-  
-  fixed_effects$Est.Error <- format_number(fixed_effects$Est.Error)
-  fixed_effects$Bulk_ESS <- format_number(fixed_effects$Bulk_ESS)
-  fixed_effects$Tail_ESS <- format_number(fixed_effects$Tail_ESS)
-  Rhat <- format_number(fixed_effects$Rhat, 3)
-  
-  # Add significance stars
+  # compute significance stars based on CI
   is_significant <- function(low, high) {
     (low > 0 & high > 0) | (low < 0 & high < 0)
   }
-  significance <- ifelse(
+  significance_fixed <- ifelse(
     is_significant(fixed_effects$`l-95% CI`, fixed_effects$`u-95% CI`),
     '*', 
     ''
   )
+  significance_random <- NA
   
-  # Handle exponentiation
+  # Handle exponentiation for fixed effects
   if (exponentiate) {
     fixed_effects$Estimate <- exp(fixed_effects$Estimate)
     fixed_effects$`u-95% CI` <- exp(fixed_effects$`u-95% CI`)
     fixed_effects$`l-95% CI` <- exp(fixed_effects$`l-95% CI`)
+    fixed_effects$ROPE_lower <-exp(fixed_effects$ROPE_lower)
+    fixed_effects$ROPE_upper <- exp(fixed_effects$ROPE_upper)
   }
   
-  # Format CIs
-  fixed_effects$`l-95% CI` <- format_number(fixed_effects$`l-95% CI`)
-  fixed_effects$`u-95% CI` <- format_number(fixed_effects$`u-95% CI`)
+  # Format ROPE
+  fixed_effects$`inside ROPE` <- paste0(format_number(rope_df$ROPE_Percentage,0), '%')
+  random_effects$`inside ROPE` <- NA
+  
+  fixed_effects$ROPE <- paste0(
+    '[',
+    format_number(fixed_effects$ROPE_lower), 
+    ', ',
+    format_number(fixed_effects$ROPE_upper),
+    ']'
+  )
+  random_effects$ROPE <- NA
   
   # Format estimates with significance
   fixed_effects$Estimate <- ifelse(
     is.na(fixed_effects$Estimate),
     NA,
-    paste0(format_number(fixed_effects$Estimate), significance)
+    paste0(format_number(fixed_effects$Estimate), significance_fixed)
+  )
+  random_effects$Estimate <- format_number(random_effects$Estimate)
+  
+  # Format CIs
+  fixed_effects$`95% CI` <- paste0(
+    '[',
+    format_number(fixed_effects$`l-95% CI`), 
+    ', ',
+    format_number(fixed_effects$`u-95% CI`),
+    ']'
+  )
+  random_effects$`95% CI` <- paste0(
+    '[',
+    format_number(random_effects$`l-95% CI`), 
+    ', ',
+    format_number(random_effects$`u-95% CI`),
+    ']'
+  )
+  
+  # Combine fixed and random effects
+  full_results <- rbind(fixed_effects, random_effects)
+  
+  # Select columns
+  full_results_subset <- full_results[, c('Estimate', 'Est.Error', '95% CI', 'pd', 'ROPE', 'inside ROPE')]
+  
+  if (bayesfactor) {
+    full_results_subset <- cbind(
+      full_results_subset,
+      full_results[, c('BF', 'BF_Evidence')])
+  }
+  
+  full_results_subset <- cbind(
+    full_results_subset, full_results[, c('Rhat', 'Bulk_ESS', 'Tail_ESS')]
   )
   
   # Determine correct column name
@@ -216,97 +254,49 @@ summarize_brms <- function(model,
       'exp(Est.)'
     }
   } else {
-    'b'
+    'Est.'
   }
   
-  # Rename columns
-  colnames(fixed_effects)[1] <- colnames(random_effects)[1] <- correct_name
+  names(full_results_subset)[1:2] <- c(correct_name, 'SE')
+  
+  # Round numbers
+  full_results_subset$SE <- format_number(full_results_subset$SE,2)
+  full_results_subset$Rhat <- format_number(full_results_subset$Rhat,3)
+  full_results_subset$Bulk_ESS <- format_number(full_results_subset$Bulk_ESS,0)
+  full_results_subset$Tail_ESS <- format_number(full_results_subset$Tail_ESS,0)
+  
+  # Select rows and handle missing ones
+  desired_rows <- c(model_rows_fixed, model_rows_random)
+  if (is.null(desired_rows)) {
+    desired_rows <- rownames(full_results_subset)
+  }
+  
+  # Create an empty data frame with desired rows
+  empty_df <- data.frame(
+    matrix(NA, nrow = length(desired_rows), ncol = ncol(full_results_subset)),
+    stringsAsFactors = FALSE
+  )
+  colnames(empty_df) <- colnames(full_results_subset)
+  rownames(empty_df) <- desired_rows
+  
+  # Fill in the data where available
+  available_rows <- intersect(desired_rows, rownames(full_results_subset))
+  empty_df[available_rows, ] <- full_results_subset[available_rows, ]
+  
+  full_results_subset <- empty_df
   
   # Handle row names
-  if (!is.null(model_rownames_fixed)) rownames(fixed_effects) <- model_rownames_fixed
-  if (!is.null(model_rownames_random)) rownames(random_effects) <- model_rownames_random
-  
-  # Combine fixed and random effects
-  fixed_effects$Rhat <- Rhat
-  full_results <- rbind(fixed_effects, random_effects)
-  
-  if (!short_version) {
-    return(full_results[, c(1, 3:length(full_results))])
-  }
-  
-  # Create short version with CI
-  full_results$`95% CI` <- ifelse(
-    is.na(full_results[[correct_name]]) | 
-      is.na(full_results$`u-95% CI`) | 
-      grepl("NA", full_results$`u-95% CI`) | 
-      grepl("^\\s*NA\\s*$", full_results[[correct_name]]),
-    NA,
-    paste0("[", full_results$`l-95% CI`, ", ", full_results$`u-95% CI`, "]")
-  )
-  
-  if (bayesfactor) {
-    return(full_results[, c(1, length(full_results), length(full_results) - 3, length(full_results) - 2, length(full_results) - 1)])
-  } else {
-    return(full_results[, c(1, length(full_results), length(full_results) - 1)])
-  }
-}
-
-
-
-
-# Function to report all models side by side.
-report_side_by_side <- function(
-    ...,
-    bayesfactor = FALSE,
-    model_rows_random = NULL, 
-    model_rows_fixed = NULL,
-    model_rownames_fixed = NULL, 
-    model_rownames_random = NULL) {
-  models <- list(...)
-  model_names <- sapply(substitute(list(...))[-1], deparse)
-  names(models) <- model_names
-  
-  side_by_side <- NULL
-  for (i in seq_along(models)) {
-    model <- models[[i]]
-    model_name <- model_names[i]
-    print(model_name)
-    if (model$family[[1]] %in% c(
-      'bernoulli', 
-      'negbinomial',
-      'cumulative', 
-      'hurdle_lognormal',
-      'hurdle_poisson',
-      'hurdle_negbinomial',
-      'hurdle_cumulative',
-      'lognormal',
-      'skewnormal') | grepl('log', model_name)) {
-      exponentiate <- TRUE
+  if (!is.null(model_rownames_fixed) || !is.null(model_rownames_random)) {
+    model_rownames <- c(model_rownames_fixed, model_rownames_random)
+    if (length(model_rownames) != nrow(full_results_subset)) {
+      warning("Length of model_rownames does not match number of rows")
     } else {
-      exponentiate <- FALSE
-    }
-    model_summary <- summarize_brms(
-      model, 
-      short_version = TRUE, 
-      bayesfactor = bayesfactor,
-      exponentiate = exponentiate, 
-      model_rows_random = model_rows_random,
-      model_rows_fixed = model_rows_fixed,
-      model_rownames_fixed = model_rownames_fixed,
-      model_rownames_random = model_rownames_random
-    )
-    
-    colnames(model_summary) <- paste(colnames(model_summary), model_name)
-    
-    if (is.null(side_by_side)) {
-      side_by_side <- model_summary
-    } else {
-      side_by_side <- cbind(side_by_side, model_summary)
+      rownames(full_results_subset) <- model_rownames
     }
   }
-  return(side_by_side)
+  
+  return(full_results_subset)
 }
-
 
 
 
