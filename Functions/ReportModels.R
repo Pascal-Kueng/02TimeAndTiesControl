@@ -105,7 +105,8 @@ summarize_brms <- function(model,
                            model_rows_random = NULL,
                            model_rownames_fixed = NULL,
                            model_rownames_random = NULL,
-                           bayesfactor = TRUE) {
+                           bayesfactor = TRUE,
+                           rope_range = NULL) {
   
   # Extract summaries
   summ_og <- summary(model)

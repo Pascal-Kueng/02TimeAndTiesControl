@@ -567,8 +567,10 @@ summarize_brms(
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
-# plot continuous model
+# Continuous part of model
+
 variable <- c(
+  '(Intercept)',
   'b_persuasion_self_cw',
   'b_persuasion_partner_cw',
   'b_pressure_self_cw',
@@ -577,13 +579,25 @@ variable <- c(
   'b_pushing_partner_cw'
 )
 
-mcmc_plot(
-  pa_sub,
-  variable = variable,
-  #regex = TRUE,
-  type = 'areas',
-  prob = 0.95
-)
+# rope range for continuous part of the model
+# for linear models it is 0.1 * sd(Y) according to Kruschke (2018). 
+# Thus, for the lognormal distribution 
+# we need to sd of log(Y). For the continuous model. 
+rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
+
+df_report <- bayestestR::describe_posterior(
+  pa_sub, 
+  test = c(
+    "p_direction" 
+    ,"rope"
+    ,"p_map"
+    #,"bayesfactor"
+    ),
+  rope_range = c(-0.1 * rope_factor, 0.1 * rope_factor)
+) 
+
+df_report[!grepl('hu_', df_report$Parameter), ]
+
 
 plot(
   bayestestR::p_direction(pa_sub, parameter = variable),
@@ -592,11 +606,16 @@ plot(
 
 
 plot(
-  bayestestR::rope(pa_sub, parameter = variable, range = c(-0.1, 0.1)),
+  bayestestR::rope(
+    pa_sub, 
+    parameter = variable, 
+    range = c(-0.1 * rope_factor, 0.1 * rope_factor)),
 ) + theme_bw()
 
 
-# plot continuous model
+
+
+# Hurdle part of the model
 variable <- c(
   'b_hu_persuasion_self_cw',
   'b_hu_persuasion_partner_cw',
@@ -606,23 +625,35 @@ variable <- c(
   'b_hu_pushing_partner_cw'
 )
 
-mcmc_plot(
-  pa_sub,
-  variable = variable,
-  #regex = TRUE,
-  type = 'areas',
-  prob = 0.95
-)
+df_report <- bayestestR::describe_posterior(
+  pa_sub, 
+  test = c(
+    "p_direction" 
+    ,"rope"
+    ,"p_map"
+    #,"bayesfactor"
+    ),
+  rope_range = c(-0.18, 0.18)
+) 
+
+df_report[grepl('hu_', df_report$Parameter), ]
 
 plot(
   bayestestR::p_direction(pa_sub, parameter = variable),
   priors = TRUE
 ) + theme_bw()
 
-
+# The rope range for the bernoulli part of the model is -0.18, 0.18
 plot(
   bayestestR::rope(pa_sub, parameter = variable, range = c(-0.18, 0.18)),
 ) + theme_bw()
+
+
+
+
+
+
+
 
 
 conditional_spaghetti(
@@ -639,6 +670,18 @@ conditional_spaghetti(
   plot_full_range = TRUE
 )
 
+
+
+
+performance::model_performance(model)
+performance::check_model(model)
+
+modelbased::estimate_means(model)
+modelbased::estimate_relation(model)
+
+slopes <- estimate_slopes(model, trend = "pressure_partner_cw", by = "coupleID")
+
+slopes
 
 ```
 
@@ -747,18 +790,6 @@ summarize_brms(
   exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
-mcmc_plot(pa_obj_log,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
 
 plot(
   bayestestR::p_direction(pa_obj_log),
@@ -767,8 +798,11 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
+# rope range for conditional model
+rope_factor <- sd(log(pa_obj_log$data$pa_obj))
+
 plot(
-  bayestestR::rope(pa_obj_log)
+  bayestestR::rope(pa_obj_log, range = c(-0.1 * rope_factor, 0.1 * rope_factor))
 ) + theme_bw()
 
 
@@ -866,18 +900,6 @@ summarize_brms(
   exponentiate = F) %>%
   print_df(rows_to_pack = rows_to_pack)
 
-mcmc_plot(mood_gauss,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
 
 plot(
   bayestestR::p_direction(mood_gauss),
@@ -1002,20 +1024,6 @@ summarize_brms(
   model_rownames_random = model_rownames_random_ordinal,
   exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack_ordinal)
-
-
-mcmc_plot(reactance_ordinal,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
 
 
 plot(
@@ -1147,19 +1155,6 @@ summarize_brms(
   model_rownames_random = model_rownames_random,
   exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
-
-mcmc_plot(is_reactance,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
 
 plot(
   bayestestR::p_direction(is_reactance),
