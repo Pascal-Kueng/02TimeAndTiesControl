@@ -64,7 +64,7 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 12000 # use 40'000
+iterations = 5000 # 10'000 per chain to achieve 40'000
 warmup = 2000
 
 # NO AR!!!
@@ -778,6 +778,11 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
+plot(
+  bayestestR::rope(pa_sub_zero_model)
+) + theme_bw()
+
+
 conditional_spaghetti(
   pa_sub_zero_model, 
   effects = c('persuasion_self_cw',
@@ -913,6 +918,10 @@ plot(
 ) + 
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
+
+plot(
+  bayestestR::rope(pa_sub_active_model)
+) + theme_bw()
 
 
 conditional_spaghetti(
@@ -1062,27 +1071,15 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
+plot(
+  bayestestR::rope(pa_obj_log)
+) + theme_bw()
+
+
 
 # Nothing significant, no plots
 
 ```
-
-# Nothing significant, no plots
-
-#```{r pa_obj_log_model_marginaleffects}
-
-marginaleffects::avg_predictions(pa_obj_log)
-marginaleffects::avg_slopes(
-  pa_obj_log, 
-  variables = c('persuasion_self_cw',
-              'persuasion_partner_cw',
-              'pressure_self_cw',
-              'pressure_partner_cw',
-              'pushing_self_cw',
-              'pushing_partner_cw')
-  )
-
-#```
 
 
 ## Affect
@@ -1197,6 +1194,10 @@ plot(
 )  + 
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
+
+plot(
+  bayestestR::rope(mood_gauss)
+) + theme_bw()
 
 
 conditional_spaghetti(
@@ -1343,6 +1344,11 @@ plot(
 ) + 
   coord_cartesian(xlim = c(-6, 6)) +
   theme_bw()
+
+plot(
+  bayestestR::rope(reactance_ordinal)
+) + theme_bw()
+
 
 
 conditional_spaghetti(
@@ -1491,6 +1497,11 @@ plot(
 ) + 
   coord_cartesian(xlim = c(-6, 6)) +
   theme_bw()
+
+plot(
+  bayestestR::rope(is_reactance)
+) + theme_bw()
+
 
 
 conditional_spaghetti(
