@@ -256,7 +256,10 @@ print_df(all_descriptives)
 
 ```{r corrs, results='asis'}
 
-cors <- wbCorr(df_full[,c(main_constructs)], df_full$coupleID, method = 'spearman')
+cors <- wbCorr(
+  df_full[,c(main_constructs)], 
+  df_full$coupleID, 
+  method = 'spearman')
 
 main_cors <- summary(cors, 'wb')$merged_wb
 
