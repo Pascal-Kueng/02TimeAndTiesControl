@@ -1,0 +1,288 @@
+---
+title: "APIM - Descriptives"
+author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    theme: flatly
+    df_print: kable
+    toc: yes
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    toc_depth: 5
+    highlight: tango
+---
+
+```{r setup, message=FALSE, results='hide'}
+
+knitr::opts_chunk$set(echo = TRUE)
+source(file.path('Functions', 'PrepareData.R'))
+
+```
+
+
+```{r prepare_datasets, results='hide'}
+
+df <- openxlsx::read.xlsx(file.path('long.xlsx'))
+df_original <- df
+
+dfs <- prepare_data(df, recode_pushing = TRUE, use_mi = use_mi)[[1]]
+df_double <- dfs[[1]]
+df_full <- dfs[[2]]
+
+```
+
+
+# Sample Statistics
+
+```{r sample_desc, results='asis'}
+
+# Income (mean of both partner's report)
+merge_income <- function(income1, income2) {
+  merged_income <- numeric(length(income1))
+  
+  # Loop through each pair of incomes
+  for (i in seq_along(income1)) {
+    # Handle NA
+    if (is.na(income1[i])) {
+      merged_income[i] <- income2[i]
+    } 
+    
+    else if (is.na(income2[i])) {
+      merged_income[i] <- income1[i]
+    }
+    
+    # if both are informative, take mean and round
+    else if (income1[i] %in% 1:6 && income2[i] %in% 1:6) {
+      merged_income[i] <- round((income1[i] + income2[i]) / 2)
+    }
+    
+    # if one is informative and the other not, use the informative one. 
+    else if (income1[i] %in% 1:6) {
+      merged_income[i] <- income1[i]
+    }
+    else if (income2[i] %in% 1:6) {
+      merged_income[i] <- income2[i]
+    }
+    
+    # Now we only have cases, where both are either 70 or 99. We simply report "undisclosed". 
+    else {
+      merged_income[i] <- 99
+    }
+  }
+  
+  # Convert to factor
+  merged_income <- factor(
+    merged_income, levels = c(1,2,3,4,5,6,70,99), 
+    labels = c(
+      "up to CHF 2'000.-", 
+      "CHF 2'001.- to CHF 4'000.-",
+      "CHF 4'001.- to CHF 6'000.-",
+      "CHF 6'001.- to CHF 8'000.-",
+      "CHF 8'001.- to CHF 10'000.-", 
+      "above CHF 10'000.-", 
+      "I don't know",
+      "Undisclosed"
+  )
+  )
+  
+  return(merged_income)
+}
+
+
+
+df_sample_report <- df_full %>%
+  group_by(coupleID) %>%
+  arrange(userID) %>%
+  # Computing couple level variables
+  mutate(
+    Household_Income = merge_income(first(pre_income_1), last(pre_income_1)),
+    
+    reldur = pre_rel_duration_m / 12 + pre_rel_duration_y,
+    Relationship_duration = mean(reldur, na.rm = TRUE),
+    
+    habdur = pre_hab_duration_m / 12 + pre_hab_duration_y,
+    Cohabiting_duration = mean(habdur, na.rm = TRUE),
+    
+    Marital_status = factor(
+      case_when(
+        all(pre_mat_stat == 1) ~ "Married",
+        any(pre_mat_stat == 1) ~ "One Partner Married",
+        TRUE ~ "Not Married"
+      )
+    ),
+    
+    Have_children = factor(
+      (first(pre_child_option) + last(pre_child_option)) > 0, 
+      levels = c(FALSE, TRUE), 
+      labels = c('Have Children', 'No Children')),
+    
+    Gender = factor(
+      gender, 
+      levels = c(1,2,3), 
+      labels = c('Male','Female', 'Other')),
+    
+
+    Couple_type = as.factor(
+      case_when(
+        first(Gender) == last(Gender) & first(Gender) == 'Male' ~ 'Same-Sex Couple (Male)',
+        first(Gender) == last(Gender) & first(Gender) == 'Female' ~ 'Same-Sex Couple (Female)',
+        TRUE ~ 'Mixed-sex Couple'
+      )
+    )
+  ) %>%
+  ungroup() %>%
+  # Individual level variables
+  mutate(
+    Age = pre_age,
+    Handedness = factor(
+      pre_handedness, 
+      levels = c(0, 1, 2), 
+      c('Right','Left', 'Ambidextrous')),
+  Highest_Education = factor(
+    pre_education, 
+    levels = c(1,2,3,4,5,6,7), 
+    labels = c(
+      "(still) no school diploma",
+      "compulsory education (9 years)",
+      "vocational training (apprenticeship)",
+      "Matura (university entrance qualification)",
+      "Bachelor's degree", 
+      "Master's degree",
+      "Doctorate degree"
+      )
+    ),
+  BMI = pre_weight / ((pre_height / 100)^2) # to meters
+  ) %>%
+  select(c(Relationship_duration, Cohabiting_duration, Couple_type, Household_Income, 
+            Marital_status, Have_children, 
+            Gender, Age, Handedness, Highest_Education, BMI))
+
+
+sample_table <- report_measures(df_sample_report, ICC = F)
+sample_table$n_Obs <- as.numeric(sample_table$n_Obs) / 55
+rownames(sample_table) <- NULL
+
+n_couple_vars <- 17
+sample_table$n_Obs[1:n_couple_vars] <- sample_table$n_Obs[1:n_couple_vars] / 2
+
+packing_sample <- list(
+    "Couple level variables (38 couples)" = 
+      c(1, n_couple_vars),
+    "Individual level variables (76 individuals)" 
+    = c(n_couple_vars+1, nrow(sample_table))
+    ) 
+
+df_sample_summary <- print_df(
+  sample_table,
+  rows_to_pack = packing_sample
+)
+
+export_xlsx(df_sample_summary,
+            file.path('Output', 'SampleDescription.xlsx'),
+            merge_option = 'both',
+            rows_to_pack = packing_sample,
+            colwidths = c(20,35,7,7,7,7,7,10)
+            )
+
+df_sample_summary
+
+```
+
+
+# Measures Descriptives
+## Focal Variables
+
+```{r measures_desc, results='asis'}
+
+
+main_constructs <- c("persuasion", "pressure","pushing", 
+                     "pa_sub", "pa_obj", "aff", "reactance"
+                     )
+
+main_descriptives <- report_measures(
+  data = df_full, 
+  measures = main_constructs,
+  ICC = TRUE, 
+  cluster_var = df_full$userID)
+
+openxlsx::write.xlsx(
+  main_descriptives, 
+  file.path('Output', 'DescriptivesMain.xlsx')
+  )
+
+print_df(main_descriptives)
+
+
+```
+
+## All Variables
+
+```{r measuers_all_desc, results='asis'}
+
+all_constructs <- c(
+  main_constructs,
+  "day",
+  "weartime",
+  "isWeekend",
+  "plan",
+  "studyGroup",
+  "support",
+  "got_JITAI",
+  "skilled_support"
+)
+
+
+all_descriptives <- report_measures(df_full, all_constructs, ICC = F)
+
+openxlsx::write.xlsx(
+  all_descriptives, 
+  file.path('Output', 'DescriptivesAll.xlsx')
+)
+
+print_df(all_descriptives)
+
+```
+
+
+# Correlations Measure
+
+```{r corrs, results='asis'}
+
+cors <- wbCorr(df_full[,c(main_constructs)], df_full$coupleID, method = 'spearman')
+
+main_cors <- summary(cors, 'wb')$merged_wb
+
+
+openxlsx::write.xlsx(
+  main_cors, 
+  file.path('Output', 'Correlations.xlsx')
+)
+
+print_df(main_cors, width = '7em')
+
+```
+
+Within-person correlations are above the diagonal and between-person correlations are below the diagonal.
+On the diagonal are intraclass correlations (ICCs)
+
+
+
+
+
+
+```{r report_system, results='asis'}
+
+report::report_system()
+report::report_packages()
+report::cite_packages()
+
+```
+
+
+
+
+
+
