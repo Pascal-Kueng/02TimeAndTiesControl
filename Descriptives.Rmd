@@ -16,10 +16,15 @@ output:
 ---
 
 ```{r setup, message=FALSE, results='hide'}
+library(tidyverse)
+library(wbCorr)
 
 knitr::opts_chunk$set(echo = TRUE)
-source(file.path('Functions', 'PrepareData.R'))
 
+source(file.path('Functions', 'ReportModels.R'))
+source(file.path('Functions', 'PrettyTables.R'))
+source(file.path('Functions', 'ReportMeasures.R'))
+source(file.path('Functions', 'PrepareData.R'))
 ```
 
 
@@ -28,7 +33,7 @@ source(file.path('Functions', 'PrepareData.R'))
 df <- openxlsx::read.xlsx(file.path('long.xlsx'))
 df_original <- df
 
-dfs <- prepare_data(df, recode_pushing = TRUE, use_mi = use_mi)[[1]]
+dfs <- prepare_data(df, recode_pushing = TRUE, use_mi = FALSE)
 df_double <- dfs[[1]]
 df_full <- dfs[[2]]
 
