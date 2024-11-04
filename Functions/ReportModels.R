@@ -99,14 +99,15 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
 
 
 summarize_brms <- function(model, 
-                           short_version = FALSE,
                            exponentiate = FALSE,
+                           stats_to_report = c('CI', 'SE', 'pd', 'rope', 'BF', 'Rhat', 'ESS'),
+                           rope_range = NULL,
+                           
                            model_rows_fixed = NULL,
                            model_rows_random = NULL,
                            model_rownames_fixed = NULL,
-                           model_rownames_random = NULL,
-                           bayesfactor = TRUE,
-                           rope_range = NULL) {
+                           model_rownames_random = NULL
+                           ) {
   
   format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
   
@@ -117,29 +118,45 @@ summarize_brms <- function(model,
   random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars)
   
   # Add p_direction to fixed effects
-  p_dir <- as.data.frame(bayestestR::p_direction(
-    model,
-    effects = 'fixed'
-  ))
-  fixed_effects$pd <- paste0(format_number(p_dir$pd*100,0), "%")
-  random_effects$pd <- NA
-  
+  if ('pd' %in% stats_to_report) {
+    p_dir <- as.data.frame(bayestestR::p_direction(
+      model,
+      effects = 'fixed'
+    ))
+    fixed_effects$pd <- paste0(format_number(p_dir$pd*100,0), "%")
+    random_effects$pd <- NA
+  }
   # Add ROPE
-  rope_df <- as.data.frame(bayestestR::rope(
-    model,
-    effects = 'fixed',
-    range = rope_range,
-    verbose = FALSE
-  ))
-  
-  fixed_effects$ROPE_lower <- rope_df$ROPE_low
-  fixed_effects$ROPE_upper <- rope_df$ROPE_high
-  
-  random_effects$ROPE_lower <- NA
-  random_effects$ROPE_upper <- NA
+  if ('ROPE' %in% stats_to_report) {
+    rope_df <- as.data.frame(bayestestR::rope(
+      model,
+      effects = 'fixed',
+      range = rope_range,
+      ci = 1,
+      verbose = FALSE
+    ))
+    
+    # Format ROPE
+    if (exponentiate) {
+      rope_df$ROPE_low <-exp(rope_df$ROPE_low)
+      rope_df$ROPE_high <- exp(rope_df$ROPE_high)
+    } 
+    
+    fixed_effects$ROPE <- paste0(
+      '[',
+      format_number(rope_df$ROPE_low), 
+      ', ',
+      format_number( rope_df$ROPE_high),
+      ']'
+    )
+    random_effects$ROPE <- NA
+    
+    fixed_effects$`inside ROPE` <- paste0(format_number(rope_df$ROPE_Percentage * 100,0), '%')
+    random_effects$`inside ROPE` <- NA
+  }
   
   # Calculate Bayes Factor for fixed effects
-  if (bayesfactor) {
+  if ('BF' %in% stats_to_report) {
     bayesfac <- bayestestR::bayesfactor(
       model,
       effects = "fixed"
@@ -186,22 +203,7 @@ summarize_brms <- function(model,
     fixed_effects$Estimate <- exp(fixed_effects$Estimate)
     fixed_effects$`u-95% CI` <- exp(fixed_effects$`u-95% CI`)
     fixed_effects$`l-95% CI` <- exp(fixed_effects$`l-95% CI`)
-    fixed_effects$ROPE_lower <-exp(fixed_effects$ROPE_lower)
-    fixed_effects$ROPE_upper <- exp(fixed_effects$ROPE_upper)
   }
-  
-  # Format ROPE
-  fixed_effects$`inside ROPE` <- paste0(format_number(rope_df$ROPE_Percentage * 100,0), '%')
-  random_effects$`inside ROPE` <- NA
-  
-  fixed_effects$ROPE <- paste0(
-    '[',
-    format_number(fixed_effects$ROPE_lower), 
-    ', ',
-    format_number(fixed_effects$ROPE_upper),
-    ']'
-  )
-  random_effects$ROPE <- NA
   
   # Format estimates with significance
   fixed_effects$Estimate <- ifelse(
@@ -229,21 +231,42 @@ summarize_brms <- function(model,
   
   # Combine fixed and random effects
   full_results <- rbind(fixed_effects, random_effects)
+  names(full_results)[2] <- "SE"
+  
+  
+  # Round numbers
+  full_results$SE <- format_number(full_results$SE,2)
+  full_results$Rhat <- format_number(full_results$Rhat,3)
+  full_results$Bulk_ESS <- format_number(full_results$Bulk_ESS,0)
+  full_results$Tail_ESS <- format_number(full_results$Tail_ESS,0)
   
   # Select columns
-  full_results_subset <- full_results[, c('Estimate', 'Est.Error', '95% CI', 'pd', 'ROPE', 'inside ROPE')]
-  
-  if (bayesfactor) {
-    full_results_subset <- cbind(
-      full_results_subset,
-      full_results[, c('BF', 'BF_Evidence')])
+  report_names_vec <- c('Estimate')
+  if ('SE' %in% stats_to_report) {
+    report_names_vec <- c(report_names_vec, 'SE')
   }
+  if ('CI' %in% stats_to_report) {
+    report_names_vec <- c(report_names_vec, '95% CI')
+  }
+  if ('pd' %in% stats_to_report) {
+    report_names_vec <- c(report_names_vec, 'pd')
+  } 
+  if ('ROPE' %in% stats_to_report) {
+    report_names_vec <- c(report_names_vec, c('ROPE', 'inside ROPE'))
+  }
+  if ('BF' %in% stats_to_report) {
+    report_names_vec <- c(report_names_vec, c('BF', 'BF_Evidence'))
+  }
+  if ('Rhat' %in% stats_to_report) {
+    report_names_vec <- c(report_names_vec, 'Rhat')
+  }
+  if ('ESS' %in% stats_to_report) {
+    report_names_vec <- c(report_names_vec, 'Bulk_ESS', 'Tail_ESS')
+  }
+  full_results_subset <- full_results[, report_names_vec]
   
-  full_results_subset <- cbind(
-    full_results_subset, full_results[, c('Rhat', 'Bulk_ESS', 'Tail_ESS')]
-  )
   
-  # Determine correct column name
+  # Determine correct column name for Estimate.
   correct_name <- if (exponentiate) {
     if (model$family[[1]] %in% c('bernoulli', 'cumulative')) {
       'OR'
@@ -257,13 +280,9 @@ summarize_brms <- function(model,
     'Est.'
   }
   
-  names(full_results_subset)[1:2] <- c(correct_name, 'SE')
+  names(full_results_subset)[1] <- correct_name
   
-  # Round numbers
-  full_results_subset$SE <- format_number(full_results_subset$SE,2)
-  full_results_subset$Rhat <- format_number(full_results_subset$Rhat,3)
-  full_results_subset$Bulk_ESS <- format_number(full_results_subset$Bulk_ESS,0)
-  full_results_subset$Tail_ESS <- format_number(full_results_subset$Tail_ESS,0)
+  
   
   # Select rows and handle missing ones
   desired_rows <- c(model_rows_fixed, model_rows_random)
@@ -297,6 +316,61 @@ summarize_brms <- function(model,
   
   return(full_results_subset)
 }
+
+
+
+
+
+# Function to report all models side by side with column subsetting.
+report_side_by_side <- function(
+    ..., 
+    stats_to_report = NULL,
+    model_rows_random = NULL, 
+    model_rows_fixed = NULL,
+    model_rownames_fixed = NULL, 
+    model_rownames_random = NULL, 
+    bayesfactor = TRUE) {
+  
+  models <- list(...)
+  model_names <- sapply(substitute(list(...))[-1], deparse)
+  names(models) <- model_names
+  
+  side_by_side <- NULL
+  for (i in seq_along(models)) {
+    model <- models[[i]]
+    model_name <- model_names[i]
+    print(model_name)
+    if (model$family$link %in% c(
+      'log', 'logit'
+    ) | grepl('lognormal', model$family$family) | grepl('log', model_name)) {
+      exponentiate <- TRUE
+    } else {
+      exponentiate <- FALSE
+    }
+    model_summary <- summarize_brms(
+      model, 
+      exponentiate = exponentiate, 
+      stats_to_report = stats_to_report,
+      bayesfactor = bayesfactor,
+      model_rows_random = model_rows_random,
+      model_rows_fixed = model_rows_fixed,
+      model_rownames_fixed = model_rownames_fixed,
+      model_rownames_random = model_rownames_random
+    )
+    
+    colnames(model_summary) <- paste(colnames(model_summary), model_name)
+    
+    
+    if (is.null(side_by_side)) {
+      side_by_side <- model_summary
+    } else {
+      side_by_side <- cbind(side_by_side, model_summary)
+    }
+  }
+  
+  return(side_by_side)
+}
+
 
 
 

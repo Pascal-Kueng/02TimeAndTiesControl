@@ -561,7 +561,6 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 summary_pa_sub_hu <- summarize_brms(
   pa_sub, 
   rope_range = c(-0.18, 0.18),
-  bayesfactor = T,
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
@@ -575,7 +574,6 @@ rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
 summary_pa_sub_continuous <- summarize_brms(
   pa_sub, 
   rope_range = rope_range_continuous,
-  bayesfactor = T,
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
@@ -614,7 +612,8 @@ plot(
     pa_sub, 
     parameter = variable, 
     range = rope_range_continuous,
-    verbose = F
+    verbose = F,
+    ci = 1
   )
 ) + theme_bw()
 
@@ -638,7 +637,7 @@ plot(
 
 # The rope range for the bernoulli part of the model is -0.18, 0.18
 plot(
-  bayestestR::rope(pa_sub, parameter = variable, range = c(-0.18, 0.18)),
+  bayestestR::rope(pa_sub, parameter = variable, range = c(-0.18, 0.18), ci = 1),
   verbose = FALSE
 ) + theme_bw()
 
@@ -768,8 +767,13 @@ DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
 
 ```{r report_pa_obj_log_g, results='asis'}
 
+# rope range for lognormal model
+rope_factor <- sd(log(pa_obj_log$data$pa_obj))
+rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
 summarize_brms(
   pa_obj_log, 
+  rope_range = rope_range_log,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -785,11 +789,9 @@ plot(
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
-# rope range for conditional model
-rope_factor <- sd(log(pa_obj_log$data$pa_obj))
 
 plot(
-  bayestestR::rope(pa_obj_log, range = c(-0.1 * rope_factor, 0.1 * rope_factor))
+  bayestestR::rope(pa_obj_log, range = rope_range_log, ci = 1)
 ) + theme_bw()
 
 
@@ -803,7 +805,7 @@ plot(
 
 ```{r explore_aff_dist}
 
-range(df_double$aff, na.rm = T) 
+range(df_double$aff, na.rm = T)
 hist(df_double$aff, breaks = 15)
 
 ```
@@ -896,7 +898,7 @@ plot(
   theme_bw()
 
 plot(
-  bayestestR::rope(mood_gauss)
+  bayestestR::rope(mood_gauss, ci = 1)
 ) + theme_bw()
 
 
@@ -1005,6 +1007,7 @@ DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 summarize_brms(
   reactance_ordinal, 
+  rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_ordinal,
   model_rows_random = model_rows_random_ordinal,
   model_rownames_fixed = model_rownames_fixed_ordinal,
@@ -1021,7 +1024,7 @@ plot(
   theme_bw()
 
 plot(
-  bayestestR::rope(reactance_ordinal)
+  bayestestR::rope(reactance_ordinal, range = c(-0.18, 0.18), ci = 1)
 ) + theme_bw()
 
 
@@ -1151,7 +1154,7 @@ plot(
   theme_bw()
 
 plot(
-  bayestestR::rope(is_reactance)
+  bayestestR::rope(is_reactance, ci = 1)
 ) + theme_bw()
 
 
@@ -1184,6 +1187,11 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 ```{r report_sidebyside, results = 'asis'}
 
+report_hurdle <- F
+report_ordinal <- F
+bayesfactor <- F
+stats_to_report <- c('95% CI', 'pd') 
+
 process_model_component <- function(obj) {
   # Convert to string, modify, and evaluate
   name <- deparse(substitute(obj))
@@ -1192,7 +1200,7 @@ process_model_component <- function(obj) {
   return(get(name, envir = parent.frame()))
 }
 
-bayesfactor = TRUE
+
 
 all_models <- report_side_by_side(
   pa_sub,
@@ -1202,11 +1210,15 @@ all_models <- report_side_by_side(
   is_reactance,
   
   bayesfactor = bayesfactor,
+  #stats_to_report = stats_to_report,
   model_rows_random = process_model_component(model_rows_random),
   model_rows_fixed = process_model_component(model_rows_fixed),
   model_rownames_random = process_model_component(model_rownames_random),
   model_rownames_fixed = process_model_component(model_rownames_fixed)
 ) 
+
+
+
 
 
 # pretty printing
@@ -1238,7 +1250,7 @@ if (bayesfactor) {
   )
 } else {
   summary_all_models <- all_models %>%
-    print_df(rows_to_pack = rows_to_pack_final) %>%
+    print_df(rows_to_pack = process_model_component(rows_to_pack)) %>%
     add_header_above(
       c(" ", "Subjective MVPA Hurdle Lognormal" = 3, 
         "Device-Based MVPA Log (Gaussian)" = 3, 
@@ -1249,7 +1261,7 @@ if (bayesfactor) {
 
   export_xlsx(
     summary_all_models, 
-    rows_to_pack = rows_to_pack_final,
+    rows_to_pack = process_model_component(rows_to_pack),
     file.path("Output", "AllModels_experimental_noAR.xlsx"), 
     merge_option = 'both', 
     simplify_2nd_row = TRUE,
