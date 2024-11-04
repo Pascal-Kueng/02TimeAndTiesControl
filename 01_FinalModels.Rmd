@@ -560,12 +560,13 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 # summarize with rope range for hurdle part
 summary_pa_sub_hu <- summarize_brms(
   pa_sub, 
+  stats_to_report = c('CI', 'SE', 'Rhat', 'ESS'),
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = T) 
+  exponentiate = F) 
 
 # rope range for continuous part of the model
 rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
@@ -1189,8 +1190,7 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 report_hurdle <- F
 report_ordinal <- F
-bayesfactor <- F
-stats_to_report <- c('95% CI', 'pd') 
+stats_to_report <- c('CI', 'pd', 'rope', 'BF')
 
 process_model_component <- function(obj) {
   # Convert to string, modify, and evaluate

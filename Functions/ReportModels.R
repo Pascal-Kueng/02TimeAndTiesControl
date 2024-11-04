@@ -198,11 +198,18 @@ summarize_brms <- function(model,
   )
   significance_random <- NA
   
+  # Rename SE
+  names(fixed_effects)[2] <- "SE" 
+  names(random_effects)[2] <- "SE" 
+  
   # Handle exponentiation for fixed effects
   if (exponentiate) {
     fixed_effects$Estimate <- exp(fixed_effects$Estimate)
     fixed_effects$`u-95% CI` <- exp(fixed_effects$`u-95% CI`)
     fixed_effects$`l-95% CI` <- exp(fixed_effects$`l-95% CI`)
+    
+    # Compute SE using the delta method
+    fixed_effects$SE <- fixed_effects$Estimate * fixed_effects$SE
   }
   
   # Format estimates with significance
@@ -231,8 +238,6 @@ summarize_brms <- function(model,
   
   # Combine fixed and random effects
   full_results <- rbind(fixed_effects, random_effects)
-  names(full_results)[2] <- "SE"
-  
   
   # Round numbers
   full_results$SE <- format_number(full_results$SE,2)
