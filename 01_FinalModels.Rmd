@@ -658,14 +658,13 @@ conditional_spaghetti(
 
 
 
+brms::bayes_R2(pa_sub)
+performance::check_model(pa_sub)
 
-performance::model_performance(model)
-performance::check_model(model)
+modelbased::estimate_means(pa_sub)
+modelbased::estimate_relation(pa_sub)
 
-modelbased::estimate_means(model)
-modelbased::estimate_relation(model)
-
-slopes <- estimate_slopes(model, trend = "pressure_partner_cw", by = "coupleID")
+slopes <- estimate_slopes(pa_sub, trend = "pressure_partner_cw", by = "coupleID")
 
 slopes
 
@@ -1236,7 +1235,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = process_model_component(rows_to_pack),
-  file.path("Output", "AllModels_experimental_noAR.xlsx"), 
+  file.path("Output", "AllModelsFinal.xlsx"), 
   merge_option = 'header', 
   simplify_2nd_row = TRUE,
   line_above_rows = c(1,2),
