@@ -329,12 +329,12 @@ summarize_brms <- function(model,
 # Function to report all models side by side with column subsetting.
 report_side_by_side <- function(
     ..., 
-    stats_to_report = NULL,
+    stats_to_report = c('CI', 'pd'),
     model_rows_random = NULL, 
     model_rows_fixed = NULL,
     model_rownames_fixed = NULL, 
-    model_rownames_random = NULL, 
-    bayesfactor = TRUE) {
+    model_rownames_random = NULL
+    ) {
   
   models <- list(...)
   model_names <- sapply(substitute(list(...))[-1], deparse)
@@ -356,7 +356,6 @@ report_side_by_side <- function(
       model, 
       exponentiate = exponentiate, 
       stats_to_report = stats_to_report,
-      bayesfactor = bayesfactor,
       model_rows_random = model_rows_random,
       model_rows_fixed = model_rows_fixed,
       model_rownames_fixed = model_rownames_fixed,
