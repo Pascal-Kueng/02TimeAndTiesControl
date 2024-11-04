@@ -657,17 +657,6 @@ conditional_spaghetti(
 )
 
 
-
-brms::bayes_R2(pa_sub)
-performance::check_model(pa_sub)
-
-modelbased::estimate_means(pa_sub)
-modelbased::estimate_relation(pa_sub)
-
-slopes <- estimate_slopes(pa_sub, trend = "pressure_partner_cw", by = "coupleID")
-
-slopes
-
 ```
 
 ```{r pa_sub_lognormal_marginaleffects}
