@@ -191,7 +191,7 @@ summarize_brms <- function(model,
   }
   
   # Format ROPE
-  fixed_effects$`inside ROPE` <- paste0(format_number(rope_df$ROPE_Percentage,0), '%')
+  fixed_effects$`inside ROPE` <- paste0(format_number(rope_df$ROPE_Percentage * 100,0), '%')
   random_effects$`inside ROPE` <- NA
   
   fixed_effects$ROPE <- paste0(

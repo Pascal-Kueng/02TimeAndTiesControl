@@ -557,19 +557,40 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 
 ```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
-summarize_brms(
+# summarize with rope range for hurdle part
+summary_pa_sub_hu <- summarize_brms(
   pa_sub, 
   rope_range = c(-0.18, 0.18),
-  bayesfactor = F,
+  bayesfactor = T,
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = T) %>%
+  exponentiate = T) 
+
+# rope range for continuous part of the model
+rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
+rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_sub_continuous <- summarize_brms(
+  pa_sub, 
+  rope_range = rope_range_continuous,
+  bayesfactor = T,
+  model_rows_fixed = model_rows_fixed_hu,
+  model_rows_random = model_rows_random_hu,
+  model_rownames_fixed = model_rownames_fixed_hu,
+  model_rownames_random = model_rownames_random_hu,
+  exponentiate = T) 
+
+summary_pa_sub <- summary_pa_sub_continuous
+summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), ] <- summary_pa_sub_hu[grepl('Hu', rownames(summary_pa_sub_hu)), ]
+
+summary_pa_sub %>%
   print_df(rows_to_pack = rows_to_pack_hu
 )
 
-# Continuous part of model
+
+# Plot continuous part of model
 
 variable <- c(
   '(Intercept)',
@@ -580,15 +601,6 @@ variable <- c(
   'b_pushing_self_cw',
   'b_pushing_partner_cw'
 )
-
-# rope range for continuous part of the model
-# for linear models it is 0.1 * sd(Y) according to Kruschke (2018). 
-# Thus, for the lognormal distribution 
-# we need to sd of log(Y). For the continuous model. 
-rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
-rope_range = c(-0.1 * rope_factor, 0.1 * rope_factor)
-
-df_report[!grepl('hu_', df_report$Parameter), ]
 
 
 plot(
@@ -601,7 +613,9 @@ plot(
   bayestestR::rope(
     pa_sub, 
     parameter = variable, 
-    range = c(-0.1 * rope_factor, 0.1 * rope_factor)),
+    range = rope_range_continuous,
+    verbose = F
+  )
 ) + theme_bw()
 
 
@@ -617,11 +631,6 @@ variable <- c(
   'b_hu_pushing_partner_cw'
 )
 
-rope_range = c(-0.18, 0.18)
-
-df_report[grepl('hu_', df_report$Parameter), ]
-
-
 plot(
   bayestestR::p_direction(pa_sub, parameter = variable),
   priors = TRUE
@@ -630,10 +639,8 @@ plot(
 # The rope range for the bernoulli part of the model is -0.18, 0.18
 plot(
   bayestestR::rope(pa_sub, parameter = variable, range = c(-0.18, 0.18)),
+  verbose = FALSE
 ) + theme_bw()
-
-
-
 
 
 conditional_spaghetti(
