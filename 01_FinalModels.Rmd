@@ -660,7 +660,6 @@ conditional_spaghetti(
 ```
 
 ```{r report_pa_sub_lognormald, fig.height=7, fig.width=9, dpi=600, results='asis'}
-
 #svg("plot.svg", width = 6, height = 8)
 
 conditional_spaghetti(
@@ -673,9 +672,10 @@ conditional_spaghetti(
 )
 
 #dev.off()
-
-
 ```
+
+
+
 
 ```{r ddd, fig.height=7, fig.width=7, dpi=600, results='asis'}
 
