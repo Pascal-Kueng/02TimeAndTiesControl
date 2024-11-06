@@ -396,7 +396,8 @@ conditional_spaghetti <- function(
     y_limits = NULL,          # vector with lower and upper bound of y-axis (optional)
     x_label = NULL,           # character
     y_label = NULL,           # character
-    transform_fn = NULL       # function to transform values after inverse link
+    transform_fn = NULL,       # function to transform values after inverse link
+    layout_option = "horizontal" # only for hurdle or ZI models with panels. 
 ) {
   if (!inherits(model, 'brmsfit')) {
     stop("Only brmsfit objects supported")
@@ -593,7 +594,7 @@ plot_general_model <- function(
       geom_ribbon(
         data = fixed_predictions,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#1f78b4", alpha = 0.1
+        fill = "#1f78b4", alpha = 0.18
       ) +
       # Add fixed effect line
       geom_line(
@@ -981,7 +982,7 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_hurdle,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#33a02c", alpha = 0.2
+        fill = "#33a02c", alpha = 0.18
       ) +
       geom_line(
         data = fixed_predictions_hurdle,
@@ -1008,7 +1009,7 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_count,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#1f78b4", alpha = 0.2
+        fill = "#1f78b4", alpha = 0.18
       ) +
       geom_line(
         data = fixed_predictions_count,
@@ -1035,7 +1036,7 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_combined,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#6a3d9a", alpha = 0.2
+        fill = "#6a3d9a", alpha = 0.18
       ) +
       geom_line(
         data = fixed_predictions_combined,
@@ -1217,7 +1218,7 @@ plot_hurdle_model <- function(
           aes(x = x_value, y = prob_positive, group = group_level),
           color = "#33a02c",
           linewidth = 0.3,
-          alpha = 0.21
+          alpha = 0.20
         )
       
       # For positive outcome component
@@ -1227,7 +1228,7 @@ plot_hurdle_model <- function(
           aes(x = x_value, y = mu_count, group = group_level),
           color = "#1f78b4",
           linewidth = 0.3,
-          alpha = 0.21
+          alpha = 0.20
         )
       
       # For combined expected value
@@ -1237,7 +1238,7 @@ plot_hurdle_model <- function(
           aes(x = x_value, y = expected_value, group = group_level),
           color = "#6a3d9a",
           linewidth = 0.3,
-          alpha = 0.21
+          alpha = 0.20
         )
     }  # End of random effects code
     
@@ -1402,7 +1403,7 @@ plot_cumulative_model <- function(
     # Initialize ggplot
     p <- ggplot(plot_data, aes(x = x_value, y = median, color = category, fill = category)) +
       # Add CI ribbon
-      geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.1, color = NA) +
+      geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.18, color = NA) +
       # Add median lines
       geom_line(linewidth = 1.3) +
       # Set manual colors for categories
