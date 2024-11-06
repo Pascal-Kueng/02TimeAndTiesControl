@@ -1289,6 +1289,8 @@ plot_hurdle_model <- function(
 
 
 
+
+
 # Updated function for cumulative models with random effects
 plot_cumulative_model <- function(
     model,

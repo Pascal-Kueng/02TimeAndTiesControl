@@ -694,6 +694,30 @@ conditional_spaghetti(
 
 ```
 
+```{r}
+
+draws_df <- pa_sub %>% 
+  as_draws_df() %>%
+  mutate(
+    combined_Intercept = (1 - plogis(b_hu_Intercept)) * exp(b_Intercept),
+    predictions = 
+      (1 - plogis(b_hu_Intercept + b_hu_pushing_self_cw)) * 
+      exp(b_Intercept + b_pushing_self_cw),
+
+    combined_slope = predictions / combined_Intercept,
+    
+    hurdle_slope = 1 / exp(b_hu_pushing_self_cw),
+    nonzero_slope = exp(b_pushing_self_cw)
+  ) %>% select(
+    c(hurdle_slope, nonzero_slope, combined_slope)
+  )
+  
+plot(p_direction(draws_df, null = 1))
+
+```
+
+
+
 ```{r pa_sub_lognormal_marginaleffects}
 
 marginaleffects::avg_predictions(pa_sub)
