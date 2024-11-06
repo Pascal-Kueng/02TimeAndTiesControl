@@ -1245,7 +1245,7 @@ plot_hurdle_model <- function(
     
     # Apply x and y limits if specified
     if (!is.null(x_limits)) {
-      p_count <- p_count + xlim(x_limits)
+      p_count <- p_count + xlim(x_limits) 
       p_hurdle <- p_hurdle + xlim(x_limits)
       p_combined <- p_combined + xlim(x_limits)
     }
@@ -1255,14 +1255,27 @@ plot_hurdle_model <- function(
       p_combined <- p_combined + ylim(y_limits)
     }
     
-    # Arrange the plots into a panel based on layout_option
-    if (layout_option == "vertical") {
-      # Two plots side by side on top, combined plot below
-      combined_plot <- ((p_hurdle + p_count) / p_combined) + plot_layout(heights = c(1, 1.5))
-    } else if (layout_option == "horizontal") {
-      # Two plots stacked vertically on the left, combined plot on the right
-      combined_plot <- ((p_hurdle / p_count) | p_combined) + plot_layout(widths = c(1, 1.5))
+    
+    if (layout_option == 'horizontal') {
+      # Arrange plots for horizontal option
+      design <- "
+        AABB
+        CCCC
+        CCCC
+      "
+      combined_plot <- p_hurdle + p_count + p_combined + plot_layout(design = design)
+    } 
+    
+    if (layout_option == 'vertical') {
+      # Arrange plots for vertical option
+      design <- "
+        AACCCC
+        BBCCCC
+      "
+      combined_plot <- p_hurdle + p_count + p_combined + plot_layout(design = design)
+      
     }
+    
     
     
     # Store the combined plot

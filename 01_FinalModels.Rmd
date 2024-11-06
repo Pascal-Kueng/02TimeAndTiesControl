@@ -659,23 +659,9 @@ conditional_spaghetti(
 
 ```
 
-```{r report_pa_sub_lognormald, fig.height=7, fig.width=8, dpi=600, results='asis'}
+```{r report_pa_sub_lognormald, fig.height=7, fig.width=9, dpi=600, results='asis'}
 
-svg("plot.svg", width = 8, height = 7)
-
-conditional_spaghetti(
-  pa_sub, 
-  effects = c('pushing_self_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  x_label = 'Daily plan-related pushing (centered)',
-  layout_option = "horizontal" 
-)
-
-dev.off()
-
-
-svg("plot2.svg", width = 7, height = 8)
+#svg("plot.svg", width = 6, height = 8)
 
 conditional_spaghetti(
   pa_sub, 
@@ -686,7 +672,25 @@ conditional_spaghetti(
   layout_option = "vertical" 
 )
 
-dev.off()
+#dev.off()
+
+
+```
+
+```{r ddd, fig.height=7, fig.width=7, dpi=600, results='asis'}
+
+#svg("plot2.svg", width = 7, height = 8)
+
+conditional_spaghetti(
+  pa_sub, 
+  effects = c('pushing_self_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE,
+  x_label = 'Daily plan-related pushing (centered)',
+  layout_option = "horizontal" 
+)
+
+#dev.off()
 
 ```
 
