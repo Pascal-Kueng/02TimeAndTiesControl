@@ -397,7 +397,7 @@ conditional_spaghetti <- function(
     x_label = NULL,           # character
     y_label = NULL,           # character
     transform_fn = NULL,       # function to transform values after inverse link
-    layout_option = "horizontal" # only for hurdle or ZI models with panels. 
+    layout_option = c('vertical', 'horizontal') # only for hurdle or ZI models with panels. 
 ) {
   if (!inherits(model, 'brmsfit')) {
     stop("Only brmsfit objects supported")
@@ -449,7 +449,8 @@ conditional_spaghetti <- function(
       y_limits = y_limits,
       x_label = x_label,
       y_label = y_label,
-      transform_fn = transform_fn
+      transform_fn = transform_fn,
+      layout_option = layout_option
     )
   } else {
     plots <- plot_general_model(
@@ -1256,12 +1257,13 @@ plot_hurdle_model <- function(
     
     # Arrange the plots into a panel based on layout_option
     if (layout_option == "vertical") {
-      # Original layout: p_hurdle and p_count side by side on top, p_combined below
-      combined_plot <- (p_hurdle + p_count) / p_combined + plot_layout(heights = c(1, 1.5))
+      # Two plots side by side on top, combined plot below
+      combined_plot <- ((p_hurdle + p_count) / p_combined) + plot_layout(heights = c(1, 1.5))
     } else if (layout_option == "horizontal") {
-      # Alternative layout: p_hurdle and p_count stacked vertically on the left, p_combined on the right
-      combined_plot <- (p_hurdle / p_count) | p_combined + plot_layout(widths = c(1, 1.5))
+      # Two plots stacked vertically on the left, combined plot on the right
+      combined_plot <- ((p_hurdle / p_count) | p_combined) + plot_layout(widths = c(1, 1.5))
     }
+    
     
     # Store the combined plot
     plots_list[[e]] <- combined_plot
