@@ -555,7 +555,7 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 ```
 
 
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300}
 
 # summarize with rope range for hurdle part
 summary_pa_sub_hu <- summarize_brms(
@@ -656,15 +656,22 @@ conditional_spaghetti(
   plot_full_range = TRUE
 )
 
+
+```
+
+```{r report_pa_sub_lognormald, fig.height=7, fig.width=8, dpi=600, results='asis'}
+
+svg("plot.svg", width = 8, height = 7)
+
 conditional_spaghetti(
   pa_sub, 
-  effects = c(
-    'pushing_self_cw'
-  ),
-  group_var = 'coupleID'
-  , plot_full_range = TRUE,
-  x_label = 'Daily Plan-Related Pushing (centered)'
+  effects = c('pushing_self_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE,
+  x_label = 'Daily plan-related pushing (centered)'
 )
+
+dev.off()
 
 ```
 

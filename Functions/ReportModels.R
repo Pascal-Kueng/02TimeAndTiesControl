@@ -593,13 +593,13 @@ plot_general_model <- function(
       geom_ribbon(
         data = fixed_predictions,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "blue4", alpha = 0.1
+        fill = "#1f78b4", alpha = 0.1
       ) +
       # Add fixed effect line
       geom_line(
         data = fixed_predictions,
         aes(x = x_value, y = response),
-        color = "blue4",
+        color = "#1f78b4",
         linewidth = 1.3
       ) +
       labs(
@@ -721,7 +721,7 @@ plot_general_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = response, group = group_level),
-          color = "blue4",
+          color = "#1f78b4",
           linewidth = 0.3,
           alpha = 0.3
         ) +
@@ -748,7 +748,7 @@ plot_general_model <- function(
 
 
 
-# Function for hurdle and zero-inflated models with adjusted notation and full code
+# Function for hurdle and zero-inflated models with adjustable layout
 plot_hurdle_model <- function(
     model,
     effects,
@@ -762,7 +762,8 @@ plot_hurdle_model <- function(
     x_label = NULL,
     y_label = NULL,
     transform_fn = NULL,
-    use_pr_notation = FALSE  # New parameter to switch between 'P' and 'Pr'
+    use_pr_notation = FALSE,  # Option to switch between 'P' and 'Pr'
+    layout_option = c("vertical", "horizontal")  # New parameter for layout
 ) {
   # Load required packages
   library(ggplot2)
@@ -773,6 +774,9 @@ plot_hurdle_model <- function(
   library(grid)  # For unit() function
   
   plots_list <- list()
+  
+  # Ensure layout_option is valid
+  layout_option <- match.arg(layout_option)
   
   # Extract posterior samples for fixed effects
   posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
@@ -977,12 +981,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_hurdle,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "green3", alpha = 0.1
+        fill = "#33a02c", alpha = 0.2
       ) +
       geom_line(
         data = fixed_predictions_hurdle,
         aes(x = x_value, y = response),
-        color = "green3",
+        color = "#33a02c",
         linewidth = 1.3
       ) +
       labs(
@@ -1004,12 +1008,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_count,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "blue3", alpha = 0.1
+        fill = "#1f78b4", alpha = 0.2
       ) +
       geom_line(
         data = fixed_predictions_count,
         aes(x = x_value, y = response),
-        color = "blue3",
+        color = "#1f78b4",
         linewidth = 1.3
       ) +
       labs(
@@ -1031,12 +1035,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_combined,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "purple", alpha = 0.1
+        fill = "#6a3d9a", alpha = 0.2
       ) +
       geom_line(
         data = fixed_predictions_combined,
         aes(x = x_value, y = response),
-        color = "purple",
+        color = "#6a3d9a",
         linewidth = 1.3
       ) +
       labs(
@@ -1211,9 +1215,9 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
-          color = "green3",
+          color = "#33a02c",
           linewidth = 0.3,
-          alpha = 0.3
+          alpha = 0.21
         )
       
       # For positive outcome component
@@ -1221,9 +1225,9 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
-          color = "blue3",
+          color = "#1f78b4",
           linewidth = 0.3,
-          alpha = 0.3
+          alpha = 0.21
         )
       
       # For combined expected value
@@ -1231,9 +1235,9 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
-          color = "purple",
+          color = "#6a3d9a",
           linewidth = 0.3,
-          alpha = 0.3
+          alpha = 0.21
         )
     }  # End of random effects code
     
@@ -1249,8 +1253,14 @@ plot_hurdle_model <- function(
       p_combined <- p_combined + ylim(y_limits)
     }
     
-    # Arrange the plots into a panel
-    combined_plot <- (p_hurdle + p_count) / p_combined + plot_layout(heights = c(1, 1.5))
+    # Arrange the plots into a panel based on layout_option
+    if (layout_option == "vertical") {
+      # Original layout: p_hurdle and p_count side by side on top, p_combined below
+      combined_plot <- (p_hurdle + p_count) / p_combined + plot_layout(heights = c(1, 1.5))
+    } else if (layout_option == "horizontal") {
+      # Alternative layout: p_hurdle and p_count stacked vertically on the left, p_combined on the right
+      combined_plot <- (p_hurdle / p_count) | p_combined + plot_layout(widths = c(1, 1.5))
+    }
     
     # Store the combined plot
     plots_list[[e]] <- combined_plot
@@ -1258,6 +1268,7 @@ plot_hurdle_model <- function(
   
   return(plots_list)
 }
+
 
 
 
