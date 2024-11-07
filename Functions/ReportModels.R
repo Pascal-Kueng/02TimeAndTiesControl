@@ -1251,7 +1251,6 @@ plot_hurdle_model <- function(
     }
     if (!is.null(y_limits)) {
       p_count <- p_count + ylim(y_limits)
-      p_hurdle <- p_hurdle + ylim(y_limits)
       p_combined <- p_combined + ylim(y_limits)
     }
     
@@ -1284,11 +1283,6 @@ plot_hurdle_model <- function(
   
   return(plots_list)
 }
-
-
-
-
-
 
 
 # Updated function for cumulative models with random effects

@@ -642,6 +642,11 @@ plot(
 ) + theme_bw()
 
 
+```
+
+```{r report_pa_sub_lognormald, fig.height=6, fig.width=9, dpi=600, results='asis'}
+svg("plot.svg", width = 9, height = 6)
+
 conditional_spaghetti(
   pa_sub, 
   effects = c(
@@ -653,48 +658,43 @@ conditional_spaghetti(
     'pushing_partner_cw'
   ),
   group_var = 'coupleID',
-  plot_full_range = TRUE
+  plot_full_range = TRUE,
+  y_limits = c(0, 100)
 )
 
 
+dev.off()
 ```
 
-```{r report_pa_sub_lognormald, fig.height=7, fig.width=9, dpi=600, results='asis'}
-#svg("plot.svg", width = 6, height = 8)
+
+
+
+#```{r ddd, fig.height=7, fig.width=6, dpi=600, results='asis'}
+
+svg("plot2.svg", width = 6, height = 7)
 
 conditional_spaghetti(
   pa_sub, 
-  effects = c('pushing_self_cw'),
+  effects = c(
+    'persuasion_self_cw',
+    'persuasion_partner_cw',
+    'pressure_self_cw',
+    'pressure_partner_cw',
+    'pushing_self_cw',
+    'pushing_partner_cw'
+  ),
   group_var = 'coupleID',
   plot_full_range = TRUE,
-  x_label = 'Daily plan-related pushing (centered)',
-  layout_option = "vertical" 
+  layout_option = 'horizontal',
+  y_limits = c(0, 100)
 )
 
-#dev.off()
-```
 
+dev.off()
 
+#```
 
-
-```{r ddd, fig.height=7, fig.width=7, dpi=600, results='asis'}
-
-#svg("plot2.svg", width = 7, height = 8)
-
-conditional_spaghetti(
-  pa_sub, 
-  effects = c('pushing_self_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  x_label = 'Daily plan-related pushing (centered)',
-  layout_option = "horizontal" 
-)
-
-#dev.off()
-
-```
-
-```{r}
+```{r fig.width=2, fig.height=7}
 
 draws_df <- pa_sub %>% 
   as_draws_df() %>%
@@ -711,10 +711,66 @@ draws_df <- pa_sub %>%
   ) %>% select(
     c(hurdle_slope, nonzero_slope, combined_slope)
   )
-  
-plot(p_direction(draws_df, null = 1))
+
+
+# Calculate 99.5th percentile cutoff for each slope type
+cutoffs <- draws_df %>%
+  pivot_longer(cols = c(hurdle_slope, nonzero_slope, combined_slope),
+               names_to = "slope_type",
+               values_to = "value") %>%
+  group_by(slope_type) %>%
+  summarize(cutoff = quantile(value, 0.995))
+
+# Filter the data to only include values up to the 99.5th percentile and set the order
+plot_data <- draws_df %>%
+  pivot_longer(cols = c(hurdle_slope, nonzero_slope, combined_slope),
+               names_to = "slope_type",
+               values_to = "value") %>%
+  left_join(cutoffs, by = "slope_type") %>%
+  filter(value <= cutoff) %>%
+  mutate(slope_type = factor(slope_type, levels = c("hurdle_slope", "nonzero_slope", "combined_slope")))
+
+
+
+# Step 1: Create a temporary density plot grouped by 'slope_type'
+temporary_plot <- ggplot(plot_data, aes(x = value, group = slope_type)) +
+  geom_density()
+
+# Step 2: Build the plot to extract density data
+build <- ggplot_build(temporary_plot)
+
+# Extract density data
+density_data <- build$data[[1]]
+
+# Map 'group' to 'slope_type'
+# Assuming 'group' corresponds to the order of 'slope_type' in plot_data
+slope_levels <- unique(plot_data$slope_type)
+density_data <- density_data %>%
+  mutate(slope_type = slope_levels[group])
+
+# Step 3: Add 'status' based on the vertical line at x = 1.0
+density_data <- density_data %>%
+  mutate(status = if_else(x <= 1.0, 'left', 'right'))
+
+# Filter for one slope type (e.g., "combined_slope")
+single_density_data <- density_data %>%
+  filter(slope_type == "nonzero_slope")  # Change to the desired slope type
+
+# Plot the density for only one slope type
+ggplot(single_density_data, aes(x = x, y = y, fill = status)) +
+  geom_area() +
+  geom_vline(xintercept = 1.0, linetype = "solid", color = "black") +  # Thick vertical line at 1.0
+  scale_fill_manual(values = c("left" = "pink", "right" = "lightblue")) +  # Customize colors as desired
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(
+    x = "Possible Parameter Values",
+    y = "Density",
+    title = "Posterior Density Plot for Combined Slope (99.5% cutoff)"
+  ) + coord_flip()
 
 ```
+
 
 
 
