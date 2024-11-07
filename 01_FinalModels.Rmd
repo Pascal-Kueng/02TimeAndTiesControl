@@ -661,8 +661,8 @@ conds_eff <- conditional_spaghetti(
   y_limits = c(0, 100)
 )
 
-svg("plot.svg", height = 10)
-conds_eff$pushing_partner_cw
+svg("plot.svg", height = 10, width = 13)
+conds_eff$persuasion_partner_cw
 dev.off()
 
 print(conds_eff)
@@ -681,7 +681,9 @@ conditional_spaghetti(
   ),
   group_var = 'coupleID',
   plot_full_range = TRUE,
-  y_limits = c(0, 100)
+  y_limits = c(0, 100),
+  y_label = 'Physical Activit',
+  x_label = 'Positive Social Control'
 )
 
 ```
