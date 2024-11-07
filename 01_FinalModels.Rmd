@@ -48,9 +48,9 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = FALSE
-report_ordinal = FALSE
-report_hurdle = FALSE
+shutdown = TRUE
+report_ordinal = TRUE
+report_hurdle = TRUE
 
 options(
   dplyr.print_max = 100, 
@@ -645,9 +645,8 @@ plot(
 ```
 
 ```{r report_pa_sub_lognormald, fig.height=6, fig.width=9, dpi=600, results='asis'}
-svg("plot.svg", width = 9, height = 6)
 
-conditional_spaghetti(
+conds_eff <- conditional_spaghetti(
   pa_sub, 
   effects = c(
     'persuasion_self_cw',
@@ -662,39 +661,18 @@ conditional_spaghetti(
   y_limits = c(0, 100)
 )
 
-
+svg("plot.svg", width = 9, height = 6)
+conds_eff$pushing_partner_cw
 dev.off()
+
+print(conds_eff)
+
 ```
 
 
 
 
-#```{r ddd, fig.height=7, fig.width=6, dpi=600, results='asis'}
-
-svg("plot2.svg", width = 6, height = 7)
-
-conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'persuasion_self_cw',
-    'persuasion_partner_cw',
-    'pressure_self_cw',
-    'pressure_partner_cw',
-    'pushing_self_cw',
-    'pushing_partner_cw'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  layout_option = 'horizontal',
-  y_limits = c(0, 100)
-)
-
-
-dev.off()
-
-#```
-
-```{r fig.width=2, fig.height=7}
+```{r fig.width=10, fig.height=3}
 
 draws_df <- pa_sub %>% 
   as_draws_df() %>%
@@ -703,71 +681,81 @@ draws_df <- pa_sub %>%
     predictions = 
       (1 - plogis(b_hu_Intercept + b_hu_pushing_self_cw)) * 
       exp(b_Intercept + b_pushing_self_cw),
-
     combined_slope = predictions / combined_Intercept,
-    
     hurdle_slope = 1 / exp(b_hu_pushing_self_cw),
     nonzero_slope = exp(b_pushing_self_cw)
-  ) %>% select(
-    c(hurdle_slope, nonzero_slope, combined_slope)
-  )
+  ) %>% 
+  select(c(hurdle_slope, nonzero_slope, combined_slope))
 
-
-# Calculate 99.5th percentile cutoff for each slope type
-cutoffs <- draws_df %>%
-  pivot_longer(cols = c(hurdle_slope, nonzero_slope, combined_slope),
-               names_to = "slope_type",
-               values_to = "value") %>%
-  group_by(slope_type) %>%
-  summarize(cutoff = quantile(value, 0.995))
-
-# Filter the data to only include values up to the 99.5th percentile and set the order
+# Prepare the data
 plot_data <- draws_df %>%
   pivot_longer(cols = c(hurdle_slope, nonzero_slope, combined_slope),
                names_to = "slope_type",
                values_to = "value") %>%
-  left_join(cutoffs, by = "slope_type") %>%
-  filter(value <= cutoff) %>%
-  mutate(slope_type = factor(slope_type, levels = c("hurdle_slope", "nonzero_slope", "combined_slope")))
+  mutate(
+    slope_type = factor(
+      slope_type, 
+      levels = c("combined_slope", "nonzero_slope", "hurdle_slope"),
+      labels = c("Combined", "Non-Zero Component", "Hurdle Component")
+    )
+  )
+
+# Calculate the 99.99% quantiles for each slope type
+quantiles <- plot_data %>%
+  group_by(slope_type) %>%
+  summarize(
+    lower = quantile(value, 0.005),
+    upper = quantile(value, 0.995)
+  )
+
+# Filter the data to include only values within the 99.99% quantile range
+plot_data_filtered <- plot_data %>%
+  left_join(quantiles, by = "slope_type") %>%
+  filter(value >= lower & value <= upper) %>%
+  select(-lower, -upper)
 
 
-
-# Step 1: Create a temporary density plot grouped by 'slope_type'
-temporary_plot <- ggplot(plot_data, aes(x = value, group = slope_type)) +
-  geom_density()
-
-# Step 2: Build the plot to extract density data
-build <- ggplot_build(temporary_plot)
-
-# Extract density data
-density_data <- build$data[[1]]
-
-# Map 'group' to 'slope_type'
-# Assuming 'group' corresponds to the order of 'slope_type' in plot_data
-slope_levels <- unique(plot_data$slope_type)
-density_data <- density_data %>%
-  mutate(slope_type = slope_levels[group])
-
-# Step 3: Add 'status' based on the vertical line at x = 1.0
-density_data <- density_data %>%
-  mutate(status = if_else(x <= 1.0, 'left', 'right'))
-
-# Filter for one slope type (e.g., "combined_slope")
-single_density_data <- density_data %>%
-  filter(slope_type == "nonzero_slope")  # Change to the desired slope type
-
-# Plot the density for only one slope type
-ggplot(single_density_data, aes(x = x, y = y, fill = status)) +
-  geom_area() +
-  geom_vline(xintercept = 1.0, linetype = "solid", color = "black") +  # Thick vertical line at 1.0
-  scale_fill_manual(values = c("left" = "pink", "right" = "lightblue")) +  # Customize colors as desired
-  theme_minimal() +
-  theme(legend.position = "none") +
+# Create the vertical density plots with enhanced styling and internal legend
+ggplot(plot_data_filtered, aes(x = value, y = slope_type, height = after_stat(density))) +
+  geom_density_ridges_gradient(
+    color = 'black',
+    linewidth = 0.4,
+    aes(fill = after_stat(x > 0.999)),
+    scale = 4,
+    rel_min_height = 0.0001,
+    gradient_lwd = 0.1,
+    quantile_lines = TRUE, quantiles = 2  # Adding lines for the median
+  ) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "black", linewidth = 0.5) +
+  scale_y_discrete(expand = c(0.01, 0)) +
+  scale_x_continuous(expand = c(0.01, 0)) +
+  scale_fill_manual(
+    values = c("lightcoral", "steelblue2"),
+    name = "Effect Direction",
+    labels = c("Negative (<1)", "Positive (>1)")
+  ) +
+  theme_ridges(font_size = 11, grid = TRUE) +  # Reduced font size for a cleaner look
+  theme(
+    panel.grid.major = element_blank(),  # Remove major grid lines for less clutter
+    panel.grid.minor.x = element_line(color = "grey85", linetype = "dotted"),  # Keep only minor grid lines on x-axis
+    panel.grid.minor.y = element_blank(),  # Remove y-axis grid lines
+    axis.title.x = element_text(face = "bold", hjust = 0.5, size = 10),  # Slightly smaller x-axis title
+    axis.text.x = element_text(size = 9),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 12),  # Slightly smaller plot title
+    plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10),
+    legend.position = c(0.8, 0.85),  # Keep the legend in its original position
+    legend.title = element_text(face = "bold"),
+    legend.background = element_blank(),  # Remove legend background for a cleaner look
+    legend.key.size = unit(0.4, "cm")
+  ) +
   labs(
-    x = "Possible Parameter Values",
-    y = "Density",
-    title = "Posterior Density Plot for Combined Slope (99.5% cutoff)"
-  ) + coord_flip()
+    x = "Transformed Slopes (Multiplicative Changes):\nOdds Ratios for Hurdle, Expected Values for Non-Zero and Combined Parts",
+    y = NULL,
+    title = "Posterior Density of Transformed Slopes",
+    subtitle = "Median lines shown for each component"
+  )
+
+
 
 ```
 
@@ -1290,8 +1278,6 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 ```{r report_sidebyside, results = 'asis'}
 
-report_hurdle <- T
-report_ordinal <- T
 stats_to_report <- c('SE', 'CI', 'pd')
 
 process_model_component <- function(obj) {
