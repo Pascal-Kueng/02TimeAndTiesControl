@@ -676,7 +676,7 @@ print(conds_eff)
 conditional_spaghetti(
   pa_sub, 
   effects = c(
-    'pushing_partner_cw'
+    'persuasion_partner_cw'
   ),
   group_var = 'coupleID',
   plot_full_range = TRUE,
