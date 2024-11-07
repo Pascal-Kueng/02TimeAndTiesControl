@@ -610,7 +610,7 @@ plot_general_model <- function(
         x = x_lab,
         y = y_lab
       ) +
-      theme_bw(base_size = 12) +
+      theme_bw(base_size = 11) +
       theme(
         plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
         axis.title = element_text(face = "bold"),
@@ -999,7 +999,7 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = prob_label
       ) +
-      theme_bw(base_size = 10) +
+      theme_bw(base_size = 11) +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
         axis.title.x = element_text(face = "bold", size = 10),
@@ -1026,7 +1026,7 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = positive_component_ylabel
       ) +
-      theme_bw(base_size = 10) +
+      theme_bw(base_size = 11) +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
         axis.title.x = element_text(face = "bold", size = 10),
@@ -1053,7 +1053,7 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = bquote(E*""[.(outcome_name)])
       ) +
-      theme_bw(base_size = 10) +
+      theme_bw(base_size = 11) +
       theme(
         plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
         axis.title.x = element_text(face = "bold", size = 10),
@@ -1506,7 +1506,7 @@ plot_cumulative_model <- function(
         color = "Category",
         fill = "Category"
       ) +
-      theme_bw(base_size = 12) +
+      theme_bw(base_size = 11) +
       theme(
         plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
         axis.title = element_text(face = "bold"),
