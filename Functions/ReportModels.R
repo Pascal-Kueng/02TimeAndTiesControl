@@ -397,7 +397,8 @@ conditional_spaghetti <- function(
     x_label = NULL,           # character
     y_label = NULL,           # character
     transform_fn = NULL,       # function to transform values after inverse link
-    layout_option = c('vertical', 'horizontal') # only for hurdle or ZI models with panels. 
+    layout_option = c('vertical', 'horizontal'), # only for hurdle or ZI models with panels. 
+    ridges = TRUE
 ) {
   if (!inherits(model, 'brmsfit')) {
     stop("Only brmsfit objects supported")
@@ -765,7 +766,8 @@ plot_hurdle_model <- function(
     y_label = NULL,
     transform_fn = NULL,
     use_pr_notation = FALSE,  # Option to switch between 'P' and 'Pr'
-    layout_option = c("vertical", "horizontal")  # New parameter for layout
+    layout_option = c("vertical", "horizontal"),  # New parameter for layout
+    ridges = TRUE
 ) {
   # Load required packages
   library(ggplot2)
@@ -773,7 +775,8 @@ plot_hurdle_model <- function(
   library(tidyr)
   library(posterior)
   library(patchwork)
-  library(grid)  # For unit() function
+  library(grid)  
+  library(ggridges)
   
   plots_list <- list()
   
@@ -1255,14 +1258,101 @@ plot_hurdle_model <- function(
     }
     
     
+    
+    ## create posterior density plot
+    # Create additional density plot for transformed slopes
+    draws_df <- posterior_samples %>%
+      as_draws_df() %>%
+      mutate(
+        combined_Intercept = (1 - plogis(b_hu_Intercept)) * exp(b_Intercept),
+        predictions = 
+          (1 - plogis(b_hu_Intercept + b_hu_pushing_self_cw)) * 
+          exp(b_Intercept + b_pushing_self_cw),
+        combined_slope = predictions / combined_Intercept,
+        hurdle_slope = 1 / exp(b_hu_pushing_self_cw),
+        nonzero_slope = exp(b_pushing_self_cw)
+      ) %>%
+      select(c(hurdle_slope, nonzero_slope, combined_slope))
+    
+    # Prepare the data
+    plot_data <- draws_df %>%
+      pivot_longer(cols = c(hurdle_slope, nonzero_slope, combined_slope),
+                   names_to = "slope_type",
+                   values_to = "value") %>%
+      mutate(
+        slope_type = factor(
+          slope_type, 
+          levels = c("combined_slope", "nonzero_slope", "hurdle_slope"),
+          labels = c("Combined", "Non-Zero Component", "Hurdle Component")
+        )
+      )
+    
+    # Calculate the 99.99% quantiles for each slope type
+    quantiles <- plot_data %>%
+      group_by(slope_type) %>%
+      summarize(
+        lower = quantile(value, 0.0001),
+        upper = quantile(value, 0.9999)
+      )
+    
+    # Filter the data to include only values within the 99.99% quantile range
+    plot_data_filtered <- plot_data %>%
+      left_join(quantiles, by = "slope_type") %>%
+      filter(value >= lower & value <= upper) %>%
+      select(-lower, -upper)
+    
+    # Create the vertical density plot
+    p_density <- ggplot(plot_data_filtered, aes(x = value, y = slope_type, height = after_stat(density))) +
+      geom_density_ridges_gradient(
+        color = 'black',
+        linewidth = 0.4,
+        aes(fill = after_stat(x > 0.999)),
+        scale = 4,
+        rel_min_height = 0.0001,
+        gradient_lwd = 0.1,
+        quantile_lines = TRUE, quantiles = 2  # Adding lines for the median
+      ) +
+      geom_vline(xintercept = 1, linetype = "dashed", color = "black", linewidth = 0.5) +
+      scale_y_discrete(expand = c(0.01, 0)) +
+      scale_x_continuous(expand = c(0.01, 0)) +
+      scale_fill_manual(
+        values = c("lightcoral", "steelblue2"),
+        name = "Effect Direction",
+        labels = c("Negative (<1)", "Positive (>1)")
+      ) +
+      theme_ridges(font_size = 11, grid = TRUE) +  # Reduced font size for a cleaner look
+      theme(
+        panel.grid.major = element_blank(),  # Remove major grid lines for less clutter
+        panel.grid.minor.x = element_line(color = "grey85", linetype = "dotted"),  # Keep only minor grid lines on x-axis
+        panel.grid.minor.y = element_blank(),  # Remove y-axis grid lines
+        axis.title.x = element_text(face = "bold", hjust = 0.5, size = 10),  # Slightly smaller x-axis title
+        axis.text.x = element_text(size = 9),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),  # Slightly smaller plot title
+        plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10),
+        legend.position = c(0.8, 0.85),  # Keep the legend in its original position
+        legend.title = element_text(face = "bold"),
+        legend.background = element_blank(),  # Remove legend background for a cleaner look
+        legend.key.size = unit(0.4, "cm")
+      ) +
+      labs(
+        x = "Transformed Slopes (Multiplicative Changes):\nOdds Ratios for Hurdle, Expected Values for Non-Zero and Combined Parts",
+        y = NULL,
+        title = "Posterior Density of Transformed Slopes",
+        subtitle = "Median lines shown for each component"
+      )
+    
+    
+    
     if (layout_option == 'horizontal') {
       # Arrange plots for horizontal option
       design <- "
         AABB
         CCCC
         CCCC
+        DDDD
       "
-      combined_plot <- p_hurdle + p_count + p_combined + plot_layout(design = design)
+      combined_plot <- p_hurdle + p_count + p_combined + free(p_density) + plot_layout(design = design, widths = 1)
+      
     } 
     
     if (layout_option == 'vertical') {
@@ -1270,9 +1360,9 @@ plot_hurdle_model <- function(
       design <- "
         AACCCC
         BBCCCC
+        DDDDDD
       "
-      combined_plot <- p_hurdle + p_count + p_combined + plot_layout(design = design)
-      
+      combined_plot <- p_hurdle + p_count + p_combined + free(p_density) + plot_layout(design = design, widths = 1)
     }
     
     
