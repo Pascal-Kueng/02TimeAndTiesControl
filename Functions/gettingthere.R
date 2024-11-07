@@ -468,8 +468,8 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
           color = "#33a02c",
-          linewidth = 0.4,
-          alpha = 0.20
+          linewidth = 0.25,
+          alpha = 0.50
         )
       
       # For positive outcome component
@@ -478,8 +478,8 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
           color = "#1f78b4",
-          linewidth = 0.4,
-          alpha = 0.20
+          linewidth = 0.25,
+          alpha = 0.50
         )
       
       # For combined expected value
@@ -488,8 +488,8 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
           color = "#6a3d9a",
-          linewidth = 0.4,
-          alpha = 0.20
+          linewidth = 0.25,
+          alpha = 0.50
         )
     }  # End of random effects code
     
@@ -541,8 +541,8 @@ plot_hurdle_model <- function(
     p_density <- ggplot(plot_data, aes(x = value, y = slope_type, height = after_stat(density))) +
       geom_density_ridges_gradient(
         color = 'black',
-        linewidth = 0.4,
-        aes(fill = after_stat(x > 0.999)),
+        linewidth = 0.25,
+        aes(fill = after_stat(x > 1)),
         scale = 4,
         rel_min_height = 0.0001,
         gradient_lwd = 0.1,
