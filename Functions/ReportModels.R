@@ -1261,20 +1261,21 @@ plot_hurdle_model <- function(
     
     ## create posterior density plot
     # Create additional density plot for transformed slopes
+    # Prepare the posterior density plot using the current effect
     draws_df <- posterior_samples %>%
       as_draws_df() %>%
       mutate(
-        combined_Intercept = (1 - plogis(b_hu_Intercept)) * exp(b_Intercept),
+        combined_Intercept = (1 - plogis(posterior_samples[[paste0("b_", hurdle_component, "_Intercept")]])) * exp(posterior_samples$b_Intercept),
         predictions = 
-          (1 - plogis(b_hu_Intercept + b_hu_pushing_self_cw)) * 
-          exp(b_Intercept + b_pushing_self_cw),
+          (1 - plogis(posterior_samples[[paste0("b_", hurdle_component, "_Intercept")]] + posterior_samples[[paste0("b_", hurdle_component, "_", e)]])) *
+          exp(posterior_samples$b_Intercept + posterior_samples[[paste0("b_", e)]]),
         combined_slope = predictions / combined_Intercept,
-        hurdle_slope = 1 / exp(b_hu_pushing_self_cw),
-        nonzero_slope = exp(b_pushing_self_cw)
+        hurdle_slope = 1 / exp(posterior_samples[[paste0("b_", hurdle_component, "_", e)]]),
+        nonzero_slope = exp(posterior_samples[[paste0("b_", e)]])
       ) %>%
       select(c(hurdle_slope, nonzero_slope, combined_slope))
     
-    # Prepare the data
+    # Prepare the data for the current effect
     plot_data <- draws_df %>%
       pivot_longer(cols = c(hurdle_slope, nonzero_slope, combined_slope),
                    names_to = "slope_type",
@@ -1287,22 +1288,10 @@ plot_hurdle_model <- function(
         )
       )
     
-    # Calculate the 99.99% quantiles for each slope type
-    quantiles <- plot_data %>%
-      group_by(slope_type) %>%
-      summarize(
-        lower = quantile(value, 0.0001),
-        upper = quantile(value, 0.9999)
-      )
     
-    # Filter the data to include only values within the 99.99% quantile range
-    plot_data_filtered <- plot_data %>%
-      left_join(quantiles, by = "slope_type") %>%
-      filter(value >= lower & value <= upper) %>%
-      select(-lower, -upper)
-    
+
     # Create the vertical density plot
-    p_density <- ggplot(plot_data_filtered, aes(x = value, y = slope_type, height = after_stat(density))) +
+    p_density <- ggplot(plot_data, aes(x = value, y = slope_type, height = after_stat(density))) +
       geom_density_ridges_gradient(
         color = 'black',
         linewidth = 0.4,
