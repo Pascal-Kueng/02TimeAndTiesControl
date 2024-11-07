@@ -681,7 +681,6 @@ conditional_spaghetti(
   ),
   group_var = 'coupleID',
   plot_full_range = TRUE,
-  n_groups = 20,
   y_limits = c(0, 100),
   y_label = 'Physical Activit',
   x_label = 'Positive Social Control'
