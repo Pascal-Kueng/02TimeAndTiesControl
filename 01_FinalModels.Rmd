@@ -644,7 +644,7 @@ plot(
 
 ```
 
-```{r report_pa_sub_lognormald, fig.height=10, dpi=600, results='asis'}
+```{r report_pa_sub_lognormald, fig.height=10, fig.width=12, dpi=600, results='asis'}
 
 conds_eff <- conditional_spaghetti(
   pa_sub, 
@@ -672,7 +672,7 @@ print(conds_eff)
 
 
 
-```{r fig.height=10}
+```{r fig.height=11, fig.width = 12}
 
 conditional_spaghetti(
   pa_sub, 

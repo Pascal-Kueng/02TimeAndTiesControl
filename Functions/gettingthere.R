@@ -214,7 +214,7 @@ plot_hurdle_model <- function(
     
     # Determine labels based on model family
     if (grepl("lognormal", model$family$family)) {
-      positive_component_title <- "Non-Zero Component Component"
+      positive_component_title <- "Non-Zero Component"
       positive_component_ylabel <- bquote(E*""[.(outcome_name) ~ "|" ~ .(outcome_name) ~ ">" ~ 0])
     } else {
       positive_component_title <- "Count Component"
@@ -246,12 +246,12 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = prob_label
       ) +
-      theme_bw(base_size = 11) +
+      theme_bw(base_size = 12) +
       theme(
-        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        axis.title.x = element_text(face = "bold", size = 10),
-        axis.title.y = element_text(face = "bold", size = 10, margin = margin(r = 10)),
-        axis.text = element_text(size = 9),
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(t = 10, b = 10)),
+        axis.title.x = element_text(size = 12, margin = margin(t = 10)),
+        axis.title.y = element_text(size = 12, margin = margin(r = 10, l = 10)),
+        axis.text = element_text(size = 10.5),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
         panel.grid.minor = element_blank()
       )
@@ -273,12 +273,12 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = positive_component_ylabel
       ) +
-      theme_bw(base_size = 11) +
+      theme_bw(base_size = 12) +
       theme(
-        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        axis.title.x = element_text(face = "bold", size = 10),
-        axis.title.y = element_text(face = "bold", size = 10, margin = margin(r = 10)),
-        axis.text = element_text(size = 9),
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(t = 10, b = 10)),
+        axis.title.x = element_text(size = 12, margin = margin(t = 10)),
+        axis.title.y = element_text(size = 12, margin = margin(r = 10, l = 10)),
+        axis.text = element_text(size = 10.5),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
         panel.grid.minor = element_blank()
       )
@@ -300,12 +300,12 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = bquote(E*""[.(outcome_name)])
       ) +
-      theme_bw(base_size = 11) +
+      theme_bw(base_size = 12) +
       theme(
-        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        axis.title.x = element_text(face = "bold", size = 10),
-        axis.title.y = element_text(face = "bold", size = 10, margin = margin(r = 10)),
-        axis.text = element_text(size = 9),
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(t = 10, b = 10)),
+        axis.title.x = element_text(size = 12, margin = margin(t = 10)),
+        axis.title.y = element_text(size = 12, margin = margin(r = 10, l = 10)),
+        axis.text = element_text(size = 10.5),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
         panel.grid.minor = element_blank()
       )
@@ -556,19 +556,19 @@ plot_hurdle_model <- function(
         name = "Effect Direction",
         labels = c("Negative (<1)", "Positive (>1)")
       ) +
-      theme_ridges(font_size = 11, grid = TRUE) +  # Reduced font size for a cleaner look
+      theme_ridges(font_size = 12, grid = TRUE) +  # Reduced font size for a cleaner look
       theme(
         panel.grid.major = element_blank(),  # Remove major grid lines for less clutter
         panel.grid.minor.x = element_line(color = "grey85", linetype = "dotted"),  # Keep only minor grid lines on x-axis
         panel.grid.minor.y = element_blank(),  # Remove y-axis grid lines
-        axis.title.x = element_text(face = "bold", hjust = 0.5, size = 10),  # Slightly smaller x-axis title
-        axis.text.x = element_text(size = 9),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),  # Slightly smaller plot title
-        plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10),
+        axis.title.x = element_text(hjust = 0.5, size = 12, margin = margin(t = 10)),  # Slightly smaller x-axis title
+        axis.text.x = element_text(size = 10.5),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 14, margin = margin(t = 10, b = 10)),  # Slightly smaller plot title
+        plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10.5),
         legend.position = 'right',  
         legend.title = element_text(face = "bold"),
         legend.background = element_blank(),  # Remove legend background for a cleaner look
-        legend.key.size = unit(0.4, "cm")
+        legend.key.size = unit(0.7, "cm")
       ) +
       labs(
         x = "Transformed Slopes (Multiplicative Changes):\nOdds Ratios for Hurdle, Expected Values for Non-Zero and Combined Parts",
@@ -594,9 +594,16 @@ plot_hurdle_model <- function(
     if (layout_option == 'vertical') {
       # Arrange plots for vertical option
       design <- "
-        AACCCC
-        BBCCCC
-        DDDDDD
+        AAACCCCCC
+        AAACCCCCC
+        AAACCCCCC
+        BBBCCCCCC
+        BBBCCCCCC
+        BBBCCCCCC
+        DDDDDDDDD
+        DDDDDDDDD
+        DDDDDDDDD
+        DDDDDDDDD
       "
       combined_plot <- p_hurdle + p_count + p_combined + free(p_density) + plot_layout(design = design, widths = 1)
     }
