@@ -673,6 +673,7 @@ print(conds_eff)
 
 
 ```{r fig.height=10}
+
 conditional_spaghetti(
   pa_sub, 
   effects = c(
@@ -682,21 +683,11 @@ conditional_spaghetti(
   plot_full_range = TRUE,
   y_limits = c(0, 100)
 )
+
 ```
 
 
-```{r fig.height=10, fig.width=15}
-conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'pushing_partner_cw'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  y_limits = c(0, 100),
-  layout = 'horizontal'
-)
-```
+
 
 ```{r pa_sub_lognormal_marginaleffects}
 

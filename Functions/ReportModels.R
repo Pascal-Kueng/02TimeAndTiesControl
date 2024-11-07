@@ -596,14 +596,14 @@ plot_general_model <- function(
       geom_ribbon(
         data = fixed_predictions,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#1f78b4", alpha = 0.18
+        fill = "#1f78b4", alpha = 0.24
       ) +
       # Add fixed effect line
       geom_line(
         data = fixed_predictions,
         aes(x = x_value, y = response),
         color = "#1f78b4",
-        linewidth = 1.3
+        linewidth =1.8
       ) +
       labs(
         title = paste("Fixed Effects:", x_lab),
@@ -725,7 +725,7 @@ plot_general_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = response, group = group_level),
           color = "#1f78b4",
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.3
         ) +
         labs(
@@ -986,13 +986,13 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_hurdle,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#33a02c", alpha = 0.18
+        fill = "#33a02c", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_hurdle,
         aes(x = x_value, y = response),
         color = "#33a02c",
-        linewidth = 1.3
+        linewidth =1.8
       ) +
       labs(
         title = "Hurdle Component",
@@ -1013,13 +1013,13 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_count,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#1f78b4", alpha = 0.18
+        fill = "#1f78b4", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_count,
         aes(x = x_value, y = response),
         color = "#1f78b4",
-        linewidth = 1.3
+        linewidth =1.8
       ) +
       labs(
         title = positive_component_title,
@@ -1040,13 +1040,13 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_combined,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#6a3d9a", alpha = 0.18
+        fill = "#6a3d9a", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_combined,
         aes(x = x_value, y = response),
         color = "#6a3d9a",
-        linewidth = 1.3
+        linewidth =1.8
       ) +
       labs(
         title = "Combined Expected Value",
@@ -1221,7 +1221,7 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
           color = "#33a02c",
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.20
         )
       
@@ -1231,7 +1231,7 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
           color = "#1f78b4",
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.20
         )
       
@@ -1241,7 +1241,7 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
           color = "#6a3d9a",
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.20
         )
     }  # End of random effects code
@@ -1318,7 +1318,7 @@ plot_hurdle_model <- function(
         axis.text.x = element_text(size = 9),
         plot.title = element_text(hjust = 0.5, face = "bold", size = 12),  # Slightly smaller plot title
         plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10),
-        legend.position = c(0.8, 0.85),  # Keep the legend in its original position
+        legend.position = 'right',  
         legend.title = element_text(face = "bold"),
         legend.background = element_blank(),  # Remove legend background for a cleaner look
         legend.key.size = unit(0.4, "cm")
@@ -1493,9 +1493,9 @@ plot_cumulative_model <- function(
     # Initialize ggplot
     p <- ggplot(plot_data, aes(x = x_value, y = median, color = category, fill = category)) +
       # Add CI ribbon
-      geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.18, color = NA) +
+      geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.24, color = NA) +
       # Add median lines
-      geom_line(linewidth = 1.3) +
+      geom_line(linewidth =1.8) +
       # Set manual colors for categories
       scale_color_manual(values = default_colors) +
       scale_fill_manual(values = default_colors) +
@@ -1662,7 +1662,7 @@ plot_cumulative_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = median, group = interaction(group_level, category), color = category),
-          linewidth = 0.3,
+          linewidth = 0.4,
           alpha = 0.3
         ) +
         labs(
@@ -1853,6 +1853,7 @@ DHARMa.check_brms.all <- function(model, integer = FALSE, outliers_type = 'defau
   try(testZeroInflation(model.check))
   try(testOutliers(model.check, type = outliers_type))
 }
+
 
 
 
