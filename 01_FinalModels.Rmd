@@ -677,7 +677,7 @@ print(conds_eff)
 
 ```
 
-```{r fig.height=11, fig.width = 12}
+```{r fig.height=11, fig.width = 12, dpi=600}
 
 
 conditional_spaghetti(

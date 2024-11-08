@@ -1,21 +1,10 @@
 ---
-title: "APIM - Control - NO AR1"
-author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
-date: "`r Sys.Date()`"
-output: 
-  rmarkdown::html_document:
-    theme: flatly
-    df_print: kable
-    toc: yes
-    toc_float:
-      collapsed: false
-      smooth_scroll: true
-    code_folding: show
-    toc_depth: 5
-    highlight: tango
+output:
+pdf_document:
+  latex_engine: xelatex
 ---
 
-```{r setup, message=FALSE, results='hide', echo=FALSE}
+```{r setup, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
 
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -34,7 +23,7 @@ source(file.path('Functions', 'PrepareData.R'))
 ```
 
 
-```{r set_options, message=FALSE, results='hide', echo=FALSE}
+```{r set_options, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
 
 system("shutdown /a")
 
@@ -74,19 +63,14 @@ suffix = as.character(iterations)
 ```
 
 
-```{r prepare_datasets, message=FALSE, results='hide', echo=FALSE}
+```{r prepare_datasets, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
 
 df_double <- readRDS('data.rds')
 
 ```
 
 
-# Modelling
-
-
-## Self-Reported MVPA
-### Hurdle Lognormal Model
-```{r pa_sub_lognormal, message=FALSE, results='hide', echo=FALSE}
+```{r pa_sub_lognormal, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
 
 
 formula <- bf(
@@ -165,23 +149,21 @@ pa_sub <- my_brm(
 ```
 
 
-```{r fig.height=11, fig.width = 12, message=FALSE, warning=FALSE, echo=FALSE}
+```{r fig.height=11, fig.width = 12, message=FALSE, warning=FALSE, echo=FALSE, dpi=600,results='hide'}
 
-
+# Generate the plot
 conditional_spaghetti(
   pa_sub, 
-  effects = c(
-    'persuasion_partner_cw'
-  ),
+  effects = c('persuasion_partner_cw'),
   group_var = 'coupleID',
   plot_full_range = TRUE,
   y_limits = c(0, 100),
   y_label = "Same-Day MVPA",
   y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
-  x_label = "Positive Control (Centered)"
-  , filter_quantiles = .9995
-  , font_family = 'Candara'
-  , p_title = "The Relationship Between Positive Control and Same-Day MVPA"
+  x_label = "Positive Control (Centered)",
+  filter_quantiles = .9995,
+  font_family = 'Candara',
+  p_title = ""
 )
 
   
