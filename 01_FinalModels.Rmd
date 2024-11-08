@@ -673,12 +673,6 @@ conds_eff <- conditional_spaghetti(
   font_family = 'Candara'
 )
 
-
-
-svg("plot.svg", height = 11, width = 12)
-conds_eff$persuasion_partner_cw
-dev.off()
-
 print(conds_eff)
 
 ```
@@ -697,12 +691,32 @@ conditional_spaghetti(
   group_var = 'coupleID',
   plot_full_range = TRUE,
   y_limits = c(0, 100),
-  y_label = 'MVPA',
+  y_label = "Same-Day MVPA",
   y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Overall Expected MVPA'),
-  x_label = 'Positive Social Control'
+  x_label = "Positive Control"
   ,filter_quantiles = .9995,
   font_family = 'Candara'
 )
+
+
+
+
+
+conditional_spaghetti(
+  pa_sub, 
+  effects = c(
+    'pressure_partner_cw'
+  ),
+  group_var = 'coupleID',
+  plot_full_range = TRUE,
+  y_limits = c(0, 100),
+  y_label = "Same-Day MVPA",
+  y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Overall Expected MVPA'),
+  x_label = "Negative Control"
+  ,filter_quantiles = .999,
+  font_family = 'Candara'
+)
+
 
 
   

@@ -590,13 +590,14 @@ plot_hurdle_model <- function(
         quantiles = 0.5  # Adding lines for the median
       ) +
       geom_vline(xintercept = 1, linetype = "dashed", color = "black", linewidth = 0.5) +
-      #scale_y_discrete(expand = c(0.01, 0)) +
-      #scale_x_continuous(expand = c(0.01, 0)) +
+      scale_x_continuous(
+        breaks = function(x) unique(c(1, pretty(x)))  # Ensure 1 is included in the breaks
+      ) +
       scale_fill_manual(
         values = c("lightcoral", "steelblue2"),
         name = "Effect Direction",
         labels = c("Negative (<1)", "Positive (>1)")
-      ) + scale_x_continuous(breaks = seq(1, 2, by = 0.2)) + 
+      ) + 
       theme_ridges(font_size = 12, grid = TRUE) +  # Reduced font size for a cleaner look
         theme(
           panel.grid.minor = element_blank(),  # Remove major grid lines for less clutter

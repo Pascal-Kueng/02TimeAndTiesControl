@@ -1396,7 +1396,7 @@ plot_hurdle_model <- function(
       plot_layout(design = design, widths = 1) +
       plot_annotation(
         title = paste('The Relationship Between', x_lab, 'and', single_outcome_name),
-        subtitle = 'Components of the Bayesian Hurdle-Lognormal Model.',
+        subtitle = 'Bayesian Hurdle-Lognormal Model Components',
         caption = 'By Pascal Küng',
         theme = theme(
           plot.title = element_text(hjust = 0.5, size = 25, face = "bold", margin = margin(t = 20, b = 15)),
