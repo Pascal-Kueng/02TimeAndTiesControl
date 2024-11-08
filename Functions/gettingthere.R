@@ -26,6 +26,7 @@ plot_hurdle_model <- function(
   library(grid)  
   library(ggridges)
   library(extrafont)
+  suppressMessages(suppressWarnings(extrafont::loadfonts()))
   
   plots_list <- list()
   
