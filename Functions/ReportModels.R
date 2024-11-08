@@ -399,7 +399,8 @@ conditional_spaghetti <- function(
     y_labels = NULL, 
     transform_fn = NULL,       # function to transform values after inverse link
     filter_quantiles = NULL,
-    font_family = 'Segoe UI'
+    font_family = 'Segoe UI',
+    p_title = NULL
 ) {
   if (!inherits(model, 'brmsfit')) {
     stop("Only brmsfit objects supported")
@@ -454,7 +455,8 @@ conditional_spaghetti <- function(
       y_labels = y_labels,
       transform_fn = transform_fn,
       filter_quantiles = filter_quantiles,
-      font_family = font_family
+      font_family = font_family,
+      p_title = p_title
     )
   } else {
     plots <- plot_general_model(
@@ -771,7 +773,8 @@ plot_hurdle_model <- function(
     transform_fn = NULL,
     use_pr_notation = FALSE,  # Option to switch between 'P' and 'Pr'
     filter_quantiles = NULL,
-    font_family = 'Segoe UI'
+    font_family = 'Segoe UI',
+    p_title = NULL
 ) {
   # Load required packages
   library(ggplot2)
@@ -999,16 +1002,16 @@ plot_hurdle_model <- function(
     
     
     # Create plots for each component
-    p_hurdle <- ggplot() + 
+    p_hurdle <- ggplot() +
       geom_ribbon(
         data = fixed_predictions_hurdle,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "peru", alpha = 0.24
+        fill = "goldenrod", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_hurdle,
         aes(x = x_value, y = response),
-        color = "peru",
+        color = "goldenrod",
         linewidth =1.8
       ) +
       labs(
@@ -1034,12 +1037,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_count,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "steelblue3", alpha = 0.24
+        fill = "#009E73", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_count,
         aes(x = x_value, y = response),
-        color = "steelblue3",
+        color = "#009E73",
         linewidth =1.8
       ) +
       labs(
@@ -1065,12 +1068,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_combined,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#008080", alpha = 0.24
+        fill = "#6a3d9a", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_combined,
         aes(x = x_value, y = response),
-        color = "#008080",
+        color = "#6a3d9a",
         linewidth =1.8
       ) +
       labs(
@@ -1249,7 +1252,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
-          color = "darkgoldenrod", 
+          color = "goldenrod",
           linewidth = 0.25,
           alpha = 0.50
         )
@@ -1259,7 +1262,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
-          color = "steelblue3",
+          color = "#009E73",
           linewidth = 0.25,
           alpha = 0.50
         )
@@ -1269,7 +1272,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
-          color = "#008080", 
+          color = "#6a3d9a",
           linewidth = 0.25,
           alpha = 0.50
         )
@@ -1350,7 +1353,7 @@ plot_hurdle_model <- function(
         breaks = function(x) unique(c(1, pretty(x)))  # Ensure 1 is included in the breaks
       ) +
       scale_fill_manual(
-        values = c("lightcoral", "palegreen3"),
+        values = c("lightcoral", "steelblue2"),
         name = "Effect Direction",
         labels = c("Negative (<1)", "Positive (>1)")
       ) + 
@@ -1391,12 +1394,15 @@ plot_hurdle_model <- function(
       DDDDDDDDDD
     "
     
+    if (is.null(p_title)) {
+      p_title <- paste('The Relationship Between', x_lab, 'and', single_outcome_name)
+    }
     
     combined_plot <- 
       p_hurdle + p_count + p_combined + free(p_density) + 
       plot_layout(design = design, widths = 1) +
       plot_annotation(
-        title = paste('The Relationship Between', x_lab, 'and', single_outcome_name),
+        title = p_title,
         subtitle = 'Bayesian Hurdle-Lognormal Model Components: Fixed and Random Effects',
         caption = 'By Pascal Küng',
         theme = theme(
@@ -1414,7 +1420,6 @@ plot_hurdle_model <- function(
   
   return(plots_list)
 }
-
 
 
 # Updated function for cumulative models with random effects

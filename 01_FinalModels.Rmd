@@ -691,34 +691,17 @@ conditional_spaghetti(
   y_label = "Same-Day MVPA",
   y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
   x_label = "Positive Control (Centered)"
-  ,filter_quantiles = .9995,
-  font_family = 'Candara'
+  , filter_quantiles = .9995
+  , font_family = 'Candara'
+  , p_title = "The Relationship Between Positive Control and Same-Day MVPA"
 )
 
   
 ```
 
+**Note.** This graphic illustrates the relationship between positive control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average received positive control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
+The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. The hurdle and combined slopes are significant, but the slope for expected MVPA when active is not, as its 95% credible interval overlaps 1.
 
-```{r fig.height=11, fig.width = 12}
-
-
-conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'persuasion_partner_cw'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  y_limits = c(0, 100),
-  y_label = "Same-Day MVPA",
-  y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
-  x_label = "Positive Control (Centered)"
-  ,filter_quantiles = .9995,
-  font_family = 'Candara'
-)
-
-  
-```
 
 
 ```{r pa_sub_lognormal_marginaleffects}

@@ -1,0 +1,193 @@
+---
+title: "APIM - Control - NO AR1"
+author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    theme: flatly
+    df_print: kable
+    toc: yes
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    toc_depth: 5
+    highlight: tango
+---
+
+```{r setup, message=FALSE, results='hide', echo=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
+
+library(tidyverse)
+library(brms)
+library(bayesplot)
+
+source(file.path('Functions', 'ReportModels.R'))
+source(file.path('Functions', 'PrettyTables.R'))
+source(file.path('Functions', 'ReportMeasures.R'))
+source(file.path('Functions', 'PrepareData.R'))
+
+
+```
+
+
+```{r set_options, message=FALSE, results='hide', echo=FALSE}
+
+system("shutdown /a")
+
+# Set options for analysis
+use_mi = FALSE
+shutdown = TRUE
+report_ordinal = TRUE
+report_hurdle = TRUE
+
+options(
+  dplyr.print_max = 100, 
+  brms.backend = 'cmdstan',
+  brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
+  brms.file_refit = 'on_change',
+  #brms.file_refit = 'always',
+  error = function() beepr::beep(sound = 5),
+  es.use_symbols = TRUE
+)
+
+
+####################### Model parameters #######################
+
+iterations = 12000 # 10'000 per chain to achieve 40'000
+warmup = 2000
+
+# NO AR!!!
+#corstr = 'ar'
+#corstr = 'cosy_couple'
+#corstr = 'cosy_couple:user'
+
+
+################################################################
+
+suffix = as.character(iterations)
+
+
+```
+
+
+```{r prepare_datasets, message=FALSE, results='hide', echo=FALSE}
+
+df_double <- readRDS('data.rds')
+
+```
+
+
+# Modelling
+
+
+## Self-Reported MVPA
+### Hurdle Lognormal Model
+```{r pa_sub_lognormal, message=FALSE, results='hide', echo=FALSE}
+
+
+formula <- bf(
+  pa_sub ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID),
+  
+  hu = ~ persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    day + 
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = autocor_str
+) 
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 2)", class = "b", dpar = "hu")
+  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
+  , brms::set_prior("normal(0.5, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = hurdle_lognormal()
+#)
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_sub <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::hurdle_lognormal(), 
+  #family = brms::hurdle_negbinomial(), 
+  #family = brms::hurdle_poisson(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 42,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_NOAR", suffix))
+  #, file_refit = 'always'
+)
+
+
+```
+
+
+```{r fig.height=11, fig.width = 12, message=FALSE, warning=FALSE, echo=FALSE}
+
+
+conditional_spaghetti(
+  pa_sub, 
+  effects = c(
+    'persuasion_partner_cw'
+  ),
+  group_var = 'coupleID',
+  plot_full_range = TRUE,
+  y_limits = c(0, 100),
+  y_label = "Same-Day MVPA",
+  y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
+  x_label = "Positive Control (Centered)"
+  , filter_quantiles = .9995
+  , font_family = 'Candara'
+  , p_title = "The Relationship Between Positive Control and Same-Day MVPA"
+)
+
+  
+```
+
+**Note.** This graphic illustrates the relationship between positive control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average received positive control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
+The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. The hurdle and combined slopes are significant, but the slope for expected MVPA when active is not, as its 95% credible interval overlaps 1.
+
+

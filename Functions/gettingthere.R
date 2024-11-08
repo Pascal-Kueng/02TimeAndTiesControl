@@ -15,7 +15,8 @@ plot_hurdle_model <- function(
     transform_fn = NULL,
     use_pr_notation = FALSE,  # Option to switch between 'P' and 'Pr'
     filter_quantiles = NULL,
-    font_family = 'Segoe UI'
+    font_family = 'Segoe UI',
+    p_title = NULL
 ) {
   # Load required packages
   library(ggplot2)
@@ -635,12 +636,15 @@ plot_hurdle_model <- function(
       DDDDDDDDDD
     "
     
+    if (is.null(p_title)) {
+      p_title <- paste('The Relationship Between', x_lab, 'and', single_outcome_name)
+    }
     
     combined_plot <- 
       p_hurdle + p_count + p_combined + free(p_density) + 
       plot_layout(design = design, widths = 1) +
       plot_annotation(
-        title = paste('The Relationship Between', x_lab, 'and', single_outcome_name),
+        title = p_title,
         subtitle = 'Bayesian Hurdle-Lognormal Model Components: Fixed and Random Effects',
         caption = 'By Pascal Küng',
         theme = theme(
