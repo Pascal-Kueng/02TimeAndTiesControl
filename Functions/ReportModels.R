@@ -396,6 +396,7 @@ conditional_spaghetti <- function(
     y_limits = NULL,          # vector with lower and upper bound of y-axis (optional)
     x_label = NULL,           # character
     y_label = NULL,           # character
+    y_labels = NULL, 
     transform_fn = NULL,       # function to transform values after inverse link
     filter_quantiles = NULL,
     font_family = 'Segoe UI'
@@ -403,7 +404,7 @@ conditional_spaghetti <- function(
   if (!inherits(model, 'brmsfit')) {
     stop("Only brmsfit objects supported")
   }
-  
+
   # Check for required packages
   required_packages <- c("dplyr", "tidyr", "ggplot2", "posterior")
   for (pkg in required_packages) {
@@ -450,6 +451,7 @@ conditional_spaghetti <- function(
       y_limits = y_limits,
       x_label = x_label,
       y_label = y_label,
+      y_labels = y_labels,
       transform_fn = transform_fn,
       filter_quantiles = filter_quantiles,
       font_family = font_family

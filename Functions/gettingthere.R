@@ -11,6 +11,7 @@ plot_hurdle_model <- function(
     y_limits = NULL,
     x_label = NULL,
     y_label = NULL,
+    y_labels = NULL,
     transform_fn = NULL,
     use_pr_notation = FALSE,  # Option to switch between 'P' and 'Pr'
     filter_quantiles = NULL,
@@ -28,7 +29,6 @@ plot_hurdle_model <- function(
   
   plots_list <- list()
   
-
   # Extract posterior samples for fixed effects
   posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
   
@@ -218,29 +218,29 @@ plot_hurdle_model <- function(
     
     ## Axes Titles
     x_lab <- ifelse(is.null(x_label), e, x_label[[i]])
-    
-    outcome_names <- NULL
-    single_outcome_name <- NULL
-    if (!is.null(y_label) & length(y_label) == 3) {
-      outcome_names <- y_label
+    single_outcome_name <- ifelse(is.null(y_label), "Y", y_label)
+    # Check if y_labels is provided and has the correct length
+    if (!is.null(y_labels)) {
+      if (length(y_labels) != 3) {
+        stop('y_labels must be of length 3. Use y_label to provide only 1')
+      }
+      # Use y_labels directly if provided
+      prob_label <- y_labels[[1]]
+      positive_component_ylabel <- y_labels[[2]]
+      combined_ylabel <- y_labels[[3]]
     } else {
-      single_outcome_name <- ifelse(is.null(y_label), "Y", y_label)
-    }
-    
-    if (!is.null(single_outcome_name)) {
-      positive_component_ylabel <- bquote(E*""[.(single_outcome_name) ~ "|" ~ .(single_outcome_name) ~ ">" ~ 0])
-      # Use 'P' or 'Pr' based on the parameter
+      # Create labels using single_outcome_name
       prob_label <- if (use_pr_notation) {
         bquote(Pr(.(single_outcome_name) ~ ">" ~ 0))
       } else {
         bquote(P(.(single_outcome_name) ~ ">" ~ 0))
       }
+      positive_component_ylabel <- bquote(E*""[.(single_outcome_name) ~ "|" ~ .(single_outcome_name) ~ ">" ~ 0])
       combined_ylabel <- bquote(E*""[.(single_outcome_name)])
-    } else {
-      positive_component_ylabel <- outcome_names[[2]]
-      prob_label <- outcome_names[[1]]
-      combined_ylabel <- outcome_names[[3]]
     }
+    
+
+    
     # Create plots for each component
     p_hurdle <- ggplot() +
       geom_ribbon(
@@ -258,7 +258,7 @@ plot_hurdle_model <- function(
         title = "Hurdle Component",
         x = x_lab,
         y = prob_label
-      ) +
+      ) + ylim(0, 1) +
       theme_bw(base_size = 12) +
       theme(
         plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(t = 10, b = 10)),
@@ -611,10 +611,10 @@ plot_hurdle_model <- function(
         legend.key.size = unit(0.7, "cm")
       ) +
       labs(
-        x = "Slopes Representing Multiplicative Changes:\nOdds Ratios for Hurdle Component and Expected Values for other Components",
+        x = "Possible Values of Transformed Slopes",
         y = NULL,
-        title = "Posterior Density of Transformed Slopes",
-        subtitle = "Median lines shown for each component"
+        title = "Posterior Density of Slopes",
+        subtitle = "Transformed to Represent Multiplicative Changes in Odds Ratios or Expected Values"
       )
     
     
@@ -632,12 +632,14 @@ plot_hurdle_model <- function(
       DDDDDDDDDD
       DDDDDDDDDD
     "
+    
+    
     combined_plot <- 
       p_hurdle + p_count + p_combined + free(p_density) + 
       plot_layout(design = design, widths = 1) +
       plot_annotation(
-        title = 'This is the Title',
-        subtitle = 'These 4 plots will reveal yet-untold secrets about our beloved data-set',
+        title = paste('The Relationship Between', x_label, 'and', single_outcome_name),
+        subtitle = 'A Breakdown of Bayesian Hurdle-Lognormal Model Components',
         caption = 'By Pascal Küng',
         theme = theme(
           plot.title = element_text(hjust = 0.5, size = 25, face = "bold"),
