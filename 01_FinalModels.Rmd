@@ -690,7 +690,7 @@ conditional_spaghetti(
   font_family = 'Candara'
 )
 
-fonts <- c('Candara', 'Segoe UI', 'Calibri', 'Cambria', 'Trebuchet MS', 'Comic Sans')
+fonts <- c('Arial', 'Candara', 'Segoe UI', 'Calibri', 'Cambria', 'Trebuchet MS', 'Comic Sans')
 
 for (font_i in fonts) {
   print(font_i)

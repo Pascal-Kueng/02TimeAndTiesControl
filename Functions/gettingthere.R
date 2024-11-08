@@ -642,8 +642,8 @@ plot_hurdle_model <- function(
         subtitle = 'A Breakdown of Bayesian Hurdle-Lognormal Model Components',
         caption = 'By Pascal Küng',
         theme = theme(
-          plot.title = element_text(hjust = 0.5, size = 25, face = "bold"),
-          plot.subtitle = element_text(hjust = 0.5, size = 14, face = "italic")
+          plot.title = element_text(hjust = 0.5, size = 25, face = "bold", margin = margin(t = 20, b = 15)),
+          plot.subtitle = element_text(hjust = 0.5, size = 14, face = "italic", margin = margin(b = 20))
         )
       ) & theme(
         title = element_text(family = font_family),
