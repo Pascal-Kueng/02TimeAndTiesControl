@@ -676,11 +676,7 @@ print(conds_eff)
 ```{r fig.height=11, fig.width = 12}
 
 
-fonts <- c('Arial', 'Candara', 'Cambria')
-
-for (font_i in fonts) {
-  print(font_i)
-  a <- conditional_spaghetti(
+conditional_spaghetti(
   pa_sub, 
   effects = c(
     'persuasion_partner_cw'
@@ -689,15 +685,28 @@ for (font_i in fonts) {
   plot_full_range = TRUE,
   y_limits = c(0, 100),
   y_label = 'MVPA',
-  y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Total Expected MVPA'),
+  y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Overall Expected MVPA'),
   x_label = 'Positive Social Control'
   ,filter_quantiles = .9995,
-  font_family = font_i
+  font_family = 'Candara'
+)
+
+
+conditional_spaghetti(
+  pa_sub, 
+  effects = c(
+    'persuasion_partner_cw'
+  ),
+  group_var = 'coupleID',
+  plot_full_range = TRUE,
+  y_limits = c(0, 100),
+  y_label = 'MVPA',
+  y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Overall Expected MVPA'),
+  x_label = 'Positive Social Control'
+  ,filter_quantiles = .9995,
+  font_family = 'Cambria'
 )
   
-  print(a)
-}
-
 ```
 
 
