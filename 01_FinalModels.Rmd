@@ -644,7 +644,7 @@ plot(
 
 ```
 
-```{r report_pa_sub_lognormald, fig.height=10, fig.width=12, dpi=600, results='asis'}
+```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis'}
 
 conds_eff <- conditional_spaghetti(
   pa_sub, 
@@ -658,10 +658,11 @@ conds_eff <- conditional_spaghetti(
   ),
   group_var = 'coupleID',
   plot_full_range = TRUE,
-  y_limits = c(0, 100)
+  y_limits = c(0, 100),
+  filter_quantiles = 0.9995
 )
 
-svg("plot.svg", height = 10, width = 13)
+svg("plot.svg", height = 11, width = 12)
 conds_eff$persuasion_partner_cw
 dev.off()
 
@@ -684,11 +685,23 @@ conditional_spaghetti(
   y_limits = c(0, 100),
   y_label = 'Physical Activit',
   x_label = 'Positive Social Control'
+  ,filter_quantiles = .9995
+)
+
+conditional_spaghetti(
+  pa_sub, 
+  effects = c(
+    'pressure_partner_cw'
+  ),
+  group_var = 'coupleID',
+  plot_full_range = TRUE,
+  y_limits = c(0, 100),
+  y_label = 'Physical Activit',
+  x_label = 'Exerted Pressure'
+  ,filter_quantiles = .99
 )
 
 ```
-
-
 
 
 ```{r pa_sub_lognormal_marginaleffects}

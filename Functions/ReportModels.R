@@ -397,8 +397,7 @@ conditional_spaghetti <- function(
     x_label = NULL,           # character
     y_label = NULL,           # character
     transform_fn = NULL,       # function to transform values after inverse link
-    layout_option = c('vertical', 'horizontal'), # only for hurdle or ZI models with panels. 
-    ridges = TRUE
+    filter_quantiles = NULL
 ) {
   if (!inherits(model, 'brmsfit')) {
     stop("Only brmsfit objects supported")
@@ -451,7 +450,7 @@ conditional_spaghetti <- function(
       x_label = x_label,
       y_label = y_label,
       transform_fn = transform_fn,
-      layout_option = layout_option
+      filter_quantiles = filter_quantiles
     )
   } else {
     plots <- plot_general_model(
