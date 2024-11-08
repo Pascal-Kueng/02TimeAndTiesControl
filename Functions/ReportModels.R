@@ -397,7 +397,8 @@ conditional_spaghetti <- function(
     x_label = NULL,           # character
     y_label = NULL,           # character
     transform_fn = NULL,       # function to transform values after inverse link
-    filter_quantiles = NULL
+    filter_quantiles = NULL,
+    font_family = 'Segoe UI'
 ) {
   if (!inherits(model, 'brmsfit')) {
     stop("Only brmsfit objects supported")
@@ -450,7 +451,8 @@ conditional_spaghetti <- function(
       x_label = x_label,
       y_label = y_label,
       transform_fn = transform_fn,
-      filter_quantiles = filter_quantiles
+      filter_quantiles = filter_quantiles,
+      font_family = font_family
     )
   } else {
     plots <- plot_general_model(
@@ -765,8 +767,8 @@ plot_hurdle_model <- function(
     y_label = NULL,
     transform_fn = NULL,
     use_pr_notation = FALSE,  # Option to switch between 'P' and 'Pr'
-    layout_option = c("vertical", "horizontal"),  # New parameter for layout
-    ridges = TRUE
+    filter_quantiles = NULL,
+    font_family = 'Segoe UI'
 ) {
   # Load required packages
   library(ggplot2)
@@ -776,11 +778,10 @@ plot_hurdle_model <- function(
   library(patchwork)
   library(grid)  
   library(ggridges)
+  library(extrafont)
   
   plots_list <- list()
   
-  # Ensure layout_option is valid
-  layout_option <- match.arg(layout_option)
   
   # Extract posterior samples for fixed effects
   posterior_samples <- posterior::as_draws_df(model) %>% as.data.frame()
@@ -966,7 +967,7 @@ plot_hurdle_model <- function(
     
     # Determine labels based on model family
     if (grepl("lognormal", model$family$family)) {
-      positive_component_title <- "Positive Outcome Component"
+      positive_component_title <- "Non-Zero Component"
       positive_component_ylabel <- bquote(E*""[.(outcome_name) ~ "|" ~ .(outcome_name) ~ ">" ~ 0])
     } else {
       positive_component_title <- "Count Component"
@@ -998,14 +999,18 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = prob_label
       ) +
-      theme_bw(base_size = 11) +
+      theme_bw(base_size = 12) +
       theme(
-        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        axis.title.x = element_text(face = "bold", size = 10),
-        axis.title.y = element_text(face = "bold", size = 10, margin = margin(r = 10)),
-        axis.text = element_text(size = 9),
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(t = 10, b = 10)),
+        axis.title.x = element_text(size = 12, margin = margin(t = 10)),
+        axis.title.y = element_text(size = 12, margin = margin(r = 10, l = 10)),
+        axis.text = element_text(size = 10.5),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
-        panel.grid.minor = element_blank()
+        panel.border = element_blank(),         # Removes the main plot panel border
+        panel.grid.major.x = element_blank(), 
+        panel.grid.major.y = element_line(color = "grey80", linetype = "dotted"), 
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(linewidth = 0.5, color = 'grey45')
       )
     
     p_count <- ggplot() +
@@ -1025,14 +1030,18 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = positive_component_ylabel
       ) +
-      theme_bw(base_size = 11) +
+      theme_bw(base_size = 12) +
       theme(
-        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        axis.title.x = element_text(face = "bold", size = 10),
-        axis.title.y = element_text(face = "bold", size = 10, margin = margin(r = 10)),
-        axis.text = element_text(size = 9),
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(t = 10, b = 10)),
+        axis.title.x = element_text(size = 12, margin = margin(t = 10)),
+        axis.title.y = element_text(size = 12, margin = margin(r = 10, l = 10)),
+        axis.text = element_text(size = 10.5),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
-        panel.grid.minor = element_blank()
+        panel.border = element_blank(),         # Removes the main plot panel border
+        panel.grid.major.x = element_blank(), 
+        panel.grid.major.y = element_line(color = "grey80", linetype = "dotted"), 
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(linewidth = 0.5, color = 'grey45')
       )
     
     p_combined <- ggplot() +
@@ -1052,14 +1061,18 @@ plot_hurdle_model <- function(
         x = x_lab,
         y = bquote(E*""[.(outcome_name)])
       ) +
-      theme_bw(base_size = 11) +
+      theme_bw(base_size = 12) +
       theme(
-        plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        axis.title.x = element_text(face = "bold", size = 10),
-        axis.title.y = element_text(face = "bold", size = 10, margin = margin(r = 10)),
-        axis.text = element_text(size = 9),
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(t = 10, b = 10)),
+        axis.title.x = element_text(size = 12, margin = margin(t = 10)),
+        axis.title.y = element_text(size = 12, margin = margin(r = 10, l = 10)),
+        axis.text = element_text(size = 10.5),
         plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
-        panel.grid.minor = element_blank()
+        panel.border = element_blank(),         # Removes the main plot panel border
+        panel.grid.major.x = element_blank(), 
+        panel.grid.major.y = element_line(color = "grey80", linetype = "dotted"),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(linewidth = 0.5, color = 'grey45')
       )
     
     # Include the random effects code
@@ -1220,8 +1233,8 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
           color = "#33a02c",
-          linewidth = 0.4,
-          alpha = 0.20
+          linewidth = 0.25,
+          alpha = 0.50
         )
       
       # For positive outcome component
@@ -1230,8 +1243,8 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
           color = "#1f78b4",
-          linewidth = 0.4,
-          alpha = 0.20
+          linewidth = 0.25,
+          alpha = 0.50
         )
       
       # For combined expected value
@@ -1240,8 +1253,8 @@ plot_hurdle_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
           color = "#6a3d9a",
-          linewidth = 0.4,
-          alpha = 0.20
+          linewidth = 0.25,
+          alpha = 0.50
         )
     }  # End of random effects code
     
@@ -1287,18 +1300,33 @@ plot_hurdle_model <- function(
         )
       )
     
+    # Calculate the quantiles for each slope type
+    if (!is.null(filter_quantiles)) {
+      quantiles <- plot_data %>%
+        group_by(slope_type) %>%
+        summarize(
+          lower = quantile(value, 1 - filter_quantiles),
+          upper = quantile(value, filter_quantiles)
+        )
+      
+      # Filter the data to include only values within the 99.99% quantile range
+      plot_data <- plot_data %>%
+        left_join(quantiles, by = "slope_type") %>%
+        filter(value >= lower & value <= upper) %>%
+        select(-lower, -upper)
+    }
     
-
     # Create the vertical density plot
     p_density <- ggplot(plot_data, aes(x = value, y = slope_type, height = after_stat(density))) +
       geom_density_ridges_gradient(
         color = 'black',
-        linewidth = 0.4,
-        aes(fill = after_stat(x > 0.999)),
+        linewidth = 0.25,
+        aes(fill = after_stat(x > 1)),
         scale = 4,
         rel_min_height = 0.0001,
         gradient_lwd = 0.1,
-        quantile_lines = TRUE, quantiles = 2  # Adding lines for the median
+        quantile_lines = TRUE, 
+        quantiles = 0.5  # Adding lines for the median
       ) +
       geom_vline(xintercept = 1, linetype = "dashed", color = "black", linewidth = 0.5) +
       scale_y_discrete(expand = c(0.01, 0)) +
@@ -1308,22 +1336,22 @@ plot_hurdle_model <- function(
         name = "Effect Direction",
         labels = c("Negative (<1)", "Positive (>1)")
       ) +
-      theme_ridges(font_size = 11, grid = TRUE) +  # Reduced font size for a cleaner look
+      theme_ridges(font_size = 12, grid = TRUE) +  # Reduced font size for a cleaner look
       theme(
         panel.grid.major = element_blank(),  # Remove major grid lines for less clutter
-        panel.grid.minor.x = element_line(color = "grey85", linetype = "dotted"),  # Keep only minor grid lines on x-axis
+        panel.grid.minor.x = element_line(color = "grey80", linetype = "dotted"),  # Keep only minor grid lines on x-axis
         panel.grid.minor.y = element_blank(),  # Remove y-axis grid lines
-        axis.title.x = element_text(face = "bold", hjust = 0.5, size = 10),  # Slightly smaller x-axis title
-        axis.text.x = element_text(size = 9),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12),  # Slightly smaller plot title
-        plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10),
+        axis.title.x = element_text(hjust = 0.5, size = 12, margin = margin(t = 10)),  # Slightly smaller x-axis title
+        axis.text.x = element_text(size = 10.5),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 14, margin = margin(t = 10, b = 10)),  # Slightly smaller plot title
+        plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 10.5),
         legend.position = 'right',  
         legend.title = element_text(face = "bold"),
         legend.background = element_blank(),  # Remove legend background for a cleaner look
-        legend.key.size = unit(0.4, "cm")
+        legend.key.size = unit(0.7, "cm")
       ) +
       labs(
-        x = "Transformed Slopes (Multiplicative Changes):\nOdds Ratios for Hurdle, Expected Values for Non-Zero and Combined Parts",
+        x = "Slopes Representing Multiplicative Changes:\nOdds Ratios for Hurdle Component and Expected Values for other Components",
         y = NULL,
         title = "Posterior Density of Transformed Slopes",
         subtitle = "Median lines shown for each component"
@@ -1331,29 +1359,34 @@ plot_hurdle_model <- function(
     
     
     
-    if (layout_option == 'horizontal') {
-      # Arrange plots for horizontal option
-      design <- "
-        AABB
-        CCCC
-        CCCC
-        DDDD
-      "
-      combined_plot <- p_hurdle + p_count + p_combined + free(p_density) + plot_layout(design = design, widths = 1)
-      
-    } 
-    
-    if (layout_option == 'vertical') {
-      # Arrange plots for vertical option
-      design <- "
-        AACCCC
-        BBCCCC
-        DDDDDD
-      "
-      combined_plot <- p_hurdle + p_count + p_combined + free(p_density) + plot_layout(design = design, widths = 1)
-    }
-    
-    
+    # Arrange plots for vertical option
+    design <- "
+      AAACCCCCCC
+      AAACCCCCCC
+      AAACCCCCCC
+      BBBCCCCCCC
+      BBBCCCCCCC
+      BBBCCCCCCC
+      DDDDDDDDDD
+      DDDDDDDDDD
+      DDDDDDDDDD
+      DDDDDDDDDD
+    "
+    combined_plot <- 
+      p_hurdle + p_count + p_combined + free(p_density) + 
+      plot_layout(design = design, widths = 1) +
+      plot_annotation(
+        title = 'This is the Title',
+        subtitle = 'These 4 plots will reveal yet-untold secrets about our beloved data-set',
+        caption = 'By Pascal Küng',
+        theme = theme(
+          plot.title = element_text(hjust = 0.5, size = 25, face = "bold"),
+          plot.subtitle = element_text(hjust = 0.5, size = 14, face = "italic")
+        )
+      ) & theme(
+        title = element_text(family = font_family),
+        text = element_text(family = font_family) # Adjust size as needed
+      )
     
     # Store the combined plot
     plots_list[[e]] <- combined_plot

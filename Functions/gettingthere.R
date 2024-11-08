@@ -13,7 +13,8 @@ plot_hurdle_model <- function(
     y_label = NULL,
     transform_fn = NULL,
     use_pr_notation = FALSE,  # Option to switch between 'P' and 'Pr'
-    filter_quantiles = NULL
+    filter_quantiles = NULL,
+    font_family = 'Segoe UI'
 ) {
   # Load required packages
   library(ggplot2)
@@ -23,6 +24,7 @@ plot_hurdle_model <- function(
   library(patchwork)
   library(grid)  
   library(ggridges)
+  library(extrafont)
   
   plots_list <- list()
   
@@ -254,7 +256,7 @@ plot_hurdle_model <- function(
         panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_line(color = "grey80", linetype = "dotted"), 
         panel.grid.minor = element_blank(),
-        axis.line = element_line(size = 0.5, color = 'grey45')
+        axis.line = element_line(linewidth = 0.5, color = 'grey45')
       )
     
     p_count <- ggplot() +
@@ -285,7 +287,7 @@ plot_hurdle_model <- function(
         panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_line(color = "grey80", linetype = "dotted"), 
         panel.grid.minor = element_blank(),
-        axis.line = element_line(size = 0.5, color = 'grey45')
+        axis.line = element_line(linewidth = 0.5, color = 'grey45')
       )
     
     p_combined <- ggplot() +
@@ -316,7 +318,7 @@ plot_hurdle_model <- function(
         panel.grid.major.x = element_blank(), 
         panel.grid.major.y = element_line(color = "grey80", linetype = "dotted"),
         panel.grid.minor = element_blank(),
-        axis.line = element_line(size = 0.5, color = 'grey45')
+        axis.line = element_line(linewidth = 0.5, color = 'grey45')
       )
     
     # Include the random effects code
@@ -627,7 +629,10 @@ plot_hurdle_model <- function(
           plot.title = element_text(hjust = 0.5, size = 25, face = "bold"),
           plot.subtitle = element_text(hjust = 0.5, size = 14, face = "italic")
         )
-      ) 
+      ) & theme(
+        title = element_text(family = font_family),
+        text = element_text(family = font_family) # Adjust size as needed
+      )
   
     # Store the combined plot
     plots_list[[e]] <- combined_plot

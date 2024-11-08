@@ -685,21 +685,30 @@ conditional_spaghetti(
   y_limits = c(0, 100),
   y_label = 'Physical Activit',
   x_label = 'Positive Social Control'
-  ,filter_quantiles = .9995
+  ,filter_quantiles = .9995,
+  font_family = 'Candara'
 )
 
-conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'pressure_partner_cw'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  y_limits = c(0, 100),
-  y_label = 'Physical Activit',
-  x_label = 'Exerted Pressure'
-  ,filter_quantiles = .99
-)
+fonts <- c('Candara', 'Segoe UI', 'Calibri', 'Cambria', 'Trebuchet MS', 'Comic Sans')
+
+for (font_i in fonts) {
+  print(font_i)
+  a <- conditional_spaghetti(
+    pa_sub, 
+    effects = c(
+      'pressure_partner_cw'
+    ),
+    group_var = 'coupleID',
+    plot_full_range = TRUE,
+    y_limits = c(0, 100),
+    y_label = 'Physical Activit',
+    x_label = 'Exerted Pressure'
+    ,filter_quantiles = .99,
+    font_family = font_i
+  )
+  
+  print(a)
+}
 
 ```
 
