@@ -692,32 +692,11 @@ conditional_spaghetti(
   plot_full_range = TRUE,
   y_limits = c(0, 100),
   y_label = "Same-Day MVPA",
-  y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Overall Expected MVPA'),
-  x_label = "Positive Control"
+  y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
+  x_label = "Positive Control (Centered)"
   ,filter_quantiles = .9995,
   font_family = 'Candara'
 )
-
-
-
-
-
-conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'pressure_partner_cw'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  y_limits = c(0, 100),
-  y_label = "Same-Day MVPA",
-  y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Overall Expected MVPA'),
-  x_label = "Negative Control"
-  ,filter_quantiles = .999,
-  font_family = 'Candara'
-)
-
-
 
   
 ```

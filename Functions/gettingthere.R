@@ -583,11 +583,11 @@ plot_hurdle_model <- function(
         color = 'black',
         linewidth = 0.25,
         aes(fill = after_stat(x > 1)),
-        scale = 4,
+        scale = 5,
         rel_min_height = 0.0001,
         gradient_lwd = 0.1,
         quantile_lines = TRUE, 
-        quantiles = 0.5  # Adding lines for the median
+        quantiles = c(0.025, 0.5, 0.975)  # Adding lines for the median
       ) +
       geom_vline(xintercept = 1, linetype = "dashed", color = "black", linewidth = 0.5) +
       scale_x_continuous(
@@ -615,7 +615,7 @@ plot_hurdle_model <- function(
       labs(
         x = "Possible Values of Transformed Slopes",
         y = NULL,
-        title = "Posterior Density of Slopes",
+        title = "Posterior Density of Fixed Effects",
         subtitle = "Transformed to Represent Multiplicative Changes in Odds Ratios or Expected Values"
       )
     
@@ -641,7 +641,7 @@ plot_hurdle_model <- function(
       plot_layout(design = design, widths = 1) +
       plot_annotation(
         title = paste('The Relationship Between', x_lab, 'and', single_outcome_name),
-        subtitle = 'Components of the Bayesian Hurdle-Lognormal Model.',
+        subtitle = 'Bayesian Hurdle-Lognormal Model Components: Fixed and Random Effects',
         caption = 'By Pascal Küng',
         theme = theme(
           plot.title = element_text(hjust = 0.5, size = 25, face = "bold", margin = margin(t = 20, b = 15)),
@@ -651,7 +651,7 @@ plot_hurdle_model <- function(
         title = element_text(family = font_family),
         text = element_text(family = font_family) # Adjust size as needed
       )
-  
+    
     # Store the combined plot
     plots_list[[e]] <- combined_plot
   }  # End of effects loop
