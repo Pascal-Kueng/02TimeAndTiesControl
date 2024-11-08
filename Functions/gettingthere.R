@@ -47,10 +47,6 @@ plot_hurdle_model <- function(
       length.out = 100
     )
     
-    # Set up labels
-    x_lab <- ifelse(is.null(x_label), e, x_label[[i]])
-    outcome_name <- ifelse(is.null(y_label), "Y", y_label)
-    y_lab <- outcome_name  # For combined expected value plot
     
     # Identify the hurdle or zero-inflation component
     if (grepl("^hurdle_", model$family$family)) {
@@ -211,22 +207,40 @@ plot_hurdle_model <- function(
     fixed_predictions_combined$lower <- apply(ci_bounds_combined, 2, quantile, probs = 0.025)
     fixed_predictions_combined$upper <- apply(ci_bounds_combined, 2, quantile, probs = 0.975)
     
-    # Determine labels based on model family
+    
+    # Set up labels
+    ## Plot titles
     if (grepl("lognormal", model$family$family)) {
       positive_component_title <- "Non-Zero Component"
-      positive_component_ylabel <- bquote(E*""[.(outcome_name) ~ "|" ~ .(outcome_name) ~ ">" ~ 0])
     } else {
       positive_component_title <- "Count Component"
-      positive_component_ylabel <- bquote(E*""[.(outcome_name) ~ "|" ~ .(outcome_name) ~ ">" ~ 0])
     }
     
-    # Use 'P' or 'Pr' based on the parameter
-    prob_label <- if (use_pr_notation) {
-      bquote(Pr(.(outcome_name) ~ ">" ~ 0))
+    ## Axes Titles
+    x_lab <- ifelse(is.null(x_label), e, x_label[[i]])
+    
+    outcome_names <- NULL
+    single_outcome_name <- NULL
+    if (!is.null(y_label) & length(y_label) == 3) {
+      outcome_names <- y_label
     } else {
-      bquote(P(.(outcome_name) ~ ">" ~ 0))
+      single_outcome_name <- ifelse(is.null(y_label), "Y", y_label)
     }
     
+    if (!is.null(single_outcome_name)) {
+      positive_component_ylabel <- bquote(E*""[.(single_outcome_name) ~ "|" ~ .(single_outcome_name) ~ ">" ~ 0])
+      # Use 'P' or 'Pr' based on the parameter
+      prob_label <- if (use_pr_notation) {
+        bquote(Pr(.(single_outcome_name) ~ ">" ~ 0))
+      } else {
+        bquote(P(.(single_outcome_name) ~ ">" ~ 0))
+      }
+      combined_ylabel <- bquote(E*""[.(single_outcome_name)])
+    } else {
+      positive_component_ylabel <- outcome_names[[2]]
+      prob_label <- outcome_names[[1]]
+      combined_ylabel <- outcome_names[[3]]
+    }
     # Create plots for each component
     p_hurdle <- ggplot() +
       geom_ribbon(
@@ -305,7 +319,7 @@ plot_hurdle_model <- function(
       labs(
         title = "Combined Expected Value",
         x = x_lab,
-        y = bquote(E*""[.(outcome_name)])
+        y = combined_ylabel
       ) +
       theme_bw(base_size = 12) +
       theme(
