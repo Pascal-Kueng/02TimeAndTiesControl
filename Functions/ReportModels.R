@@ -1346,18 +1346,18 @@ plot_hurdle_model <- function(
         quantiles = 0.5  # Adding lines for the median
       ) +
       geom_vline(xintercept = 1, linetype = "dashed", color = "black", linewidth = 0.5) +
-      scale_y_discrete(expand = c(0.01, 0)) +
-      scale_x_continuous(expand = c(0.01, 0)) +
+      #scale_y_discrete(expand = c(0.01, 0)) +
+      #scale_x_continuous(expand = c(0.01, 0)) +
       scale_fill_manual(
         values = c("lightcoral", "steelblue2"),
         name = "Effect Direction",
         labels = c("Negative (<1)", "Positive (>1)")
-      ) +
+      ) + scale_x_continuous(breaks = seq(1, 2, by = 0.2)) + 
       theme_ridges(font_size = 12, grid = TRUE) +  # Reduced font size for a cleaner look
       theme(
-        panel.grid.major = element_blank(),  # Remove major grid lines for less clutter
-        panel.grid.minor.x = element_line(color = "grey80", linetype = "dotted"),  # Keep only minor grid lines on x-axis
-        panel.grid.minor.y = element_blank(),  # Remove y-axis grid lines
+        panel.grid.minor = element_blank(),  # Remove major grid lines for less clutter
+        panel.grid.major.x = element_line(color = "grey80", linetype = "dotted"),  # Keep only minor grid lines on x-axis
+        panel.grid.major.y = element_blank(),  # Remove y-axis grid lines
         axis.title.x = element_text(hjust = 0.5, size = 12, margin = margin(t = 10)),  # Slightly smaller x-axis title
         axis.text.x = element_text(size = 10.5),
         plot.title = element_text(hjust = 0.5, face = "bold", size = 14, margin = margin(t = 10, b = 10)),  # Slightly smaller plot title
@@ -1395,8 +1395,8 @@ plot_hurdle_model <- function(
       p_hurdle + p_count + p_combined + free(p_density) + 
       plot_layout(design = design, widths = 1) +
       plot_annotation(
-        title = paste('The Relationship Between', x_label, 'and', single_outcome_name),
-        subtitle = 'A Breakdown of Bayesian Hurdle-Lognormal Model Components',
+        title = paste('The Relationship Between', x_lab, 'and', single_outcome_name),
+        subtitle = 'Components of the Bayesian Hurdle-Lognormal Model.',
         caption = 'By Pascal Küng',
         theme = theme(
           plot.title = element_text(hjust = 0.5, size = 25, face = "bold", margin = margin(t = 20, b = 15)),
@@ -1413,7 +1413,6 @@ plot_hurdle_model <- function(
   
   return(plots_list)
 }
-
 
 
 
