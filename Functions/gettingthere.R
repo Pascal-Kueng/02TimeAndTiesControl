@@ -247,12 +247,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_hurdle,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#33a02c", alpha = 0.24
+        fill = "goldenrod", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_hurdle,
         aes(x = x_value, y = response),
-        color = "#33a02c",
+        color = "goldenrod",
         linewidth =1.8
       ) +
       labs(
@@ -278,12 +278,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_count,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#1f78b4", alpha = 0.24
+        fill = "#009E73", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_count,
         aes(x = x_value, y = response),
-        color = "#1f78b4",
+        color = "#009E73",
         linewidth =1.8
       ) +
       labs(
@@ -493,7 +493,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
-          color = "#33a02c",
+          color = "goldenrod",
           linewidth = 0.25,
           alpha = 0.50
         )
@@ -503,7 +503,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
-          color = "#1f78b4",
+          color = "#009E73",
           linewidth = 0.25,
           alpha = 0.50
         )

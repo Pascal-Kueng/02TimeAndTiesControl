@@ -999,16 +999,16 @@ plot_hurdle_model <- function(
     
     
     # Create plots for each component
-    p_hurdle <- ggplot() +
+    p_hurdle <- ggplot() + 
       geom_ribbon(
         data = fixed_predictions_hurdle,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#33a02c", alpha = 0.24
+        fill = "peru", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_hurdle,
         aes(x = x_value, y = response),
-        color = "#33a02c",
+        color = "peru",
         linewidth =1.8
       ) +
       labs(
@@ -1034,12 +1034,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_count,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#1f78b4", alpha = 0.24
+        fill = "steelblue3", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_count,
         aes(x = x_value, y = response),
-        color = "#1f78b4",
+        color = "steelblue3",
         linewidth =1.8
       ) +
       labs(
@@ -1065,12 +1065,12 @@ plot_hurdle_model <- function(
       geom_ribbon(
         data = fixed_predictions_combined,
         aes(x = x_value, ymin = lower, ymax = upper),
-        fill = "#6a3d9a", alpha = 0.24
+        fill = "#008080", alpha = 0.24
       ) +
       geom_line(
         data = fixed_predictions_combined,
         aes(x = x_value, y = response),
-        color = "#6a3d9a",
+        color = "#008080",
         linewidth =1.8
       ) +
       labs(
@@ -1249,7 +1249,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = prob_positive, group = group_level),
-          color = "#33a02c",
+          color = "darkgoldenrod", 
           linewidth = 0.25,
           alpha = 0.50
         )
@@ -1259,7 +1259,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = mu_count, group = group_level),
-          color = "#1f78b4",
+          color = "steelblue3",
           linewidth = 0.25,
           alpha = 0.50
         )
@@ -1269,7 +1269,7 @@ plot_hurdle_model <- function(
         geom_line(
           data = individual_predictions,
           aes(x = x_value, y = expected_value, group = group_level),
-          color = "#6a3d9a",
+          color = "#008080", 
           linewidth = 0.25,
           alpha = 0.50
         )
@@ -1339,20 +1339,21 @@ plot_hurdle_model <- function(
         color = 'black',
         linewidth = 0.25,
         aes(fill = after_stat(x > 1)),
-        scale = 4,
+        scale = 5,
         rel_min_height = 0.0001,
         gradient_lwd = 0.1,
         quantile_lines = TRUE, 
-        quantiles = 0.5  # Adding lines for the median
+        quantiles = c(0.025, 0.5, 0.975)  # Adding lines for the median
       ) +
       geom_vline(xintercept = 1, linetype = "dashed", color = "black", linewidth = 0.5) +
-      #scale_y_discrete(expand = c(0.01, 0)) +
-      #scale_x_continuous(expand = c(0.01, 0)) +
+      scale_x_continuous(
+        breaks = function(x) unique(c(1, pretty(x)))  # Ensure 1 is included in the breaks
+      ) +
       scale_fill_manual(
-        values = c("lightcoral", "steelblue2"),
+        values = c("lightcoral", "palegreen3"),
         name = "Effect Direction",
         labels = c("Negative (<1)", "Positive (>1)")
-      ) + scale_x_continuous(breaks = seq(1, 2, by = 0.2)) + 
+      ) + 
       theme_ridges(font_size = 12, grid = TRUE) +  # Reduced font size for a cleaner look
       theme(
         panel.grid.minor = element_blank(),  # Remove major grid lines for less clutter
@@ -1370,7 +1371,7 @@ plot_hurdle_model <- function(
       labs(
         x = "Possible Values of Transformed Slopes",
         y = NULL,
-        title = "Posterior Density of Slopes",
+        title = "Posterior Density of Fixed Effects",
         subtitle = "Transformed to Represent Multiplicative Changes in Odds Ratios or Expected Values"
       )
     
@@ -1396,7 +1397,7 @@ plot_hurdle_model <- function(
       plot_layout(design = design, widths = 1) +
       plot_annotation(
         title = paste('The Relationship Between', x_lab, 'and', single_outcome_name),
-        subtitle = 'Bayesian Hurdle-Lognormal Model Components',
+        subtitle = 'Bayesian Hurdle-Lognormal Model Components: Fixed and Random Effects',
         caption = 'By Pascal Küng',
         theme = theme(
           plot.title = element_text(hjust = 0.5, size = 25, face = "bold", margin = margin(t = 20, b = 15)),
