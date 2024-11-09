@@ -30,8 +30,6 @@ library(brms)
 library(bayesplot)
 library(beepr)
 library(DHARMa)
-library(showtext)
-showtext_auto()
 
 
 
