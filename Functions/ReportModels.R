@@ -1394,15 +1394,17 @@ plot_hurdle_model <- function(
       DDDDDDDDDD
     "
     
-    if (is.null(p_title)) {
-      p_title <- paste('The Relationship Between', x_lab, 'and', single_outcome_name)
+    if (!is.null(p_title)) {
+      final_p_title <- p_title
+    } else {
+      final_p_title <- paste('The Relationship Between', x_lab, 'and', single_outcome_name)
     }
     
     combined_plot <- 
       p_hurdle + p_count + p_combined + free(p_density) + 
       plot_layout(design = design, widths = 1) +
       plot_annotation(
-        title = p_title,
+        title = final_p_title,
         subtitle = 'Bayesian Hurdle-Lognormal Model Components: Fixed and Random Effects',
         caption = 'By Pascal Küng',
         theme = theme(

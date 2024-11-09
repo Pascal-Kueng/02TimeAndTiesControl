@@ -21,6 +21,7 @@ cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
 library(tidyverse)
 library(brms)
 library(bayesplot)
+library(rsvg)
 
 source(file.path('Functions', 'ReportModels.R'))
 source(file.path('Functions', 'PrettyTables.R'))
