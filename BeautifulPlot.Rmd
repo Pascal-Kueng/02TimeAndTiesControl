@@ -1,8 +1,19 @@
 ---
+documentclass: article
+geometry: 
+  - paper=a3paper
+  - margin=2.5cm
+fontsize: 18pt
+linestretch: 1.5
 output:
-pdf_document:
-  latex_engine: xelatex
+  pdf_document:
+    latex_engine: xelatex
+header-includes:
+  - \usepackage{geometry}
+  - \usepackage{fontspec}
+  - \setmainfont{Candara}
 ---
+
 
 ```{r setup, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
 
@@ -13,6 +24,10 @@ cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
 library(tidyverse)
 library(brms)
 library(bayesplot)
+library(showtext)
+showtext_auto()
+#par(cex = 1.5)  # Set a base size for text
+
 
 source(file.path('Functions', 'ReportModels.R'))
 source(file.path('Functions', 'PrettyTables.R'))
@@ -149,27 +164,28 @@ pa_sub <- my_brm(
 ```
 
 
-```{r fig.height=11, fig.width = 12, message=FALSE, warning=FALSE, echo=FALSE, dpi=600,results='hide'}
+```{r fig.height=11, fig.width = 12, message=FALSE, warning=FALSE, echo=FALSE, dpi=900,results='hide', fig.showtext=TRUE}
 
-# Generate the plot
 conditional_spaghetti(
   pa_sub, 
-  effects = c('persuasion_partner_cw'),
+  effects = c(
+    'persuasion_partner_cw'
+  ),
   group_var = 'coupleID',
   plot_full_range = TRUE,
   y_limits = c(0, 100),
   y_label = "Same-Day MVPA",
   y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
-  x_label = "Positive Control (Centered)",
-  filter_quantiles = .9995,
-  font_family = 'Candara',
-  p_title = ""
+  x_label = "Positive Control (Centered)"
+  , filter_quantiles = .9995
+  , font_family = 'Candara'
+  , p_title = "The Relationship Between Positive Control and Same-Day MVPA"
 )
 
   
 ```
 
-**Note.** This graphic illustrates the relationship between positive control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average received positive control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
+**Note.** This graphic illustrates the relationship between positive control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average received positive control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.  
 The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. The hurdle and combined slopes are significant, but the slope for expected MVPA when active is not, as its 95% credible interval overlaps 1.
 
 

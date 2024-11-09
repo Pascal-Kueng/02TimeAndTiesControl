@@ -30,6 +30,8 @@ library(brms)
 library(bayesplot)
 library(beepr)
 library(DHARMa)
+library(showtext)
+showtext_auto()
 
 
 
@@ -555,7 +557,7 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 ```
 
 
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, fig.showtext=TRUE}
 
 # summarize with rope range for hurdle part
 summary_pa_sub_hu <- summarize_brms(
@@ -644,7 +646,7 @@ plot(
 
 ```
 
-```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis'}
+```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, fig.showtext=TRUE, results='asis'}
 
 conds_eff <- conditional_spaghetti(
   pa_sub, 
@@ -661,14 +663,6 @@ conds_eff <- conditional_spaghetti(
   y_limits = c(0, 100),
   y_label = 'MVPA',
   y_labels = c('Probability of MVPA > 0', 'Expected MVPA When Active', 'Overall Expected MVPA'),
-  x_label = c(
-    'Positive Social Control', 
-    'Positive Social Control',
-    'Negative Social Control',
-    'Negative Social Control',
-    'Plan-Related Pushing',
-    'Plan-Related Pushing'
-  )
   ,filter_quantiles = .9995,
   font_family = 'Candara'
 )
@@ -677,7 +671,7 @@ print(conds_eff)
 
 ```
 
-```{r fig.height=11, fig.width = 12, dpi=600}
+```{r fig.height=11, fig.width = 12, dpi=1200, fig.showtext=TRUE}
 
 
 conditional_spaghetti(
@@ -911,7 +905,7 @@ DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 
 ```
 
-```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, fig.showtext=TRUE}
 
 summarize_brms(
   mood_gauss, 
@@ -1036,7 +1030,7 @@ DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 ```
 
-```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, fig.showtext=TRUE}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1168,7 +1162,7 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 ```
 
-```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, fig.showtext=TRUE}
 
 summarize_brms(
   is_reactance, 
