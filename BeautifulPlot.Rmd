@@ -3,7 +3,7 @@ documentclass: article
 geometry: 
   - paper=a3paper
   - margin=2.5cm
-fontsize: 18pt
+fontsize: 20pt
 linestretch: 1.5
 output:
   pdf_document:
