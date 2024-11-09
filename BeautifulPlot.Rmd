@@ -178,10 +178,10 @@ p <- conditional_spaghetti(
 
 ```{r echo=FALSE, fig.height=11, fig.width=12, message=FALSE, warning=FALSE, dpi=900}
 
-ggsave('beautifulplot.svg', p[[1]], width = 12, height = 11, dpi = 900)
-rsvg::rsvg_pdf("beautifulplot.svg", "000beautifulplot.pdf")
+ggsave('Output/Plots/beautifulplot_raw.svg', p[[1]], width = 12, height = 11, dpi = 900)
+rsvg::rsvg_pdf("Output/Plots/beautifulplot_raw.svg", "Output/Plots/beautifulplot_raw.pdf")
 
-knitr::include_graphics('000beautifulplot.pdf')
+knitr::include_graphics('Output/Plots/beautifulplot_raw.pdf')
 
 
 ```
