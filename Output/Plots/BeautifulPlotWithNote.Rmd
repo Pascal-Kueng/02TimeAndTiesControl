@@ -1,0 +1,81 @@
+---
+geometry: paperheight=29cm,paperwidth=25cm,margin=2cm
+linestretch: 1.5
+output:
+    pdf_document: 
+      latex_engine: xelatex
+header-includes:
+  - \usepackage{fontspec}
+  - \setmainfont{Candara}
+
+params:
+  p_i: NULL
+  p_name: NULL
+  x_label: NULL
+---
+
+```{r setup, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
+
+p_i <- params$p_i
+p_name <- params$p_name
+x_label <- params$x_label
+
+source("C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Functions/ReportModels.R")
+
+```
+
+
+
+```{r echo=FALSE, fig.height=11, fig.width=12, message=FALSE, warning=FALSE, dpi=900}
+
+
+ggsave(
+  paste0(
+    'C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw',
+    p_name, 
+    '.svg'
+  )
+  , p_i, width = 12, height = 11, dpi = 900
+)
+
+rsvg::rsvg_pdf(
+  paste0(
+    "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
+    p_name, 
+    ".svg"), 
+  paste0(
+    "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
+    p_name,
+    ".pdf"
+    )
+)
+
+if (FALSE) {
+  rsvg::rsvg_png(
+    paste0(
+      "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
+      p_name,
+      ".svg"), 
+    paste0(
+      "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
+      p_name,
+      ".png"), 
+    width = 18000, height = 16500)
+}
+  
+knitr::include_graphics(
+  paste0(
+    'C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw',
+    p_name,
+    ".pdf"
+  )
+)
+
+
+```
+
+*Note.* This graphic illustrates the relationship between `r tolower(x_label)` and self-reported moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.  
+The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
+
+
+

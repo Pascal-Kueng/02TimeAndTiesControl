@@ -731,7 +731,7 @@ plot_general_model <- function(
           aes(x = x_value, y = response, group = group_level),
           color = "#1f78b4",
           linewidth = 0.4,
-          alpha = 0.3
+          alpha = 0.4
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects:", x_lab)
@@ -1254,7 +1254,7 @@ plot_hurdle_model <- function(
           aes(x = x_value, y = prob_positive, group = group_level),
           color = "goldenrod",
           linewidth = 0.25,
-          alpha = 0.50
+          alpha = 0.4
         )
       
       # For positive outcome component
@@ -1264,7 +1264,7 @@ plot_hurdle_model <- function(
           aes(x = x_value, y = mu_count, group = group_level),
           color = "#009E73",
           linewidth = 0.25,
-          alpha = 0.50
+          alpha = 0.4
         )
       
       # For combined expected value
@@ -1274,7 +1274,7 @@ plot_hurdle_model <- function(
           aes(x = x_value, y = expected_value, group = group_level),
           color = "#6a3d9a",
           linewidth = 0.25,
-          alpha = 0.50
+          alpha = 0.4
         )
     }  # End of random effects code
     
@@ -1723,7 +1723,7 @@ plot_cumulative_model <- function(
           data = individual_predictions,
           aes(x = x_value, y = median, group = interaction(group_level, category), color = category),
           linewidth = 0.4,
-          alpha = 0.3
+          alpha = 0.4
         ) +
         labs(
           title = paste("Conditional Fixed and Random Effects:", x_lab)

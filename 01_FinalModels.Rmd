@@ -657,6 +657,14 @@ conds_eff <- conditional_spaghetti(
     'pushing_self_cw',
     'pushing_partner_cw'
   ),
+  x_label = c(
+    'Received Persuasion',
+    'Exerted Persuasion',
+    'Received Pressure',
+    'Exerted Pressure',
+    'Received Plan-Related Pushing',
+    'Exerted Plan-Related Pushing'
+  ),
   group_var = 'coupleID',
   plot_full_range = TRUE,
   y_limits = c(0, 100),
@@ -669,8 +677,40 @@ conds_eff <- conditional_spaghetti(
 print(conds_eff)
 
 ```
-**Note.** This graphic illustrates the relationship between positive control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average received positive control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
+**Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
 The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
+
+```{r}
+
+x_label = c(
+    'Received Persuasion',
+    'Exerted Persuasion',
+    'Received Pressure',
+    'Exerted Pressure',
+    'Received Plan-Related Pushing',
+    'Exerted Plan-Related Pushing'
+  )
+
+for (i in 1:length(conds_eff)) {
+  effname <- names(conds_eff)[i]
+  eff_plot <- conds_eff[[i]]
+  x_label_i <- x_label[[i]]
+  rmarkdown::render(
+    "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/BeautifulPlotWithNote.Rmd", 
+    output_file = paste0('C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_', effname, '.pdf'),
+    params = list(
+      p_i = eff_plot,
+      p_name = effname,
+      x_label = x_label_i
+      ),
+    envir = new.env(),
+    quiet = TRUE
+  )
+}
+
+
+```
+
 
 
 ```{r pa_sub_lognormal_marginaleffects}
