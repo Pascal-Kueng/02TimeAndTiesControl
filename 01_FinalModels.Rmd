@@ -680,7 +680,7 @@ print(conds_eff)
 **Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
 The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
 
-```{r}
+```{r include=FALSE}
 
 x_label = c(
     'Received Persuasion',
