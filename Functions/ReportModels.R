@@ -100,7 +100,7 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
 
 summarize_brms <- function(model, 
                            exponentiate = FALSE,
-                           stats_to_report = c('CI', 'SE', 'pd', 'rope', 'BF', 'Rhat', 'ESS'),
+                           stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
                            
                            model_rows_fixed = NULL,
