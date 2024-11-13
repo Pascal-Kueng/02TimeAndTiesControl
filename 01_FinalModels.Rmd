@@ -545,10 +545,13 @@ pa_sub <- my_brm(
 )
 
 
+pa_sub_digest <- digest::digest(pa_sub)
+
+
 ```
 
 
-```{r check_pa_sub_lognormal}
+```{r check_pa_sub_lognormal, cache=TRUE, cache.extra=pa_sub_digest}
 
 check_brms(pa_sub, log_pp_check = TRUE)
 DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
@@ -556,7 +559,7 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 ```
 
 
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=pa_sub_digest}
 
 # summarize with rope range for hurdle part
 summary_pa_sub_hu <- summarize_brms(
@@ -680,7 +683,7 @@ print(conds_eff)
 **Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
 The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
 
-```{r include=FALSE}
+```{r eval=FALSE}
 
 x_label = c(
     'Received Persuasion',
@@ -713,7 +716,7 @@ for (i in 1:length(conds_eff)) {
 
 
 
-```{r pa_sub_lognormal_marginaleffects}
+```{r pa_sub_lognormal_marginaleffects, cache=TRUE, cache.extra=pa_sub_digest}
 
 marginaleffects::avg_predictions(pa_sub)
 
@@ -795,10 +798,13 @@ pa_obj_log <- my_brm(
   file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_NOAR", suffix))
 )
 
+pa_obj_log_digest <- digest::digest(pa_obj_log)
+
+
 ```
 
 
-```{r check_pa_obj_log_g}
+```{r check_pa_obj_log_g, cache=TRUE, cache.extra=pa_obj_log_digest}
 
 check_brms(pa_obj_log, log_pp_check = TRUE)
 DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
@@ -807,7 +813,7 @@ DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
 
 
 
-```{r report_pa_obj_log_g, results='asis'}
+```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=pa_obj_log_digest}
 
 # rope range for lognormal model
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
@@ -909,18 +915,20 @@ mood_gauss <- my_brm(
   file = file.path("models_cache_brms", paste0("mood_gauss_NOAR", suffix))
 )
 
+mood_gauss_digest <- digest::digest(mood_gauss)
+
 
 ```
 
 
-```{r check_mood_gauss}
+```{r check_mood_gauss, cache=TRUE, cache.extra=mood_gauss_digest}
 
 check_brms(mood_gauss, log_pp_check = FALSE)
 DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 
 ```
 
-```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=mood_gauss_digest}
 
 summarize_brms(
   mood_gauss, 
@@ -955,7 +963,7 @@ conditional_spaghetti(
 
 
 
-```{r mood_gauss_marginaleffects}
+```{r mood_gauss_marginaleffects, cache=TRUE, cache.extra=mood_gauss_digest}
 
 marginaleffects::avg_predictions(mood_gauss)
 
@@ -1035,17 +1043,20 @@ reactance_ordinal <- my_brm(
 )
 
 
+reactance_ordinal_digest <- digest::digest(reactance_ordinal)
+
+
 ```
 
 
-```{r check_reactance_ordinal}
+```{r check_reactance_ordinal, cache=TRUE, cache.extra=reactance_ordinal_digest}
 
 check_brms(reactance_ordinal)
 DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 ```
 
-```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=reactance_ordinal_digest}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1084,7 +1095,7 @@ conditional_spaghetti(
 
 
 
-```{r reactance_ordinal_marginaleffects}
+```{r reactance_ordinal_marginaleffects, cache=TRUE, cache.extra=reactance_ordinal_digest}
 
 marginaleffects::avg_predictions(reactance_ordinal)
 
@@ -1166,10 +1177,11 @@ is_reactance <- my_brm(
   #, file_refit = 'always'
 )
 
+is_reactance_digest <- digest::digest(is_reactance)
 
 ```
 
-```{r check_is_reactance}
+```{r check_is_reactance, cache=TRUE, cache.extra=is_reactance_digest}
 
 check_brms(is_reactance)
 DHARMa.check_brms.all(is_reactance, integer = FALSE)
@@ -1177,7 +1189,7 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 ```
 
-```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=is_reactance_digest}
 
 summarize_brms(
   is_reactance, 
@@ -1211,7 +1223,7 @@ conditional_spaghetti(
 ```
 
 
-```{r is_reactance_marginaleffects}
+```{r is_reactance_marginaleffects, cache=TRUE, cache.extra=is_reactance_digest}
 
 marginaleffects::avg_predictions(is_reactance)
 
@@ -1227,7 +1239,7 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 # Report All Models
 
-```{r report_sidebyside, results = 'asis'}
+```{r report_sidebyside, results = 'asis', cache=TRUE, cache.extra=is_reactance_digest}
 
 stats_to_report <- c('SE', 'CI', 'pd')
 
