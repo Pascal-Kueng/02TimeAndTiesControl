@@ -102,6 +102,8 @@ summarize_brms <- function(model,
                            exponentiate = FALSE,
                            stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
+                           pd_significance = TRUE, # otherwise CI is used
+                           pd_one_tailed = FALSE, # only an option if pd_significance is TRUE
                            
                            model_rows_fixed = NULL,
                            model_rows_random = NULL,
@@ -123,7 +125,7 @@ summarize_brms <- function(model,
       model,
       effects = 'fixed'
     ))
-    fixed_effects$pd <- paste0(format_number(p_dir$pd*100,0), "%")
+    fixed_effects$pd <- paste0(format_number(p_dir$pd*100,2), "%")
     random_effects$pd <- NA
   }
   # Add ROPE
@@ -187,15 +189,31 @@ summarize_brms <- function(model,
     random_effects$BF_Evidence <- NA
   } 
   
-  # compute significance stars based on CI
-  is_significant <- function(low, high) {
-    (low > 0 & high > 0) | (low < 0 & high < 0)
+  # compute significance stars
+  ## based on pd if TRUE
+  if (pd_significance) {
+    if (! 'pd' %in% stats_to_report) {
+      warning('To compute significance stars based on pd, include it in stats_to_report. Fallback to CI is used.')
+    }
+    
+    significance_fixed <- case_when(
+      p_dir$pd > 0.9995 ~ '***',
+      p_dir$pd > 0.995  ~ '**',
+      p_dir$pd > 0.975  ~ '*',
+      TRUE              ~ ''
+    )
+    
+  } else {
+    # compute significance stars based on CI
+    is_significant <- function(low, high) {
+      (low > 0 & high > 0) | (low < 0 & high < 0)
+    }
+    significance_fixed <- ifelse(
+      is_significant(fixed_effects$`l-95% CI`, fixed_effects$`u-95% CI`),
+      '*', 
+      ''
+    )
   }
-  significance_fixed <- ifelse(
-    is_significant(fixed_effects$`l-95% CI`, fixed_effects$`u-95% CI`),
-    '*', 
-    ''
-  )
   significance_random <- NA
   
   # Rename SE
