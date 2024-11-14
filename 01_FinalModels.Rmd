@@ -568,7 +568,7 @@ priorsense_vars <- c(
 )
 
 hurdle_priorsense_vars <- c(
-  'hu_Intercept',
+  'Intercept_hu',
   'b_hu_persuasion_self_cw',
   'b_hu_persuasion_partner_cw',
   'b_hu_pressure_self_cw',
