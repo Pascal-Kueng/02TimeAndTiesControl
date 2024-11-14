@@ -570,7 +570,7 @@ summary_pa_sub_hu <- summarize_brms(
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = F) 
+  exponentiate = T) 
 
 # rope range for continuous part of the model
 rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
