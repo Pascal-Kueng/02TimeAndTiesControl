@@ -579,6 +579,7 @@ hurdle_priorsense_vars <- c(
   'b_hu_pushing_partner_cw'
 )
 
+gc()
 priorsense::powerscale_sensitivity(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
 priorsense::powerscale_plot_dens(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
 priorsense::powerscale_plot_ecdf(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
@@ -839,6 +840,8 @@ DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
 
 
 ```{r check_pa_obj_log_priorsense, cache=TRUE, cache.extra=pa_obj_log_digest}
+
+gc()
 priorsense::powerscale_sensitivity(pa_obj_log, variable = priorsense_vars)
 priorsense::powerscale_plot_dens(pa_obj_log, variable = priorsense_vars)
 priorsense::powerscale_plot_ecdf(pa_obj_log, variable = priorsense_vars)
@@ -963,6 +966,8 @@ DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 
 
 ```{r check_mood_gauss_priorsense, cache=TRUE, cache.extra=mood_gauss_digest}
+
+gc()
 priorsense::powerscale_sensitivity(mood_gauss, variable = priorsense_vars)
 priorsense::powerscale_plot_dens(mood_gauss, variable = priorsense_vars)
 priorsense::powerscale_plot_ecdf(mood_gauss, variable = priorsense_vars)
@@ -1099,6 +1104,8 @@ DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 
 ```{r check_reactance_ordinal_priorsense, cache=TRUE, cache.extra=reactance_ordinal_digest}
+
+gc()
 priorsense::powerscale_sensitivity(reactance_ordinal, variable = priorsense_vars)
 priorsense::powerscale_plot_dens(reactance_ordinal, variable = priorsense_vars)
 priorsense::powerscale_plot_ecdf(reactance_ordinal, variable = priorsense_vars)
@@ -1239,6 +1246,8 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 
 ```{r check_is_reactance_priorsense, cache=TRUE, cache.extra=is_reactance_digest}
+
+gc()
 priorsense::powerscale_sensitivity(is_reactance, variable = priorsense_vars)
 priorsense::powerscale_plot_dens(is_reactance, variable = priorsense_vars)
 priorsense::powerscale_plot_ecdf(is_reactance, variable = priorsense_vars)
