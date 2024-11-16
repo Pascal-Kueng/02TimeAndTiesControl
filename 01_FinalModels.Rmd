@@ -50,8 +50,8 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = TRUE
-report_ordinal = TRUE
+shutdown = FALSE
+report_ordinal = FALSE
 report_hurdle = TRUE
 do_priorsense = FALSE
 
@@ -688,7 +688,7 @@ plot(
 
 ```
 
-```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis'}
+```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
 
 conds_eff <- conditional_spaghetti(
   pa_sub, 
@@ -1320,9 +1320,7 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 # Report All Models
 
-```{r report_sidebyside, results = 'asis', cache=TRUE, cache.extra=is_reactance_digest}
-
-stats_to_report <- c('SE', 'CI', 'pd')
+```{r report_sidebyside, results = 'asis'}
 
 process_model_component <- function(obj) {
   # Convert to string, modify, and evaluate
@@ -1341,7 +1339,7 @@ all_models <- report_side_by_side(
   reactance_ordinal,
   is_reactance,
   
-  stats_to_report = stats_to_report,
+  stats_to_report = c('CI', 'pd'),
   
   model_rows_random = process_model_component(model_rows_random),
   model_rows_fixed = process_model_component(model_rows_fixed),
