@@ -567,7 +567,7 @@ DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
 ```
 
 
-```{r check_pa_sub_lognormal_priorsense, cache=TRUE, cache.extra=pa_sub_digest}
+```{r check_pa_sub_lognormal_priorsense, cache=TRUE, cache.extra=c(pa_sub_digest, do_priorsense)}
 if (do_priorsense) {
   priorsense_vars <- c(
       'Intercept',
@@ -850,7 +850,7 @@ DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
 ```
 
 
-```{r check_pa_obj_log_priorsense, cache=TRUE, cache.extra=pa_obj_log_digest}
+```{r check_pa_obj_log_priorsense, cache=TRUE, cache.extra=c(pa_obj_log_digest, do_priorsense)}
 if (do_priorsense) {
   gc()
   priorsense::powerscale_sensitivity(pa_obj_log, variable = priorsense_vars)
@@ -977,7 +977,7 @@ DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 ```
 
 
-```{r check_mood_gauss_priorsense, cache=TRUE, cache.extra=mood_gauss_digest}
+```{r check_mood_gauss_priorsense, cache=TRUE, cache.extra=c(mood_gauss_digest, do_priorsense)}
 
 if (do_priorsense) {
   gc()
@@ -1116,7 +1116,7 @@ DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 ```
 
 
-```{r check_reactance_ordinal_priorsense, cache=TRUE, cache.extra=reactance_ordinal_digest}
+```{r check_reactance_ordinal_priorsense, cache=TRUE, cache.extra=c(reactance_ordinal_digest, do_priorsense)}
 
 if (do_priorsense) {
   gc()
@@ -1259,7 +1259,7 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 ```
 
 
-```{r check_is_reactance_priorsense, cache=TRUE, cache.extra=is_reactance_digest}
+```{r check_is_reactance_priorsense, cache=TRUE, cache.extra=c(is_reactance_digest, do_priorsense)}
 if (do_priorsense) {
   gc()
   priorsense::powerscale_sensitivity(is_reactance, variable = priorsense_vars)
