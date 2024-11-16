@@ -50,7 +50,7 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = FALSE
+shutdown = TRUE
 report_ordinal = FALSE
 report_hurdle = TRUE
 do_priorsense = FALSE
@@ -144,12 +144,6 @@ model_rows_random <- c(
   'sd(pushing_self_cw)',
   'sd(pushing_partner_cw)',
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -206,12 +200,6 @@ model_rownames_random <- c(
   "sd(Daily pushing experienced)", 
   "sd(Daily pushing utilized (partner's view))", 
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -228,7 +216,7 @@ rows_to_pack <- list(
   "Within-Person Effects" = c(2,9),
   "Between-Person Effects" = c(10,16),
   "Random Effects" = c(17, 23), 
-  "Additional Parameters" = c(24,30)
+  "Additional Parameters" = c(24,24)
   )
 
 
@@ -237,7 +225,7 @@ rows_to_pack_ordinal <- list(
   "Within-Person Effects" = c(2+5,9+5),
   "Between-Person Effects" = c(10+5,16+5),
   "Random Effects" = c(17+5, 23+5), 
-  "Additional Parameters" = c(24+5,30+6)
+  "Additional Parameters" = c(24+5,24+6)
   )
 
 ```
@@ -320,12 +308,6 @@ model_rows_random_hu <- c(
   'sd(hu_pushing_self_cw)',
   'sd(hu_pushing_partner_cw)',
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -416,12 +398,6 @@ model_rownames_random_hu <- c(
   "sd(Hu Daily pushing experienced)", 
   "sd(Hu Daily pushing utilized (partner's view))", 
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -441,7 +417,7 @@ rows_to_pack_hu <- list(
   "Hurdle Between-Person Effects" = c(26,32),
   
   "Random Effects" = c(33, 46), 
-  "Additional Parameters" = c(47,53)
+  "Additional Parameters" = c(47,47)
   )
 
 rows_to_pack_hu_ordinal <- list(
@@ -453,7 +429,7 @@ rows_to_pack_hu_ordinal <- list(
   "Hurdle Between-Person Effects" = c(26+5,32+5),
   
   "Random Effects" = c(33+5, 46+5), 
-  "Additional Parameters" = c(47+5,53+6)
+  "Additional Parameters" = c(47+5,47+6)
   )
 
 ```
@@ -548,14 +524,6 @@ pa_sub <- my_brm(
 
 
 pa_sub_digest <- digest::digest(pa_sub)
-
-
-summary(pa_sub, priors = TRUE, robust = TRUE)
-summary(pa_sub, priors = TRUE, robust = FALSE)
-
-bayestestR::hdi(pa_sub)
-bayestestR::spi(pa_sub)
-bayestestR::eti(pa_sub)
 
 
 ```
