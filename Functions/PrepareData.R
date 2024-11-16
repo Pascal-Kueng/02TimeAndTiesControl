@@ -1,7 +1,7 @@
 
 # Data Preparation
 
-prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_code_studyGroup = TRUE) {
+prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_code_studyGroup = FALSE) {
     
   
   
