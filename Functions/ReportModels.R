@@ -114,7 +114,7 @@ summarize_brms <- function(model,
   format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
   
   # Extract summaries
-  summ_og <- summary(model)
+  summ_og <- summary(model, robust = TRUE)
   fixed_effects <- summ_og$fixed
   random_effects <- summ_og$random[[1]][grep('sd\\(', rownames(summ_og$random[[1]])), ]
   random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars)
