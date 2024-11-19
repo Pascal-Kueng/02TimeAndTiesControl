@@ -576,8 +576,9 @@ if (do_priorsense) {
 ```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=pa_sub_digest}
 
 # summarize with rope range for hurdle part
-summary_pa_sub_hurdlerdle <- summarize_brms(
+summary_pa_sub_hurdle <- summarize_brms(
   pa_sub, 
+  stats_to_report = c('pd', 'ROPE'),
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
@@ -598,12 +599,18 @@ summary_pa_sub_continuous <- summarize_brms(
   model_rownames_random = model_rownames_random_hu,
   exponentiate = T) 
 
-summary_pa_sub <- summary_pa_sub_continuous
-summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), ] <- summary_pa_sub_hurdle[grepl('Hu', rownames(summary_pa_sub_hurdle)), ]
 
+# Replace only the ROPE and % in Rope columns for rows with 'Hu'
+summary_pa_sub <- summary_pa_sub_continuous
+
+columns_to_replace <- c("ROPE", "inside ROPE")
+
+summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), columns_to_replace] <- 
+  summary_pa_sub_hurdle[grepl('Hu', rownames(summary_pa_sub_hurdle)), columns_to_replace]
+
+# Print the updated dataframe
 summary_pa_sub %>%
-  print_df(rows_to_pack = rows_to_pack_hu
-)
+  print_df(rows_to_pack = rows_to_pack_hu)
 
 
 # Plot continuous part of model
