@@ -40,6 +40,9 @@ source(file.path('Functions', 'PrettyTables.R'))
 source(file.path('Functions', 'ReportMeasures.R'))
 source(file.path('Functions', 'PrepareData.R'))
 
+report_function_hash <- digest::digest(summarize_brms)
+
+
 
 ```
 
@@ -573,7 +576,7 @@ if (do_priorsense) {
 ```
 
 
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=pa_sub_digest}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
 
 # summarize with rope range for hurdle part
 summary_pa_sub_hurdle <- summarize_brms(
@@ -846,7 +849,7 @@ if (do_priorsense) {
 
 
 
-```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=pa_obj_log_digest}
+```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=c(pa_obj_log_digest, report_function_hash)}
 
 # rope range for lognormal model
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
@@ -972,7 +975,7 @@ if (do_priorsense) {
 
 ```
 
-```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=mood_gauss_digest}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(mood_gauss_digest, report_function_hash)}
 
 summarize_brms(
   mood_gauss, 
@@ -1111,7 +1114,7 @@ if (do_priorsense) {
 
 ```
 
-```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=reactance_ordinal_digest}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(reactance_ordinal_digest, report_function_hash)}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1253,7 +1256,7 @@ if (do_priorsense) {
 
 ```
 
-```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=is_reactance_digest}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(is_reactance_digest, report_function_hash)}
 
 summarize_brms(
   is_reactance, 
