@@ -50,7 +50,7 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = TRUE
+shutdown = FALSE
 report_ordinal = FALSE
 report_hurdle = TRUE
 do_priorsense = FALSE
@@ -576,7 +576,7 @@ if (do_priorsense) {
 ```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=pa_sub_digest}
 
 # summarize with rope range for hurdle part
-summary_pa_sub_hu <- summarize_brms(
+summary_pa_sub_hurdlerdle <- summarize_brms(
   pa_sub, 
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_hu,
@@ -599,7 +599,7 @@ summary_pa_sub_continuous <- summarize_brms(
   exponentiate = T) 
 
 summary_pa_sub <- summary_pa_sub_continuous
-summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), ] <- summary_pa_sub_hu[grepl('Hu', rownames(summary_pa_sub_hu)), ]
+summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), ] <- summary_pa_sub_hurdle[grepl('Hu', rownames(summary_pa_sub_hurdle)), ]
 
 summary_pa_sub %>%
   print_df(rows_to_pack = rows_to_pack_hu
@@ -662,17 +662,6 @@ plot(
 
 ```
 
-```{r}
-summary_pa_sub_hu <- summarize_brms(
-  pa_sub, 
-  stats_to_report = c('CI', 'SE', 'pd', 'Rhat', 'ESS'),
-  rope_range = c(-0.18, 0.18),
-  model_rows_fixed = model_rows_fixed_hu,
-  model_rows_random = model_rows_random_hu,
-  model_rownames_fixed = model_rownames_fixed_hu,
-  model_rownames_random = model_rownames_random_hu,
-  exponentiate = T) 
-```
 
 
 ```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
