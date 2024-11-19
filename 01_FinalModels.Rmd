@@ -662,6 +662,19 @@ plot(
 
 ```
 
+```{r}
+summary_pa_sub_hu <- summarize_brms(
+  pa_sub, 
+  stats_to_report = c('CI', 'SE', 'pd', 'Rhat', 'ESS'),
+  rope_range = c(-0.18, 0.18),
+  model_rows_fixed = model_rows_fixed_hu,
+  model_rows_random = model_rows_random_hu,
+  model_rownames_fixed = model_rownames_fixed_hu,
+  model_rownames_random = model_rownames_random_hu,
+  exponentiate = T) 
+```
+
+
 ```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
 
 conds_eff <- conditional_spaghetti(

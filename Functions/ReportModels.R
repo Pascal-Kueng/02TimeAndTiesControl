@@ -100,6 +100,7 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
 
 summarize_brms <- function(model, 
                            exponentiate = FALSE,
+                           invert_hurdle_OR = TRUE,
                            stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
                            pd_significance = TRUE, # otherwise CI is used
@@ -219,6 +220,22 @@ summarize_brms <- function(model,
   # Rename SE
   names(fixed_effects)[2] <- "SE" 
   names(random_effects)[2] <- "SE" 
+  
+  if (invert_hurdle_OR) {
+    # Create an index for the rows to invert
+    invert_index <- grepl('hu_', rownames(fixed_effects)) | grepl('_hu', rownames(fixed_effects))
+    
+    # Invert the log-odds for those rows
+    fixed_effects$Estimate[invert_index] <- -fixed_effects$Estimate[invert_index]
+    
+    # Invert and swap the bounds
+    temp_upper <- -fixed_effects$`l-95% CI`[invert_index]
+    temp_lower <- -fixed_effects$`u-95% CI`[invert_index]
+    
+    fixed_effects$`u-95% CI`[invert_index] <- temp_upper
+    fixed_effects$`l-95% CI`[invert_index] <- temp_lower
+  }
+  
   
   # Handle exponentiation for fixed effects
   if (exponentiate) {
