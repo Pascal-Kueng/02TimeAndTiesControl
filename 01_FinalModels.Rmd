@@ -61,8 +61,14 @@ options(
   brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
   brms.file_refit = 'on_change',
   #brms.file_refit = 'always',
-  error = function() beepr::beep(sound = 5),
-  es.use_symbols = TRUE
+  error = function() {
+    beepr::beep(sound = 5)
+    if (shutdown) {
+      system("shutdown /s /t 180")
+      quit(save = "no", status = 1)
+    }
+  }
+  , es.use_symbols = TRUE
 )
 
 
