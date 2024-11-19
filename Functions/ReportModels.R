@@ -126,7 +126,7 @@ summarize_brms <- function(model,
       model,
       effects = 'fixed'
     ))
-    fixed_effects$pd <- paste0(format_number(p_dir$pd*100,2), "%")
+    fixed_effects$pd <- format_number(p_dir$pd,3)
     random_effects$pd <- NA
   }
   # Add ROPE
@@ -195,8 +195,8 @@ summarize_brms <- function(model,
   if (pd_significance) {
     if (! 'pd' %in% stats_to_report) {
       warning('To compute significance stars based on pd, include it in stats_to_report. Fallback to CI is used.')
+      pd_significance <- FALSE
     } else {
-    
       significance_fixed <- case_when(
         p_dir$pd > 0.9995 ~ '***',
         p_dir$pd > 0.995  ~ '**',
@@ -205,7 +205,9 @@ summarize_brms <- function(model,
       )
     }
     
-  } else {
+  } 
+  
+  if (!pd_significance) {
     # compute significance stars based on CI
     is_significant <- function(low, high) {
       (low > 0 & high > 0) | (low < 0 & high < 0)

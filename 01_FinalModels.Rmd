@@ -581,7 +581,7 @@ if (do_priorsense) {
 # summarize with rope range for hurdle part
 summary_pa_sub_hurdle <- summarize_brms(
   pa_sub, 
-  stats_to_report = c('pd', 'ROPE'),
+  stats_to_report = c('pd','ROPE'),
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
