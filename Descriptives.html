@@ -11,7 +11,7 @@
 
 <meta name="author" content="Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD" />
 
-<meta name="date" content="2024-11-04" />
+<meta name="date" content="2024-11-20" />
 
 <title>APIM - Descriptives</title>
 
@@ -1898,7 +1898,7 @@ font-size: 0.95em;
 <h1 class="title toc-ignore">APIM - Descriptives</h1>
 <h4 class="author">Pascal Küng, MSc, Patrick Höhener, MSc, James M.
 Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD</h4>
-<h4 class="date">2024-11-04</h4>
+<h4 class="date">2024-11-20</h4>
 
 </div>
 
@@ -3800,17 +3800,20 @@ NA
 </div>
 <div id="correlations-measure" class="section level1">
 <h1>Correlations Measure</h1>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>cors <span class="ot">&lt;-</span> <span class="fu">wbCorr</span>(df_full[,<span class="fu">c</span>(main_constructs)], df_full<span class="sc">$</span>coupleID, <span class="at">method =</span> <span class="st">&#39;spearman&#39;</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>main_cors <span class="ot">&lt;-</span> <span class="fu">summary</span>(cors, <span class="st">&#39;wb&#39;</span>)<span class="sc">$</span>merged_wb</span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a></span>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>cors <span class="ot">&lt;-</span> <span class="fu">wbCorr</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  df_full[,<span class="fu">c</span>(main_constructs)], </span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  df_full<span class="sc">$</span>coupleID, </span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&#39;spearman&#39;</span>)</span>
 <span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>openxlsx<span class="sc">::</span><span class="fu">write.xlsx</span>(</span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>  main_cors, </span>
-<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>  <span class="fu">file.path</span>(<span class="st">&#39;Output&#39;</span>, <span class="st">&#39;Correlations.xlsx&#39;</span>)</span>
-<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>)</span>
-<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a></span>
-<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a><span class="fu">print_df</span>(main_cors, <span class="at">width =</span> <span class="st">&#39;7em&#39;</span>)</span></code></pre></div>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>main_cors <span class="ot">&lt;-</span> <span class="fu">summary</span>(cors, <span class="st">&#39;wb&#39;</span>)<span class="sc">$</span>merged_wb</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>openxlsx<span class="sc">::</span><span class="fu">write.xlsx</span>(</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>  main_cors, </span>
+<span id="cb12-11"><a href="#cb12-11" tabindex="-1"></a>  <span class="fu">file.path</span>(<span class="st">&#39;Output&#39;</span>, <span class="st">&#39;Correlations.xlsx&#39;</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" tabindex="-1"></a>)</span>
+<span id="cb12-13"><a href="#cb12-13" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" tabindex="-1"></a><span class="fu">print_df</span>(main_cors, <span class="at">width =</span> <span class="st">&#39;7em&#39;</span>)</span></code></pre></div>
 <div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:500px; overflow-x: scroll; width:100%; ">
 <table class="table table-striped table-hover table-responsive" style="color: black; width: auto !important; ">
 <thead>
@@ -4029,10 +4032,203 @@ reactance
 <p>Within-person correlations are above the diagonal and between-person
 correlations are below the diagonal. On the diagonal are intraclass
 correlations (ICCs)</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">report_system</span>()</span></code></pre></div>
+</div>
+<div id="correlations-between-self-report-and-partner-report" class="section level1">
+<h1>Correlations between self-report and partner-report</h1>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>same_constr <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="st">&#39;ss_psc_more&#39;</span>, <span class="st">&#39;sp_psc_more&#39;</span>,</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="st">&#39;ss_nsc_more&#39;</span>, <span class="st">&#39;sp_nsc_more&#39;</span>,</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="st">&#39;ss_push_plan&#39;</span>, <span class="st">&#39;sp_push_plan&#39;</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>cors <span class="ot">&lt;-</span> <span class="fu">wbCorr</span>(</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>  df_original[,<span class="fu">c</span>(same_constr)], </span>
+<span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a>  df_original<span class="sc">$</span>coupleID, </span>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">&#39;spearman&#39;</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>self_partner_report_cors <span class="ot">&lt;-</span> <span class="fu">summary</span>(cors, <span class="st">&#39;wb&#39;</span>)<span class="sc">$</span>merged_wb</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>openxlsx<span class="sc">::</span><span class="fu">write.xlsx</span>(</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>  self_partner_report_cors, </span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>  <span class="fu">file.path</span>(<span class="st">&#39;Output&#39;</span>, <span class="st">&#39;SelfVsPartnerReport.xlsx&#39;</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>)</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="fu">print_df</span>(self_partner_report_cors, <span class="at">width =</span> <span class="st">&#39;7em&#39;</span>)</span></code></pre></div>
+<div style="border: 1px solid #ddd; padding: 0px; overflow-y: scroll; height:500px; overflow-x: scroll; width:100%; ">
+<table class="table table-striped table-hover table-responsive" style="color: black; width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+ss_psc_more
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+sp_psc_more
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+ss_nsc_more
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+sp_nsc_more
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+ss_push_plan
+</th>
+<th style="text-align:left;position: sticky; top:0; background-color: #FFFFFF;position: sticky; top:0; background-color: #FFFFFF;">
+sp_push_plan
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;white-space: nowrap;">
+ss_psc_more
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+[0.18]
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.59***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.33***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.16***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.45***
+</td>
+<td style="text-align:left;white-space: nowrap;">
+0.31***
+</td>
+</tr>
+<tr>
+<td style="text-align:left;white-space: nowrap;">
+sp_psc_more
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.80***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+[0.20]
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.30***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.21***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.21***
+</td>
+<td style="text-align:left;white-space: nowrap;">
+0.41***
+</td>
+</tr>
+<tr>
+<td style="text-align:left;white-space: nowrap;">
+ss_nsc_more
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.54***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.53***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+[0.51]
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.52***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.33***
+</td>
+<td style="text-align:left;white-space: nowrap;">
+0.30***
+</td>
+</tr>
+<tr>
+<td style="text-align:left;white-space: nowrap;">
+sp_nsc_more
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.29
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.30
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.64***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+[0.55]
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.17***
+</td>
+<td style="text-align:left;white-space: nowrap;">
+0.37***
+</td>
+</tr>
+<tr>
+<td style="text-align:left;white-space: nowrap;">
+ss_push_plan
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.67***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.45**
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.55***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.27
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+[0.17]
+</td>
+<td style="text-align:left;white-space: nowrap;">
+0.42***
+</td>
+</tr>
+<tr>
+<td style="text-align:left;white-space: nowrap;">
+sp_push_plan
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.67***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.57***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.55***
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.39*
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+0.81***
+</td>
+<td style="text-align:left;white-space: nowrap;">
+[0.22]
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Within-person correlations are above the diagonal and between-person
+correlations are below the diagonal. On the diagonal are intraclass
+correlations (ICCs)</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">report_system</span>()</span></code></pre></div>
 <p>Analyses were conducted using the R Statistical language (version
 4.4.1; R Core Team, 2024) on Windows 11 x64 (build 22635)</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">report_packages</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">report_packages</span>()</span></code></pre></div>
 <ul>
 <li>lubridate (version 1.9.3; Grolemund G, Wickham H, 2011)</li>
 <li>wbCorr (version 0.1.22; Küng P, 2023)</li>
@@ -4049,10 +4245,10 @@ correlations (ICCs)</p>
 <li>readr (version 2.1.5; Wickham H et al., 2024)</li>
 <li>xml2 (version 1.3.6; Wickham H et al., 2023)</li>
 <li>tidyr (version 1.3.1; Wickham H et al., 2024)</li>
-<li>knitr (version 1.48; Xie Y, 2024)</li>
+<li>knitr (version 1.49; Xie Y, 2024)</li>
 <li>kableExtra (version 1.4.0; Zhu H, 2024)</li>
 </ul>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">cite_packages</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">cite_packages</span>()</span></code></pre></div>
 <ul>
 <li>Grolemund G, Wickham H (2011). “Dates and Times Made Easy with
 lubridate.” <em>Journal of Statistical Software</em>, <em>40</em>(3),
@@ -4092,7 +4288,7 @@ package version 1.3.6, <a href="https://CRAN.R-project.org/package=xml2" class="
 <li>Wickham H, Vaughan D, Girlich M (2024). <em>tidyr: Tidy Messy
 Data</em>. R package version 1.3.1, <a href="https://CRAN.R-project.org/package=tidyr" class="uri">https://CRAN.R-project.org/package=tidyr</a>.</li>
 <li>Xie Y (2024). <em>knitr: A General-Purpose Package for Dynamic
-Report Generation in R</em>. R package version 1.48, <a href="https://yihui.org/knitr/" class="uri">https://yihui.org/knitr/</a>. Xie Y (2015). <em>Dynamic
+Report Generation in R</em>. R package version 1.49, <a href="https://yihui.org/knitr/" class="uri">https://yihui.org/knitr/</a>. Xie Y (2015). <em>Dynamic
 Documents with R and knitr</em>, 2nd edition. Chapman and Hall/CRC, Boca
 Raton, Florida. ISBN 978-1498716963, <a href="https://yihui.org/knitr/" class="uri">https://yihui.org/knitr/</a>. Xie Y (2014). “knitr: A
 Comprehensive Tool for Reproducible Research in R.” In Stodden V, Leisch
