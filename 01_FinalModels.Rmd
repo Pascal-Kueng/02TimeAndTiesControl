@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - NO AR1"
+title: "APIM - Control - Final Models"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 

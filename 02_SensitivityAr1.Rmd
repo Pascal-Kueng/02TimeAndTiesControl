@@ -76,8 +76,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 5000
-warmup = 2000
+iterations = 2000
+warmup = 1000
 corstr = 'ar'
 #corstr = 'cosy_couple'
 #corstr = 'cosy_couple:user'
@@ -546,7 +546,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 42,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal", suffix))
   #, file_refit = 'always'
 )
 
@@ -662,6 +662,42 @@ plot(
 ```
 
 
+```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
+
+conds_eff <- conditional_spaghetti(
+  pa_sub, 
+  effects = c(
+    'persuasion_self_cw',
+    'persuasion_partner_cw',
+    'pressure_self_cw',
+    'pressure_partner_cw',
+    'pushing_self_cw',
+    'pushing_partner_cw'
+  ),
+  x_label = c(
+    'Received Persuasion',
+    'Exerted Persuasion',
+    'Received Pressure',
+    'Exerted Pressure',
+    'Received Plan-Related Pushing',
+    'Exerted Plan-Related Pushing'
+  ),
+  group_var = 'coupleID',
+  plot_full_range = TRUE,
+  y_limits = c(0, 100),
+  y_label = "Same-Day MVPA",
+  y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
+  , filter_quantiles = .9995
+  , font_family = 'Candara'
+)
+
+print(conds_eff)
+
+```
+**Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
+The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
+
+
 
 ## Device Based MVPA 
 
@@ -736,7 +772,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix))
 )
 
 pa_obj_log_digest <- digest::digest(pa_obj_log)
@@ -856,7 +892,7 @@ mood_gauss <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_gauss_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("mood_gauss", suffix))
 )
 
 mood_gauss_digest <- digest::digest(mood_gauss)
@@ -977,7 +1013,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777
-  , file = file.path("models_cache_brms", paste0("reactance_ordinal_NOARNOAR_", suffix))
+  , file = file.path("models_cache_brms", paste0("reactance_ordinal", suffix))
 )
 
 
@@ -1106,7 +1142,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_NOARNOAR_", suffix))
+  file = file.path("models_cache_brms", paste0("is_reactance", suffix))
   #, file_refit = 'always'
 )
 
