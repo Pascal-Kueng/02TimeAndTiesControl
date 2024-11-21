@@ -15,8 +15,9 @@ notebooks <- c(
   "01_FinalModels.Rmd"
   , "02_SensitivityAr1.Rmd"
   , "03_SensitivityPushingSeparate.Rmd"
-  , "04_SensitivityExchangeProcessesCovariates.Rmd"
-  , "04_SensitivityOtherCovariates.Rmd"
+  #, "04_SensitivityExchangeProcessesCovariates.Rmd"
+  #, "04_SensitivityOtherCovariates.Rmd"
+  #, "05_AsPreregistred.Rmd"
 )
 
 
