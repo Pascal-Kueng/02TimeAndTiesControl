@@ -1,7 +1,7 @@
 
 
 
-SHUTDOWN <- F
+SHUTDOWN <- T
 
 
 
@@ -12,9 +12,11 @@ library(fs)
 
 # Define the list of .Rmd files you want to knit
 notebooks <- c(
-  #"01_Analysis_Script_FINAL.Rmd"
   "01_FinalModels.Rmd"
   , "02_SensitivityAr1.Rmd"
+  , "03_SensitivityPushingSeparate.Rmd"
+  , "04_SensitivityExchangeProcessesCovariates.Rmd"
+  , "04_SensitivityOtherCovariates.Rmd"
 )
 
 
