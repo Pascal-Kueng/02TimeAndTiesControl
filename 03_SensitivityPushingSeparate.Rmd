@@ -561,6 +561,7 @@ rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summary_pa_sub_continuous <- summarize_brms(
   pa_sub, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   rope_range = rope_range_continuous,
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
@@ -761,6 +762,7 @@ rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summarize_brms(
   pa_obj_log, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   rope_range = rope_range_log,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
@@ -869,6 +871,7 @@ DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 
 summarize_brms(
   mood_gauss, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -980,6 +983,7 @@ DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 summarize_brms(
   reactance_ordinal, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_ordinal,
   model_rows_random = model_rows_random_ordinal,
@@ -1103,6 +1107,7 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 summarize_brms(
   is_reactance, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -1285,6 +1290,7 @@ rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summary_pa_sub_continuous <- summarize_brms(
   pa_sub, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   rope_range = rope_range_continuous,
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
@@ -1475,6 +1481,7 @@ rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summarize_brms(
   pa_obj_log, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   rope_range = rope_range_log,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
@@ -1578,6 +1585,7 @@ DHARMa.check_brms.all(mood_gauss, integer = FALSE)
 
 summarize_brms(
   mood_gauss, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -1694,6 +1702,7 @@ DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
 
 summarize_brms(
   reactance_ordinal, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_ordinal,
   model_rows_random = model_rows_random_ordinal,
@@ -1803,6 +1812,7 @@ DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 summarize_brms(
   is_reactance, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
