@@ -1,0 +1,23 @@
+Knit failures log - 2024-11-21 01:58:20.873332 
+
+Failed to knit: 01_FinalModels.Rmd
+Error: 
+Failed at retrieving data :( Please provide original model or
+  data through the `data` argument
+
+
+
+Failed to knit: 02_SensitivityAr1.Rmd
+Error: 
+Failed at retrieving data :( Please provide original model or
+  data through the `data` argument
+
+
+
+Failed to knit: 03_SensitivityPushingSeparate.Rmd
+Error: 
+Failed at retrieving data :( Please provide original model or
+  data through the `data` argument
+
+
+
