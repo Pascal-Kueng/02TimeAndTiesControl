@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - NO AR1"
+title: "APIM - Control - SensitivitySocialProcesses"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -21,7 +21,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
 
-
 library(tidyverse)
 library(R.utils)
 library(wbCorr)
@@ -29,8 +28,10 @@ library(readxl)
 library(kableExtra)
 library(brms)
 library(bayesplot)
+library(see)
 library(beepr)
 library(DHARMa)
+library(digest)
 
 
 
@@ -38,6 +39,9 @@ source(file.path('Functions', 'ReportModels.R'))
 source(file.path('Functions', 'PrettyTables.R'))
 source(file.path('Functions', 'ReportMeasures.R'))
 source(file.path('Functions', 'PrepareData.R'))
+
+report_function_hash <- digest::digest(summarize_brms)
+
 
 
 ```
@@ -51,6 +55,8 @@ system("shutdown /a")
 use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
+report_hurdle = TRUE
+do_priorsense = FALSE
 
 options(
   dplyr.print_max = 100, 
@@ -58,14 +64,21 @@ options(
   brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
   brms.file_refit = 'on_change',
   #brms.file_refit = 'always',
-  error = function() beepr::beep(sound = 5)
+  error = function() {
+    beepr::beep(sound = 5)
+    if (shutdown) {
+      system("shutdown /s /t 180")
+      quit(save = "no", status = 1)
+    }
+  }
+  , es.use_symbols = TRUE
 )
 
 
 ####################### Model parameters #######################
 
-iterations = 5000
-warmup = 2000
+iterations = 2000 # 10'000 per chain to achieve 40'000
+warmup = 1000
 
 # NO AR!!!
 #corstr = 'ar'
@@ -87,6 +100,7 @@ df <- openxlsx::read.xlsx(file.path('long.xlsx'))
 df_original <- df
 
 df_double <- prepare_data(df, recode_pushing = TRUE, use_mi = use_mi)[[1]]
+summary(df_double$pushing)
 
 ```
 
@@ -108,6 +122,13 @@ model_rows_fixed <- c(
     'day', 
     'weartime_self_cw',
     
+    'support_self_cw',
+    'support_partner_cw',
+    'isWeekendWeekend',
+    'got_JITAI_selfJITAIreceived',
+    'skilled_supportDaysafterIntervention',
+    
+    
     # '-- BETWEEN PERSON MAIN EFFECTS',
     'persuasion_self_cb',
     'persuasion_partner_cb',
@@ -115,7 +136,12 @@ model_rows_fixed <- c(
     'pressure_partner_cb',
     'pushing_self_cb',
     'pushing_partner_cb',
-    'weartime_self_cb'
+    'weartime_self_cb',
+    
+    'support_self_cb',
+    'support_partner_cb',
+    'studyGroupFirst3weeksinterventions',
+    'studyGrouplast3weeksinterventions'
   )
 
 
@@ -140,12 +166,6 @@ model_rows_random <- c(
   'sd(pushing_self_cw)',
   'sd(pushing_partner_cw)',
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -153,67 +173,6 @@ model_rows_random_ordinal <- c(model_rows_random,'disc')
 
 ```
 
-
-```{r set_display_names}
-
-# For indistinguishable Dyads
-model_rownames_fixed <- c(
-    'Intercept', 
-    # '-- WITHIN PERSON MAIN EFFECTS --', 
-    'Daily received persuasion target -> target', 
-    'Daily received persuasion target -> agent', 
-    'Daily received pressure target -> target', 
-    'Daily received pressure target -> agent', 
-    'Daily received pushing target -> target', 
-    'Daily received pushing target -> agent', 
-    'Day', 
-    'Daily weartime',
-    
-    # '-- BETWEEN PERSON MAIN EFFECTS',
-    'Mean received persuasion target -> target',
-    'Mean received persuasion target -> agent',
-    'Mean received pressure target -> target',
-    'Mean received pressure target -> agent',
-    'Mean received pushing target -> target',
-    'Mean received pushing target -> agent',
-    'Mean weartime'
-  )
-
-
-model_rownames_fixed_ordinal <- c(
-  model_rownames_fixed[1],
-  'Intercept[1]',
-  'Intercept[2]',
-  'Intercept[3]',
-  'Intercept[4]',
-  'Intercept[5]',
-  model_rownames_fixed[2:length(model_rownames_fixed)]
-)
-
-model_rownames_random <- c(
-  # '--------------',
-  # '-- RANDOM EFFECTS --',
-  'sd(Intercept)', 
-  'sd(Daily received persuasion target -> target)', 
-  'sd(Daily received persuasion target -> agent)', 
-  'sd(Daily received pressure target -> target)', 
-  'sd(Daily received pressure target -> agent)', 
-  'sd(Daily received pushing target -> target)', 
-  'sd(Daily received pushing target -> agent)', 
-  # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]',
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
-  'sigma'
-)
-
-model_rownames_random_ordinal <- c(model_rownames_random,'disc')
-
-
-```
 
 
 ```{r set_display_names_alt}
@@ -231,6 +190,12 @@ model_rownames_fixed <- c(
     "Day", 
     "Daily weartime",
     
+    'Daily support received',
+    "Daily support provided (partner's view)",
+    'Is a Weekend',
+    'JITAI received',
+    'Days post skilled support intervention',
+    
     # "-- BETWEEN PERSON MAIN EFFECTS",
     "Mean persuasion experienced", 
     "Mean persuasion utilized (partner's view)", 
@@ -238,7 +203,12 @@ model_rownames_fixed <- c(
     "Mean pressure utilized (partner's view)", 
     "Mean pushing experienced", 
     "Mean pushing utilized (partner's view)", 
-    "Mean weartime"
+    "Mean weartime",
+    
+    'Mean support received',
+    "Mean support provided (partner's view)",
+    'Difference study group 2',
+    'Difference study group 3'
   )
 
 
@@ -263,12 +233,6 @@ model_rownames_random <- c(
   "sd(Daily pushing experienced)", 
   "sd(Daily pushing utilized (partner's view))", 
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -282,20 +246,21 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 ```{r parameters_for_printing}
 
 rows_to_pack <- list(
-  "Within-Person Effects" = c(2,9),
-  "Between-Person Effects" = c(10,16),
-  "Random Effects" = c(17, 23), 
-  "Additional Parameters" = c(24,30)
+  "Within-Person Effects" = c(2,14),
+  "Between-Person Effects" = c(15,25),
+  "Random Effects" = c(26, 32), 
+  "Additional Parameters" = c(33,33)
   )
 
 
 rows_to_pack_ordinal <- list(
   "Intercepts" = c(1,6),
-  "Within-Person Effects" = c(2+5,9+5),
-  "Between-Person Effects" = c(10+5,16+5),
-  "Random Effects" = c(17+5, 23+5), 
-  "Additional Parameters" = c(24+5,30+6)
+  "Within-Person Effects" = c(2+5,14+5),
+  "Between-Person Effects" = c(15+5,25+5),
+  "Random Effects" = c(26+5, 32+5), 
+  "Additional Parameters" = c(33+5,33+6)
   )
+
 
 ```
 
@@ -317,6 +282,12 @@ model_rows_fixed_hu <- c(
     'day', 
     'weartime_self_cw',
     
+    'support_self_cw',
+    'support_partner_cw',
+    'isWeekendWeekend',
+    'got_JITAI_selfJITAIreceived',
+    'skilled_supportDaysafterIntervention',
+    
     # '-- BETWEEN PERSON MAIN EFFECTS',
     'persuasion_self_cb',
     'persuasion_partner_cb',
@@ -325,6 +296,11 @@ model_rows_fixed_hu <- c(
     'pushing_self_cb',
     'pushing_partner_cb',
     'weartime_self_cb',
+    
+    'support_self_cb',
+    'support_partner_cb',
+    'studyGroupFirst3weeksinterventions',
+    'studyGrouplast3weeksinterventions',
     
     # HURDLE MODEL
     # '-- WITHIN PERSON MAIN EFFECTS --', 
@@ -337,6 +313,12 @@ model_rows_fixed_hu <- c(
     'hu_day', 
     'hu_weartime_self_cw',
     
+    'hu_support_self_cw',
+    'hu_support_partner_cw',
+    'hu_isWeekendWeekend',
+    'hu_got_JITAI_selfJITAIreceived',
+    'hu_skilled_supportDaysafterIntervention',
+    
     # '-- BETWEEN PERSON MAIN EFFECTS',
     'hu_persuasion_self_cb',
     'hu_persuasion_partner_cb',
@@ -344,8 +326,25 @@ model_rows_fixed_hu <- c(
     'hu_pressure_partner_cb',
     'hu_pushing_self_cb',
     'hu_pushing_partner_cb',
-    'hu_weartime_self_cb'
+    'hu_weartime_self_cb',
+    
+    'hu_support_self_cb',
+    'hu_support_partner_cb',
+    'hu_studyGroupFirst3weeksinterventions',
+    'hu_studyGrouplast3weeksinterventions'
+    
   )
+
+model_rows_fixed_hu_ordinal <- c(
+  model_rows_fixed_hu[1:2],
+  'Intercept[1]',
+  'Intercept[2]',
+  'Intercept[3]',
+  'Intercept[4]',
+  'Intercept[5]',
+  model_rows_fixed_hu[3:length(model_rows_fixed_hu)]
+)
+
 
 model_rows_random_hu <- c(
   # '--------------',
@@ -366,14 +365,11 @@ model_rows_random_hu <- c(
   'sd(hu_pushing_self_cw)',
   'sd(hu_pushing_partner_cw)',
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
+
+model_rows_random_hu_ordinal <- c(model_rows_random_hu,'disc')
+
 
 ```
 
@@ -395,6 +391,12 @@ model_rownames_fixed_hu <- c(
     "Day", 
     "Daily weartime",
     
+    'Daily support received',
+    "Daily support provided (partner's view)",
+    'Is a Weekend',
+    'JITAI received',
+    'Days post skilled support intervention',
+    
     # "-- BETWEEN PERSON MAIN EFFECTS",
     "Mean persuasion experienced", 
     "Mean persuasion utilized (partner's view)", 
@@ -402,7 +404,12 @@ model_rownames_fixed_hu <- c(
     "Mean pressure utilized (partner's view)", 
     "Mean pushing experienced", 
     "Mean pushing utilized (partner's view)", 
-    "Mean weartime",
+    "Mean weartime", 
+    
+    'Mean support received',
+    "Mean support provided (partner's view)",
+    'Difference study group 2',
+    'Difference study group 3',
     
     # HURDLE
     # "-- WITHIN PERSON MAIN EFFECTS --", 
@@ -415,6 +422,12 @@ model_rownames_fixed_hu <- c(
     "Hu Day", 
     "Hu Daily weartime",
     
+    'Hu Daily support received',
+    "Hu Daily support provided (partner's view)",
+    'Hu Is a Weekend',
+    'Hu JITAI received',
+    'Hu Days post skilled support intervention',
+    
     # "-- BETWEEN PERSON MAIN EFFECTS",
     "Hu Mean persuasion experienced", 
     "Hu Mean persuasion utilized (partner's view)", 
@@ -422,8 +435,26 @@ model_rownames_fixed_hu <- c(
     "Hu Mean pressure utilized (partner's view)", 
     "Hu Mean pushing experienced", 
     "Hu Mean pushing utilized (partner's view)", 
-    "Hu Mean weartime"
+    "Hu Mean weartime",
+    
+    'Hu Mean support received',
+    "Hu Mean support provided (partner's view)",
+    'Hu Difference study group 2',
+    'Hu Difference study group 3'
   )
+
+
+
+model_rownames_fixed_hu_ordinal <- c(
+  model_rownames_fixed_hu[1:2],
+  'Intercept[1]',
+  'Intercept[2]',
+  'Intercept[3]',
+  'Intercept[4]',
+  'Intercept[5]',
+  model_rownames_fixed_hu[3:length(model_rownames_fixed_hu)]
+)
+
 
 
 model_rownames_random_hu <- c(
@@ -446,14 +477,10 @@ model_rownames_random_hu <- c(
   "sd(Hu Daily pushing experienced)", 
   "sd(Hu Daily pushing utilized (partner's view))", 
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
+
+model_rownames_random_hu_ordinal <- c(model_rownames_random_hu,'disc')
 
 
 ```
@@ -462,33 +489,35 @@ model_rownames_random_hu <- c(
 ```{r parameters_for_printing_hu}
 
 rows_to_pack_hu <- list(
-  "Conditional Within-Person Effects" = c(3,10),
-  "Conditional Between-Person Effects" = c(11,17),
+  "Conditional Within-Person Effects" = c(3,15),
+  "Conditional Between-Person Effects" = c(16,26),
   
-  "Hurdle Within-Person Effects" = c(18,25),
-  "Hurdle Between-Person Effects" = c(26,32),
+  "Hurdle Within-Person Effects" = c(27,39),
+  "Hurdle Between-Person Effects" = c(40,50),
   
-  "Random Effects" = c(33, 46), 
-  "Additional Parameters" = c(47,53)
+  "Random Effects" = c(51, 64), 
+  "Additional Parameters" = c(65,65)
   )
 
+rows_to_pack_hu_ordinal <- list(
+  "Conditional Within-Person Effects" = c(3+5,15+5),
+  "Conditional Between-Person Effects" = c(16+5,26+5),
+  
+  "Hurdle Within-Person Effects" = c(27+5,39+5),
+  "Hurdle Between-Person Effects" = c(40+5,50+5),
+  
+  "Random Effects" = c(51+5, 64+5), 
+  "Additional Parameters" = c(65+5,65+6)
+  )
 
 ```
 
 
-## Subjective MVPA
+## Self-Reported MVPA
 
-```{r explore_pa_sub_dist}
 
-range(df_double$pa_sub, na.rm = T) 
-hist(df_double$pa_sub, breaks = 40) 
-
-hist(log(df_double$pa_sub+00000000001), breaks = 40)
-
-```
-
-## Hurdle Poisson Model
-```{r pa_sub_poisson, results='hide'}
+### Hurdle Lognormal Model
+```{r pa_sub_lognormal, results='hide'}
 
 
 formula <- bf(
@@ -497,9 +526,18 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
     
+    support_self_cw + support_partner_cw + 
+    #plan +
+    #isWeekend + 
+    #got_JITAI_self + 
+    #skilled_support +
+    
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
+    
+    support_self_cb + support_partner_cb + 
+    #studyGroup +
     
     day + 
     
@@ -512,9 +550,18 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
     
+    support_self_cw + support_partner_cw + 
+    #plan +
+    #isWeekend + 
+    #got_JITAI_self + 
+    #skilled_support +
+    
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
+    
+    support_self_cb + support_partner_cb + 
+    #studyGroup +
     
     day + 
     
@@ -527,25 +574,19 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 2)", class = "b", dpar = "hu")
   , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-  , brms::set_prior("normal(6, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
-  
+  , brms::set_prior("normal(0.5, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("normal(10, 10", class = "shape")
-  
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = hurdle_poisson()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = hurdle_lognormal()
+#)
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -556,295 +597,120 @@ pa_sub <- my_brm(
   formula = formula, 
   prior = prior1,
   data = df_double, 
-  #family = brms::hurdle_lognormal(), 
+  family = brms::hurdle_lognormal(), 
   #family = brms::hurdle_negbinomial(), 
-  family = brms::hurdle_poisson(),
-  control = list(adapt_delta = 0.95, max_treedepth = 15),
+  #family = brms::hurdle_poisson(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
   iter = iterations,
   warmup = warmup,
   chains = 4,
   cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_poisson_NOAR", suffix))
+  seed = 42,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_senssocial_", suffix))
   #, file_refit = 'always'
 )
 
 
+pa_sub_digest <- digest::digest(pa_sub)
+
+
 ```
 
 
-```{r check_pa_sub_poisson}
 
-check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
-#shinystan::launch_shinystan(pa_sub)
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
 
-```
-In this instance, the warning about max treedepth is a false positive. We have set
-treedepth to 15, and when we check with shinystan, we see that treedepth is 
-continuously between 10 and 14.
-
-```{r report_pa_sub_poisson, results='asis'}
-
-summarize_brms(
+# summarize with rope range for hurdle part
+summary_pa_sub_hurdle <- summarize_brms(
   pa_sub, 
+  stats_to_report = c('pd','ROPE'),
+  rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack_hu
+  exponentiate = T) 
+
+# rope range for continuous part of the model
+rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
+rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_sub_continuous <- summarize_brms(
+  pa_sub, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
+  rope_range = rope_range_continuous,
+  model_rows_fixed = model_rows_fixed_hu,
+  model_rows_random = model_rows_random_hu,
+  model_rownames_fixed = model_rownames_fixed_hu,
+  model_rownames_random = model_rownames_random_hu,
+  exponentiate = T) 
+
+
+# Replace only the ROPE and % in Rope columns for rows with 'Hu'
+summary_pa_sub <- summary_pa_sub_continuous
+
+columns_to_replace <- c("ROPE", "inside ROPE")
+
+summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), columns_to_replace] <- 
+  summary_pa_sub_hurdle[grepl('Hu', rownames(summary_pa_sub_hurdle)), columns_to_replace]
+
+# Print the updated dataframe
+summary_pa_sub %>%
+  print_df(rows_to_pack = rows_to_pack_hu)
+
+
+# Plot continuous part of model
+
+variable <- c(
+  '(Intercept)',
+  'b_persuasion_self_cw',
+  'b_persuasion_partner_cw',
+  'b_pressure_self_cw',
+  'b_pressure_partner_cw',
+  'b_pushing_self_cw',
+  'b_pushing_partner_cw'
 )
 
-mcmc_plot(pa_sub,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
+
+plot(
+  bayestestR::p_direction(pa_sub, parameter = variable),
+  priors = TRUE
+) + theme_bw()
 
 
-
-mcmc_plot(pa_sub,
-          variable = c(
-            'b_hu_persuasion_self_cw',
-            'b_hu_persuasion_partner_cw',
-            'b_hu_pressure_self_cw',
-            'b_hu_pressure_partner_cw',
-            'b_hu_pushing_self_cw',
-            'b_hu_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
-
-
-```
-
-
-Additionally, as a sensitivity analysis, we estimate the two part of the models separately. 
-
-## Two separate models
-
-### Modelling 0/1 
-The zero vs. 1 modelling part also has high pareto-k values, but reaches the 
-same conslucsions as the hurdle model.
-We tried further simplifying by removing the residual AR1 correlation structure,
-which led to a model with good pareto-k values, still arriving at the same
-conslusion as the original hurdle model:
-```{r pa_sub_separate_inactive, results='hide', message=FALSE}
-
-df_double$pa_sub_zero <- as.factor(ifelse(df_double$pa_sub > 0, 1, 0))
-
-formula <- bf(
-  pa_sub_zero ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  #, autocor = autocor_str
-) 
-
-prior1 <- c(
-    set_prior("normal(0, 1.5)", class = "b")
-  , brms::set_prior("normal(0, 5)", class = "Intercept") # for non-zero PA
-
-  , brms::set_prior("normal(0, 1)", class = "sd", group = "coupleID")
-
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 1.5)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = bernoulli()
+plot(
+  bayestestR::rope(
+    pa_sub, 
+    parameter = variable, 
+    range = rope_range_continuous,
+    verbose = F,
+    ci = 1
   )
+) + theme_bw()
 
 
-pa_sub_zero_model <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  #family = brms::hurdle_lognormal(), 
-  #family = brms::hurdle_negbinomial(), 
-  family = brms::bernoulli(),
-  #control = list(adapt_delta = 0.95),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_zero_part_NOAR", suffix))
+
+
+# Hurdle part of the model
+variable <- c(
+  'b_hu_persuasion_self_cw',
+  'b_hu_persuasion_partner_cw',
+  'b_hu_pressure_self_cw',
+  'b_hu_pressure_partner_cw',
+  'b_hu_pushing_self_cw',
+  'b_hu_pushing_partner_cw'
 )
 
+plot(
+  bayestestR::p_direction(pa_sub, parameter = variable),
+  priors = TRUE
+) + theme_bw()
 
-
-```
-
-
-```{r check_pa_sub_separate_inactive}
-
-check_brms(pa_sub_zero_model, log_pp_check = FALSE)
-DHARMa.check_brms.all(pa_sub_zero_model, integer = TRUE, outliers_type = 'bootstrap')
-
-```
-
-
-```{r report_pa_sub_separate_inactive, results='asis'}
-
-summarize_brms(
-  pa_sub_zero_model, 
-  model_rows_fixed = model_rows_fixed_hu,
-  model_rows_random = model_rows_random_hu,
-  model_rownames_fixed = model_rownames_fixed_hu,
-  model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack_hu
-)
-
-mcmc_plot(pa_sub_zero_model,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
-
-
-
-```
-
-
-### Modelling active Days
-```{r pa_sub_separate_active, results='hide', message=FALSE}
-
-# Only include active days
-df_double$pa_sub_non_zero <- ifelse(df_double$pa_sub > 0, df_double$pa_sub, NA)
-
-formula <- bf(
-  log(pa_sub_non_zero) ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
-  ##, autocor = autocor_str
-) 
-
-prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
-)
-
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = gaussian()
-  )
-
-
-pa_sub_active_model <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = gaussian(),
-  #control = list(adapt_delta = 0.95),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_active_part_NOAR", suffix))
-)
-
-
-
-```
-
-
-```{r check_pa_sub_separate_active}
-
-check_brms(pa_sub_active_model, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub_active_model, integer = TRUE, outliers_type = 'bootstrap')
-
-```
-
-
-```{r report_pa_sub_separate_active, results='asis'}
-
-summarize_brms(
-  pa_sub_active_model, 
-  model_rows_fixed = model_rows_fixed_hu,
-  model_rows_random = model_rows_random_hu,
-  model_rownames_fixed = model_rownames_fixed_hu,
-  model_rownames_random = model_rownames_random_hu,
-  exponentiate = T,
-  include_p_direction = T) %>%
-  print_df(rows_to_pack = rows_to_pack_hu
-)
-
-mcmc_plot(pa_sub_active_model,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
+# The rope range for the bernoulli part of the model is -0.18, 0.18
+plot(
+  bayestestR::rope(pa_sub, parameter = variable, range = c(-0.18, 0.18), ci = 1),
+  verbose = FALSE
+) + theme_bw()
 
 
 ```
@@ -853,33 +719,28 @@ mcmc_plot(pa_sub_active_model,
 
 ## Device Based MVPA 
 
-```{r explore_pa_obj_dist}
-
-range(df_double$pa_obj, na.rm = T) 
-
-hist(df_double$pa_obj, breaks = 50)
-
-df_double$pa_obj_log <- log(df_double$pa_obj)
-
-hist(df_double$pa_obj_log, breaks = 50)
-
-```
-
-
-
-### log gaussian
+### Lognormal Model
 
 ```{r pa_obj_log_g, results='hide', message=FALSE}
 
 formula <- bf(
-  log(pa_obj) ~ 
+  pa_obj ~ 
     persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
     
+    support_self_cw + support_partner_cw + 
+    #plan +
+    #isWeekend + 
+    #got_JITAI_self + 
+    #skilled_support +
+    
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
+    
+    support_self_cb + support_partner_cb + 
+    #studyGroup +
     
     day + weartime_self_cw + weartime_self_cb +
     
@@ -894,22 +755,18 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-
+  , brms::set_prior("normal(0, 50)", class = "Intercept") 
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = gaussian()
-  )
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = lognormal()
+#  )
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -920,67 +777,60 @@ pa_obj_log <- my_brm(
   formula = formula, 
   prior = prior1,
   data = df_double, 
-  family = gaussian(),
+  family = lognormal(),
   #control = list(adapt_delta = 0.95),
   iter = iterations,
   warmup = warmup,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_senssocial_", suffix))
 )
 
-```
+pa_obj_log_digest <- digest::digest(pa_obj_log)
 
-
-```{r check_pa_obj_log_g}
-
-check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
 
 ```
 
 
+```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=c(pa_obj_log_digest, report_function_hash)}
 
-```{r report_pa_obj_log_g, results='asis'}
+# rope range for lognormal model
+rope_factor <- sd(log(pa_obj_log$data$pa_obj))
+rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summarize_brms(
   pa_obj_log, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
+  rope_range = rope_range_log,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
-mcmc_plot(pa_obj_log,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
+
+plot(
+  bayestestR::p_direction(pa_obj_log),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
+
+
+plot(
+  bayestestR::rope(pa_obj_log, range = rope_range_log, ci = 1)
+) + theme_bw()
+
+
+
+# Nothing significant, no plots
 
 ```
-
-
-
 
 
 ## Affect
-
-```{r explore_aff_dist}
-
-range(df_double$aff, na.rm = T) 
-hist(df_double$aff, breaks = 15)
-
-```
 
 ### Gaussian
 ```{r mood_gauss, results='hide', results='hide', message=FALSE}
@@ -992,11 +842,20 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
     
+    support_self_cw + support_partner_cw + 
+    #plan +
+    #isWeekend + 
+    #got_JITAI_self + 
+    #skilled_support +
+    
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    day +
+    support_self_cb + support_partner_cb + 
+    #studyGroup +
+    
+    day + 
     
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
@@ -1008,22 +867,17 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 5)", class = "b")
-  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6) # range of the outcome scale
-  
+  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6)
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  , brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
 )
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = gaussian()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = gaussian()
+#  )
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -1041,63 +895,53 @@ mood_gauss <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_gauss_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("mood_gauss_senssocial_", suffix))
 )
 
+mood_gauss_digest <- digest::digest(mood_gauss)
+
 
 ```
 
 
-```{r check_mood_gauss}
-
-check_brms(mood_gauss, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood_gauss, integer = FALSE)
-
-```
-
-```{r report_mood_gauss, results='asis'}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(mood_gauss_digest, report_function_hash)}
 
 summarize_brms(
   mood_gauss, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = F,
-  include_p_direction = T) %>%
+  exponentiate = F) %>%
   print_df(rows_to_pack = rows_to_pack)
 
-mcmc_plot(mood_gauss,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
+
+plot(
+  bayestestR::p_direction(mood_gauss),
+  priors = TRUE
+)  + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
+
+plot(
+  bayestestR::rope(mood_gauss, ci = 1)
+) + theme_bw()
+
+
+conditional_spaghetti(
+  mood_gauss, 
+  effects = c('pushing_partner_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
+)
 
 ```
-
 
 
 ## Reactance
 
-```{r check_reactance}
-
-range(df_double$reactance, na.rm = T) 
-hist(df_double$reactance, breaks = 7) 
-
-hist(log(df_double$reactance+0.1), breaks = 10)
-
-```
-
-
 ### Ordinal
-
 
 ```{r reactance_ordinal, results='hide', message=FALSE}
 
@@ -1111,11 +955,20 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
     
+    support_self_cw + support_partner_cw + 
+    #plan +
+    #isWeekend + 
+    #got_JITAI_self + 
+    #skilled_support +
+    
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    day +
+    support_self_cb + support_partner_cb + 
+    #studyGroup +
+    
+    day + 
     
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
@@ -1127,23 +980,16 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
-  #, brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5) # range of the outcome scale
-  
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
 )
 
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = cumulative() # HURDLE_CUMULATIVE
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = cumulative() # HURDLE_CUMULATIVE
+#  )
 
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
@@ -1162,48 +1008,53 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777
-  , file = file.path("models_cache_brms", paste0("reactance_ordinal_NOARNOAR_", suffix))
+  , file = file.path("models_cache_brms", paste0("reactance_ordinal_senssocial_", suffix))
 )
 
 
+reactance_ordinal_digest <- digest::digest(reactance_ordinal)
+
+
 ```
 
 
-```{r check_reactance_ordinal}
-
-check_brms(reactance_ordinal)
-DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
-
-```
-
-```{r report_reactance_ordinal, results='asis'}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(reactance_ordinal_digest, report_function_hash)}
 
 summarize_brms(
-  reactance_ordinal, 
+  reactance_ordinal,
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
+  rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_ordinal,
   model_rows_random = model_rows_random_ordinal,
   model_rownames_fixed = model_rownames_fixed_ordinal,
   model_rownames_random = model_rownames_random_ordinal,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack_ordinal)
 
 
-mcmc_plot(reactance_ordinal,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
+plot(
+  bayestestR::p_direction(reactance_ordinal),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-6, 6)) +
+  theme_bw()
+
+plot(
+  bayestestR::rope(reactance_ordinal, range = c(-0.18, 0.18), ci = 1)
+) + theme_bw()
+
+
+
+conditional_spaghetti(
+  reactance_ordinal, 
+  effects = c('persuasion_self_cw', 'pressure_self_cw')
+  , group_var = 'coupleID'
+  #, n_groups = 15
+  , plot_full_range = T
+)
+
 
 ```
-
 
 
 ### Binary 
@@ -1231,11 +1082,20 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
     
+    support_self_cw + support_partner_cw + 
+    #plan +
+    #isWeekend + 
+    #got_JITAI_self + 
+    #skilled_support +
+    
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    day +
+    support_self_cb + support_partner_cb + 
+    #studyGroup +
+    
+    day + 
     
     # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
@@ -1248,23 +1108,17 @@ formula <- bf(
 
 prior1 <- c(
   brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5) # range of the outcome scale
-  
+  , brms::set_prior("normal(0, 10)", class = "Intercept", lb=0, ub=5) 
   , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  
-  #, brms::set_prior("cauchy(0, 2)", class = "sigma", lb = 0)
-  #, brms::set_prior("cauchy(0, 2)", class = "sderr", lb = 0)
-  
-  #, autocor_prior
 )
 
 
-brms::validate_prior(
-  prior1, 
-  formula = formula, 
-  data = df_double, 
-  family = bernoulli()
-  )
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = bernoulli()
+#  )
 
 
 
@@ -1284,52 +1138,47 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_NOARNOAR_", suffix))
+  file = file.path("models_cache_brms", paste0("is_reactance_senssocial_", suffix))
   #, file_refit = 'always'
 )
 
+is_reactance_digest <- digest::digest(is_reactance)
 
 ```
 
-```{r check_is_reactance}
-
-check_brms(is_reactance)
-DHARMa.check_brms.all(is_reactance, integer = FALSE)
 
 
-```
-
-```{r report_is_reactance, results='asis'}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(is_reactance_digest, report_function_hash)}
 
 summarize_brms(
   is_reactance, 
+  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T,
-  include_p_direction = T) %>%
+  exponentiate = T) %>%
   print_df(rows_to_pack = rows_to_pack)
 
-mcmc_plot(is_reactance,
-          variable = c(
-            'b_persuasion_self_cw',
-            'b_persuasion_partner_cw',
-            'b_pressure_self_cw',
-            'b_pressure_partner_cw',
-            'b_pushing_self_cw',
-            'b_pushing_partner_cw'
-          ),
-          #regex = TRUE,
-          type = 'areas',
-          prob = 0.95)
+plot(
+  bayestestR::p_direction(is_reactance),
+  priors = TRUE
+) + 
+  coord_cartesian(xlim = c(-6, 6)) +
+  theme_bw()
 
-```
+plot(
+  bayestestR::rope(is_reactance, ci = 1)
+) + theme_bw()
 
 
-```{r testingdifferencecoefsbinary}
 
-hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
+conditional_spaghetti(
+  is_reactance, 
+  effects = c('pressure_self_cw', 'pushing_self_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
+)
 
 ```
 
@@ -1337,21 +1186,14 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 # Report All Models
 
-```{r report_sidebyside}
+```{r report_sidebyside, results = 'asis'}
 
-
-if (report_ordinal) {
-  model_rows_random_final <- model_rows_random_ordinal
-  model_rows_fixed_final <- model_rows_fixed_ordinal
-  model_rownames_fixed_final <- model_rownames_fixed_ordinal
-  model_rownames_random_final <- model_rownames_random_ordinal
-  rows_to_pack_final <- rows_to_pack_ordinal
-} else {
-  model_rows_random_final <- model_rows_random_hu
-  model_rows_fixed_final <- model_rows_fixed_hu
-  model_rownames_fixed_final <- model_rownames_fixed_hu
-  model_rownames_random_final <- model_rownames_random_hu
-  rows_to_pack_final <- rows_to_pack_hu
+process_model_component <- function(obj) {
+  # Convert to string, modify, and evaluate
+  name <- deparse(substitute(obj))
+  if (report_hurdle) name <- paste0(name, '_hu')
+  if (report_ordinal) name <- paste0(name, '_ordinal')
+  return(get(name, envir = parent.frame()))
 }
 
 
@@ -1363,36 +1205,43 @@ all_models <- report_side_by_side(
   reactance_ordinal,
   is_reactance,
   
-  model_rows_random = model_rows_random_final,
-  model_rows_fixed = model_rows_fixed_final,
-  model_rownames_random = model_rownames_random_final,
-  model_rownames_fixed = model_rownames_fixed_final
+  stats_to_report = c('CI', 'pd'),
+  
+  model_rows_random = process_model_component(model_rows_random),
+  model_rows_fixed = process_model_component(model_rows_fixed),
+  model_rownames_random = process_model_component(model_rownames_random),
+  model_rownames_fixed = process_model_component(model_rownames_fixed)
 ) 
 
 
+
+
+
 # pretty printing
+
 summary_all_models <- all_models %>%
-  print_df(rows_to_pack = rows_to_pack_final) %>%
+  print_df(rows_to_pack = process_model_component(rows_to_pack)) %>%
   add_header_above(
-    c(" ", "Subjective MVPA Hurdle Poisson" = 2, 
-      "Device-Based MVPA Log (Gaussian)" = 2, 
-      "Mood Gaussian" = 2,
-      "Reactance Ordinal" = 2,
-      "Reactance Dichotome" = 2)
+    c(" ", "Subjective MVPA Hurdle Lognormal" = (length(all_models) / 5),  
+      "Device-Based MVPA Log (Gaussian)" = (length(all_models) / 5), 
+      "Mood Gaussian" = (length(all_models) / 5),
+      "Reactance Ordinal" = (length(all_models) / 5),
+      "Reactance Dichotome" = (length(all_models) / 5))
   )
+
 
 export_xlsx(
   summary_all_models, 
-  rows_to_pack = rows_to_pack_final,
-  file.path("Output", "AllModels_experimental_noAR.xlsx"), 
-  merge_option = 'both', 
+  rows_to_pack = process_model_component(rows_to_pack),
+  file.path("Output", "AllModels_sensSocial.xlsx"), 
+  merge_option = 'header', 
   simplify_2nd_row = TRUE,
-  colwidths = c(38, 7.2, 13.3, 7.2, 13.3,7.2, 13.3,7.2, 13.3,7.2, 13.3),
   line_above_rows = c(1,2),
   line_below_rows = c(-1)
 )
 
-summary_all_models
+  
+print(summary_all_models)
 
 ```
 
