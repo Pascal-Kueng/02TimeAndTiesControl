@@ -100,6 +100,7 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
 
 summarize_brms <- function(model, 
                            exponentiate = FALSE,
+                           invert_hurdle_OR = TRUE,
                            stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
                            pd_significance = TRUE, # otherwise CI is used
@@ -114,7 +115,7 @@ summarize_brms <- function(model,
   format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
   
   # Extract summaries
-  summ_og <- summary(model)
+  summ_og <- summary(model, robust = TRUE)
   fixed_effects <- summ_og$fixed
   random_effects <- summ_og$random[[1]][grep('sd\\(', rownames(summ_og$random[[1]])), ]
   random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars)
@@ -125,7 +126,7 @@ summarize_brms <- function(model,
       model,
       effects = 'fixed'
     ))
-    fixed_effects$pd <- paste0(format_number(p_dir$pd*100,2), "%")
+    fixed_effects$pd <- format_number(p_dir$pd,3)
     random_effects$pd <- NA
   }
   # Add ROPE
@@ -153,7 +154,7 @@ summarize_brms <- function(model,
     )
     random_effects$ROPE <- NA
     
-    fixed_effects$`inside ROPE` <- paste0(format_number(rope_df$ROPE_Percentage * 100,0), '%')
+    fixed_effects$`inside ROPE` <- format_number(rope_df$ROPE_Percentage,3)
     random_effects$`inside ROPE` <- NA
   }
   
@@ -194,16 +195,19 @@ summarize_brms <- function(model,
   if (pd_significance) {
     if (! 'pd' %in% stats_to_report) {
       warning('To compute significance stars based on pd, include it in stats_to_report. Fallback to CI is used.')
+      pd_significance <- FALSE
+    } else {
+      significance_fixed <- case_when(
+        p_dir$pd > 0.9995 ~ '***',
+        p_dir$pd > 0.995  ~ '**',
+        p_dir$pd > 0.975  ~ '*',
+        TRUE              ~ ''
+      )
     }
     
-    significance_fixed <- case_when(
-      p_dir$pd > 0.9995 ~ '***',
-      p_dir$pd > 0.995  ~ '**',
-      p_dir$pd > 0.975  ~ '*',
-      TRUE              ~ ''
-    )
-    
-  } else {
+  } 
+  
+  if (!pd_significance) {
     # compute significance stars based on CI
     is_significant <- function(low, high) {
       (low > 0 & high > 0) | (low < 0 & high < 0)
@@ -219,6 +223,22 @@ summarize_brms <- function(model,
   # Rename SE
   names(fixed_effects)[2] <- "SE" 
   names(random_effects)[2] <- "SE" 
+  
+  if (invert_hurdle_OR) {
+    # Create an index for the rows to invert
+    invert_index <- grepl('hu_', rownames(fixed_effects)) | grepl('_hu', rownames(fixed_effects))
+    
+    # Invert the log-odds for those rows
+    fixed_effects$Estimate[invert_index] <- -fixed_effects$Estimate[invert_index]
+    
+    # Invert and swap the bounds
+    temp_upper <- -fixed_effects$`l-95% CI`[invert_index]
+    temp_lower <- -fixed_effects$`u-95% CI`[invert_index]
+    
+    fixed_effects$`u-95% CI`[invert_index] <- temp_upper
+    fixed_effects$`l-95% CI`[invert_index] <- temp_lower
+  }
+  
   
   # Handle exponentiation for fixed effects
   if (exponentiate) {
@@ -339,7 +359,6 @@ summarize_brms <- function(model,
   
   return(full_results_subset)
 }
-
 
 
 

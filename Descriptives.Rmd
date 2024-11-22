@@ -278,6 +278,37 @@ On the diagonal are intraclass correlations (ICCs)
 
 
 
+# Correlations between self-report and partner-report
+
+```{r corrs_measures_self_partner, results='asis'}
+
+same_constr <- c(
+  'ss_psc_more', 'sp_psc_more',
+  'ss_nsc_more', 'sp_nsc_more',
+  'ss_push_plan', 'sp_push_plan')
+
+cors <- wbCorr(
+  df_original[,c(same_constr)], 
+  df_original$coupleID, 
+  method = 'spearman')
+
+self_partner_report_cors <- summary(cors, 'wb')$merged_wb
+
+
+openxlsx::write.xlsx(
+  self_partner_report_cors, 
+  file.path('Output', 'SelfVsPartnerReport.xlsx')
+)
+
+print_df(self_partner_report_cors, width = '7em')
+
+```
+
+Within-person correlations are above the diagonal and between-person correlations are below the diagonal.
+On the diagonal are intraclass correlations (ICCs)
+
+
+
 
 
 
@@ -288,9 +319,4 @@ report::report_packages()
 report::cite_packages()
 
 ```
-
-
-
-
-
 

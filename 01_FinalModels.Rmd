@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - NO AR1"
+title: "APIM - Control - Final Models"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -40,6 +40,9 @@ source(file.path('Functions', 'PrettyTables.R'))
 source(file.path('Functions', 'ReportMeasures.R'))
 source(file.path('Functions', 'PrepareData.R'))
 
+report_function_hash <- digest::digest(summarize_brms)
+
+
 
 ```
 
@@ -50,9 +53,10 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = TRUE
-report_ordinal = TRUE
+shutdown = FALSE
+report_ordinal = FALSE
 report_hurdle = TRUE
+do_priorsense = FALSE
 
 options(
   dplyr.print_max = 100, 
@@ -60,8 +64,14 @@ options(
   brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
   brms.file_refit = 'on_change',
   #brms.file_refit = 'always',
-  error = function() beepr::beep(sound = 5),
-  es.use_symbols = TRUE
+  error = function() {
+    beepr::beep(sound = 5)
+    if (shutdown) {
+      system("shutdown /s /t 180")
+      quit(save = "no", status = 1)
+    }
+  }
+  , es.use_symbols = TRUE
 )
 
 
@@ -90,6 +100,7 @@ df <- openxlsx::read.xlsx(file.path('long.xlsx'))
 df_original <- df
 
 df_double <- prepare_data(df, recode_pushing = TRUE, use_mi = use_mi)[[1]]
+summary(df_double$pushing)
 
 ```
 
@@ -143,12 +154,6 @@ model_rows_random <- c(
   'sd(pushing_self_cw)',
   'sd(pushing_partner_cw)',
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -205,12 +210,6 @@ model_rownames_random <- c(
   "sd(Daily pushing experienced)", 
   "sd(Daily pushing utilized (partner's view))", 
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -227,7 +226,7 @@ rows_to_pack <- list(
   "Within-Person Effects" = c(2,9),
   "Between-Person Effects" = c(10,16),
   "Random Effects" = c(17, 23), 
-  "Additional Parameters" = c(24,30)
+  "Additional Parameters" = c(24,24)
   )
 
 
@@ -236,7 +235,7 @@ rows_to_pack_ordinal <- list(
   "Within-Person Effects" = c(2+5,9+5),
   "Between-Person Effects" = c(10+5,16+5),
   "Random Effects" = c(17+5, 23+5), 
-  "Additional Parameters" = c(24+5,30+6)
+  "Additional Parameters" = c(24+5,24+6)
   )
 
 ```
@@ -319,12 +318,6 @@ model_rows_random_hu <- c(
   'sd(hu_pushing_self_cw)',
   'sd(hu_pushing_partner_cw)',
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -415,12 +408,6 @@ model_rownames_random_hu <- c(
   "sd(Hu Daily pushing experienced)", 
   "sd(Hu Daily pushing utilized (partner's view))", 
   # '-- CORRELATION STRUCTURE -- ', 
-  'ar[1]', 
-  'ma[1]', 
-  'cosy',
-  'nu',
-  'shape',
-  'sderr',
   'sigma'
 )
 
@@ -440,7 +427,7 @@ rows_to_pack_hu <- list(
   "Hurdle Between-Person Effects" = c(26,32),
   
   "Random Effects" = c(33, 46), 
-  "Additional Parameters" = c(47,53)
+  "Additional Parameters" = c(47,47)
   )
 
 rows_to_pack_hu_ordinal <- list(
@@ -452,7 +439,7 @@ rows_to_pack_hu_ordinal <- list(
   "Hurdle Between-Person Effects" = c(26+5,32+5),
   
   "Random Effects" = c(33+5, 46+5), 
-  "Additional Parameters" = c(47+5,53+6)
+  "Additional Parameters" = c(47+5,47+6)
   )
 
 ```
@@ -553,24 +540,55 @@ pa_sub_digest <- digest::digest(pa_sub)
 
 
 ```{r check_pa_sub_lognormal, cache=TRUE, cache.extra=pa_sub_digest}
-
 check_brms(pa_sub, log_pp_check = TRUE)
 DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
+```
+
+
+```{r check_pa_sub_lognormal_priorsense, cache=TRUE, cache.extra=c(pa_sub_digest, do_priorsense)}
+if (do_priorsense) {
+  priorsense_vars <- c(
+      'Intercept',
+      'b_persuasion_self_cw',
+      'b_persuasion_partner_cw',
+      'b_pressure_self_cw',
+      'b_pressure_partner_cw',
+      'b_pushing_self_cw',
+      'b_pushing_partner_cw'
+  )
+  
+  hurdle_priorsense_vars <- c(
+    'Intercept_hu',
+    'b_hu_persuasion_self_cw',
+    'b_hu_persuasion_partner_cw',
+    'b_hu_pressure_self_cw',
+    'b_hu_pressure_partner_cw',
+    'b_hu_pushing_self_cw',
+    'b_hu_pushing_partner_cw'
+  )
+  
+  gc()
+  priorsense::powerscale_sensitivity(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
+  priorsense::powerscale_plot_dens(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
+  priorsense::powerscale_plot_ecdf(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
+  priorsense::powerscale_plot_quantities(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
+}
 
 ```
 
 
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=pa_sub_digest}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
 
 # summarize with rope range for hurdle part
-summary_pa_sub_hu <- summarize_brms(
+summary_pa_sub_hurdle <- summarize_brms(
   pa_sub, 
+  stats_to_report = c('pd','ROPE'),
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
   model_rownames_fixed = model_rownames_fixed_hu,
   model_rownames_random = model_rownames_random_hu,
-  exponentiate = F) 
+  exponentiate = T) 
 
 # rope range for continuous part of the model
 rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
@@ -585,12 +603,18 @@ summary_pa_sub_continuous <- summarize_brms(
   model_rownames_random = model_rownames_random_hu,
   exponentiate = T) 
 
-summary_pa_sub <- summary_pa_sub_continuous
-summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), ] <- summary_pa_sub_hu[grepl('Hu', rownames(summary_pa_sub_hu)), ]
 
+# Replace only the ROPE and % in Rope columns for rows with 'Hu'
+summary_pa_sub <- summary_pa_sub_continuous
+
+columns_to_replace <- c("ROPE", "inside ROPE")
+
+summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), columns_to_replace] <- 
+  summary_pa_sub_hurdle[grepl('Hu', rownames(summary_pa_sub_hurdle)), columns_to_replace]
+
+# Print the updated dataframe
 summary_pa_sub %>%
-  print_df(rows_to_pack = rows_to_pack_hu
-)
+  print_df(rows_to_pack = rows_to_pack_hu)
 
 
 # Plot continuous part of model
@@ -649,7 +673,9 @@ plot(
 
 ```
 
-```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis'}
+
+
+```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
 
 conds_eff <- conditional_spaghetti(
   pa_sub, 
@@ -806,15 +832,25 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 
 
 ```{r check_pa_obj_log_g, cache=TRUE, cache.extra=pa_obj_log_digest}
-
 check_brms(pa_obj_log, log_pp_check = TRUE)
 DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
+```
+
+
+```{r check_pa_obj_log_priorsense, cache=TRUE, cache.extra=c(pa_obj_log_digest, do_priorsense)}
+if (do_priorsense) {
+  gc()
+  priorsense::powerscale_sensitivity(pa_obj_log, variable = priorsense_vars)
+  priorsense::powerscale_plot_dens(pa_obj_log, variable = priorsense_vars)
+  priorsense::powerscale_plot_ecdf(pa_obj_log, variable = priorsense_vars)
+  priorsense::powerscale_plot_quantities(pa_obj_log, variable = priorsense_vars)
+}
 
 ```
 
 
 
-```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=pa_obj_log_digest}
+```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=c(pa_obj_log_digest, report_function_hash)}
 
 # rope range for lognormal model
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
@@ -923,13 +959,24 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 
 
 ```{r check_mood_gauss, cache=TRUE, cache.extra=mood_gauss_digest}
-
 check_brms(mood_gauss, log_pp_check = FALSE)
 DHARMa.check_brms.all(mood_gauss, integer = FALSE)
+```
+
+
+```{r check_mood_gauss_priorsense, cache=TRUE, cache.extra=c(mood_gauss_digest, do_priorsense)}
+
+if (do_priorsense) {
+  gc()
+  priorsense::powerscale_sensitivity(mood_gauss, variable = priorsense_vars)
+  priorsense::powerscale_plot_dens(mood_gauss, variable = priorsense_vars)
+  priorsense::powerscale_plot_ecdf(mood_gauss, variable = priorsense_vars)
+  priorsense::powerscale_plot_quantities(mood_gauss, variable = priorsense_vars)
+}
 
 ```
 
-```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=mood_gauss_digest}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(mood_gauss_digest, report_function_hash)}
 
 summarize_brms(
   mood_gauss, 
@@ -972,7 +1019,7 @@ marginaleffects::avg_predictions(mood_gauss)
 
 ## Reactance
 
-```{r check_reactance}
+```{r investigatee_reactance}
 
 range(df_double$reactance, na.rm = T) 
 hist(df_double$reactance, breaks = 7) 
@@ -1051,13 +1098,24 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 
 
 ```{r check_reactance_ordinal, cache=TRUE, cache.extra=reactance_ordinal_digest}
-
 check_brms(reactance_ordinal)
 DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
+```
+
+
+```{r check_reactance_ordinal_priorsense, cache=TRUE, cache.extra=c(reactance_ordinal_digest, do_priorsense)}
+
+if (do_priorsense) {
+  gc()
+  priorsense::powerscale_sensitivity(reactance_ordinal, variable = priorsense_vars)
+  priorsense::powerscale_plot_dens(reactance_ordinal, variable = priorsense_vars)
+  priorsense::powerscale_plot_ecdf(reactance_ordinal, variable = priorsense_vars)
+  priorsense::powerscale_plot_quantities(reactance_ordinal, variable = priorsense_vars)
+}
 
 ```
 
-```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=reactance_ordinal_digest}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(reactance_ordinal_digest, report_function_hash)}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1183,14 +1241,23 @@ is_reactance_digest <- digest::digest(is_reactance)
 ```
 
 ```{r check_is_reactance, cache=TRUE, cache.extra=is_reactance_digest}
-
 check_brms(is_reactance)
 DHARMa.check_brms.all(is_reactance, integer = FALSE)
+```
 
+
+```{r check_is_reactance_priorsense, cache=TRUE, cache.extra=c(is_reactance_digest, do_priorsense)}
+if (do_priorsense) {
+  gc()
+  priorsense::powerscale_sensitivity(is_reactance, variable = priorsense_vars)
+  priorsense::powerscale_plot_dens(is_reactance, variable = priorsense_vars)
+  priorsense::powerscale_plot_ecdf(is_reactance, variable = priorsense_vars)
+  priorsense::powerscale_plot_quantities(is_reactance, variable = priorsense_vars)
+}
 
 ```
 
-```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=is_reactance_digest}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(is_reactance_digest, report_function_hash)}
 
 summarize_brms(
   is_reactance, 
@@ -1240,9 +1307,7 @@ hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
 
 # Report All Models
 
-```{r report_sidebyside, results = 'asis', cache=TRUE, cache.extra=is_reactance_digest}
-
-stats_to_report <- c('SE', 'CI', 'pd')
+```{r report_sidebyside, results = 'asis'}
 
 process_model_component <- function(obj) {
   # Convert to string, modify, and evaluate
@@ -1261,7 +1326,7 @@ all_models <- report_side_by_side(
   reactance_ordinal,
   is_reactance,
   
-  stats_to_report = stats_to_report,
+  stats_to_report = c('CI', 'pd'),
   
   model_rows_random = process_model_component(model_rows_random),
   model_rows_fixed = process_model_component(model_rows_fixed),
