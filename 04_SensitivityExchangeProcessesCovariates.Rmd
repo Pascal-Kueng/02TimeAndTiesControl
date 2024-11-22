@@ -105,6 +105,7 @@ summary(df_double$pushing)
 ```
 
 
+
 # Modelling
 
 ```{r set_report_order_persuasion}
@@ -122,6 +123,7 @@ model_rows_fixed <- c(
     'day', 
     'weartime_self_cw',
     
+    'planPlan',
     'support_self_cw',
     'support_partner_cw',
     'isWeekendWeekend',
@@ -190,6 +192,7 @@ model_rownames_fixed <- c(
     "Day", 
     "Daily weartime",
     
+    'Actionplan',
     'Daily support received',
     "Daily support provided (partner's view)",
     'Is a Weekend',
@@ -246,19 +249,19 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 ```{r parameters_for_printing}
 
 rows_to_pack <- list(
-  "Within-Person Effects" = c(2,14),
-  "Between-Person Effects" = c(15,25),
-  "Random Effects" = c(26, 32), 
-  "Additional Parameters" = c(33,33)
+  "Within-Person Effects" = c(2,15),
+  "Between-Person Effects" = c(16,26),
+  "Random Effects" = c(27, 33), 
+  "Additional Parameters" = c(34,34)
   )
 
 
 rows_to_pack_ordinal <- list(
   "Intercepts" = c(1,6),
-  "Within-Person Effects" = c(2+5,14+5),
-  "Between-Person Effects" = c(15+5,25+5),
-  "Random Effects" = c(26+5, 32+5), 
-  "Additional Parameters" = c(33+5,33+6)
+  "Within-Person Effects" = c(2+5,15+5),
+  "Between-Person Effects" = c(16+5,26+5),
+  "Random Effects" = c(27+5, 33+5), 
+  "Additional Parameters" = c(34+5,34+6)
   )
 
 
@@ -281,7 +284,8 @@ model_rows_fixed_hu <- c(
     'pushing_partner_cw', 
     'day', 
     'weartime_self_cw',
-    
+  
+    'planPlan',
     'support_self_cw',
     'support_partner_cw',
     'isWeekendWeekend',
@@ -312,7 +316,8 @@ model_rows_fixed_hu <- c(
     'hu_pushing_partner_cw', 
     'hu_day', 
     'hu_weartime_self_cw',
-    
+
+    'hu_planPlan',
     'hu_support_self_cw',
     'hu_support_partner_cw',
     'hu_isWeekendWeekend',
@@ -390,7 +395,8 @@ model_rownames_fixed_hu <- c(
     "Daily pushing utilized (partner's view)", 
     "Day", 
     "Daily weartime",
-    
+
+    'Actionplan',
     'Daily support received',
     "Daily support provided (partner's view)",
     'Is a Weekend',
@@ -421,7 +427,8 @@ model_rownames_fixed_hu <- c(
     "Hu Daily pushing utilized (partner's view)", 
     "Hu Day", 
     "Hu Daily weartime",
-    
+
+    'Hu Actionplan',
     'Hu Daily support received',
     "Hu Daily support provided (partner's view)",
     'Hu Is a Weekend',
@@ -489,29 +496,28 @@ model_rownames_random_hu_ordinal <- c(model_rownames_random_hu,'disc')
 ```{r parameters_for_printing_hu}
 
 rows_to_pack_hu <- list(
-  "Conditional Within-Person Effects" = c(3,15),
-  "Conditional Between-Person Effects" = c(16,26),
+  "Conditional Within-Person Effects" = c(3,16),
+  "Conditional Between-Person Effects" = c(17,27),
   
-  "Hurdle Within-Person Effects" = c(27,39),
-  "Hurdle Between-Person Effects" = c(40,50),
+  "Hurdle Within-Person Effects" = c(28,41),
+  "Hurdle Between-Person Effects" = c(42,52),
   
-  "Random Effects" = c(51, 64), 
-  "Additional Parameters" = c(65,65)
+  "Random Effects" = c(53, 66), 
+  "Additional Parameters" = c(67,67)
   )
 
 rows_to_pack_hu_ordinal <- list(
-  "Conditional Within-Person Effects" = c(3+5,15+5),
-  "Conditional Between-Person Effects" = c(16+5,26+5),
+  "Conditional Within-Person Effects" = c(3+5,16+5),
+  "Conditional Between-Person Effects" = c(17+5,27+5),
   
-  "Hurdle Within-Person Effects" = c(27+5,39+5),
-  "Hurdle Between-Person Effects" = c(40+5,50+5),
+  "Hurdle Within-Person Effects" = c(28+5,41+5),
+  "Hurdle Between-Person Effects" = c(42+5,52+5),
   
-  "Random Effects" = c(51+5, 64+5), 
-  "Additional Parameters" = c(65+5,65+6)
+  "Random Effects" = c(53+5, 66+5), 
+  "Additional Parameters" = c(67+5,67+6)
   )
 
 ```
-
 
 ## Self-Reported MVPA
 
@@ -618,7 +624,7 @@ pa_sub_digest <- digest::digest(pa_sub)
 
 
 
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300}
 
 # summarize with rope range for hurdle part
 summary_pa_sub_hurdle <- summarize_brms(
@@ -793,7 +799,7 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 ```
 
 
-```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=c(pa_obj_log_digest, report_function_hash)}
+```{r report_pa_obj_log_g, results='asis'}
 
 # rope range for lognormal model
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
@@ -904,7 +910,7 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 ```
 
 
-```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(mood_gauss_digest, report_function_hash)}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   mood_gauss, 
@@ -1018,7 +1024,7 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 ```
 
 
-```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(reactance_ordinal_digest, report_function_hash)}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   reactance_ordinal,
@@ -1148,7 +1154,7 @@ is_reactance_digest <- digest::digest(is_reactance)
 
 
 
-```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(is_reactance_digest, report_function_hash)}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   is_reactance, 

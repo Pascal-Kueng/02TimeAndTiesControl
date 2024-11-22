@@ -536,13 +536,7 @@ pa_sub_digest <- digest::digest(pa_sub)
 ```
 
 
-```{r check_pa_sub_lognormal, cache=TRUE, cache.extra=pa_sub_digest}
-check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
-```
-
-
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300}
 
 # summarize with rope range for hurdle part
 summary_pa_sub_hurdle <- summarize_brms(
@@ -636,54 +630,7 @@ plot(
 ```
 
 
-
-```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
-
-conds_eff <- conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'persuasion_self_cw',
-    'persuasion_partner_cw',
-    'pressure_self_cw',
-    'pressure_partner_cw'
-  ),
-  x_label = c(
-    'Received Persuasion',
-    'Exerted Persuasion',
-    'Received Pressure',
-    'Exerted Pressure'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  y_limits = c(0, 100),
-  y_label = "Same-Day MVPA",
-  y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
-  , filter_quantiles = .9995
-  , font_family = 'Candara'
-)
-
-print(conds_eff)
-
-```
-**Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
-The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
-
-
 ## Device Based MVPA 
-
-```{r explore_pa_obj_dist}
-
-range(df_double$pa_obj, na.rm = T) 
-
-hist(df_double$pa_obj, breaks = 50)
-
-df_double$pa_obj_log <- log(df_double$pa_obj)
-
-hist(df_double$pa_obj_log, breaks = 50)
-
-```
-
-
 
 ### Lognormal Model
 
@@ -747,14 +694,8 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 ```
 
 
-```{r check_pa_obj_log_g, cache=TRUE, cache.extra=pa_obj_log_digest}
-check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
-```
 
-
-
-```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=c(pa_obj_log_digest, report_function_hash)}
+```{r report_pa_obj_log_g, results='asis'}
 
 # rope range for lognormal model
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
@@ -792,13 +733,6 @@ plot(
 
 
 ## Affect
-
-```{r explore_aff_dist}
-
-range(df_double$aff, na.rm = T)
-hist(df_double$aff, breaks = 15)
-
-```
 
 ### Gaussian
 ```{r mood_gauss, results='hide', results='hide', message=FALSE}
@@ -860,14 +794,8 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 ```
 
 
-```{r check_mood_gauss, cache=TRUE, cache.extra=mood_gauss_digest}
-check_brms(mood_gauss, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood_gauss, integer = FALSE)
-```
 
-
-
-```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(mood_gauss_digest, report_function_hash)}
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   mood_gauss, 
@@ -897,16 +825,6 @@ plot(
 
 
 ## Reactance
-
-```{r investigatee_reactance}
-
-range(df_double$reactance, na.rm = T) 
-hist(df_double$reactance, breaks = 7) 
-
-hist(log(df_double$reactance+0.1), breaks = 10)
-
-```
-
 
 ### Ordinal
 
@@ -973,13 +891,8 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 ```
 
 
-```{r check_reactance_ordinal, cache=TRUE, cache.extra=reactance_ordinal_digest}
-check_brms(reactance_ordinal)
-DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
-```
 
-
-```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(reactance_ordinal_digest, report_function_hash)}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1096,14 +1009,8 @@ is_reactance_digest <- digest::digest(is_reactance)
 
 ```
 
-```{r check_is_reactance, cache=TRUE, cache.extra=is_reactance_digest}
-check_brms(is_reactance)
-DHARMa.check_brms.all(is_reactance, integer = FALSE)
-```
 
-
-
-```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(is_reactance_digest, report_function_hash)}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   is_reactance, 
@@ -1264,14 +1171,9 @@ pa_sub_digest <- digest::digest(pa_sub)
 ```
 
 
-```{r check_pa_sub_lognormal_pushingonly, cache=TRUE, cache.extra=pa_sub_digest}
-check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
-```
 
 
-
-```{r report_pa_sub_lognormal_pushingonly, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
+```{r report_pa_sub_lognormal_pushingonly, results='asis', fig.width=8, fig.height=7, dpi=300}
 
 # summarize with rope range for hurdle part
 summary_pa_sub_hurdle <- summarize_brms(
@@ -1361,51 +1263,7 @@ plot(
 ```
 
 
-
-```{r report_pa_sub_lognormald_pushingonly, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
-
-conds_eff <- conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'pushing_self_cw',
-    'pushing_partner_cw'
-  ),
-  x_label = c(
-    'Received Plan-Related Pushing',
-    'Exerted Plan-Related Pushing'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  y_limits = c(0, 100),
-  y_label = "Same-Day MVPA",
-  y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
-  , filter_quantiles = .9995
-  , font_family = 'Candara'
-)
-
-print(conds_eff)
-
-```
-**Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
-The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
-
-
-
 ## Device Based MVPA 
-
-```{r explore_pa_obj_dist_pushingonly}
-
-range(df_double$pa_obj, na.rm = T) 
-
-hist(df_double$pa_obj, breaks = 50)
-
-df_double$pa_obj_log <- log(df_double$pa_obj)
-
-hist(df_double$pa_obj_log, breaks = 50)
-
-```
-
-
 
 ### Lognormal Model
 
@@ -1466,14 +1324,7 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 ```
 
 
-```{r check_pa_obj_log_g_pushingonly, cache=TRUE, cache.extra=pa_obj_log_digest}
-check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
-```
-
-
-
-```{r report_pa_obj_log_g_pushingonly, results='asis', cache=TRUE, cache.extra=c(pa_obj_log_digest, report_function_hash)}
+```{r report_pa_obj_log_g_pushingonly, results='asis'}
 
 # rope range for lognormal model
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
@@ -1511,13 +1362,6 @@ plot(
 
 
 ## Affect
-
-```{r explore_aff_dist_pushingonly}
-
-range(df_double$aff, na.rm = T)
-hist(df_double$aff, breaks = 15)
-
-```
 
 ### Gaussian
 ```{r mood_gauss_pushingonly, results='hide', results='hide', message=FALSE}
@@ -1575,13 +1419,8 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 ```
 
 
-```{r check_mood_gauss_pushingonly, cache=TRUE, cache.extra=mood_gauss_digest}
-check_brms(mood_gauss, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood_gauss, integer = FALSE)
-```
 
-
-```{r report_mood_gauss_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(mood_gauss_digest, report_function_hash)}
+```{r report_mood_gauss_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   mood_gauss, 
@@ -1619,15 +1458,6 @@ conditional_spaghetti(
 
 
 ## Reactance
-
-```{r investigatee_reactance_pushingonly}
-
-range(df_double$reactance, na.rm = T) 
-hist(df_double$reactance, breaks = 7) 
-
-hist(log(df_double$reactance+0.1), breaks = 10)
-
-```
 
 
 ### Ordinal
@@ -1691,14 +1521,8 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 ```
 
 
-```{r check_reactance_ordinal_pushingonly, cache=TRUE, cache.extra=reactance_ordinal_digest}
-check_brms(reactance_ordinal)
-DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
-```
 
-
-
-```{r report_reactance_ordinal_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(reactance_ordinal_digest, report_function_hash)}
+```{r report_reactance_ordinal_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   reactance_ordinal, 
@@ -1801,14 +1625,9 @@ is_reactance_digest <- digest::digest(is_reactance)
 
 ```
 
-```{r check_is_reactance_pushingonly, cache=TRUE, cache.extra=is_reactance_digest}
-check_brms(is_reactance)
-DHARMa.check_brms.all(is_reactance, integer = FALSE)
-```
 
 
-
-```{r report_is_reactance_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(is_reactance_digest, report_function_hash)}
+```{r report_is_reactance_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summarize_brms(
   is_reactance, 
