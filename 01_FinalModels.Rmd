@@ -120,6 +120,7 @@ model_rows_fixed <- c(
     'pushing_self_cw', 
     'pushing_partner_cw', 
     'day', 
+    'planPlan',
     'weartime_self_cw',
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -176,6 +177,7 @@ model_rownames_fixed <- c(
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
     "Day", 
+    "Actionplan",
     "Daily weartime",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
@@ -223,19 +225,19 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 ```{r parameters_for_printing}
 
 rows_to_pack <- list(
-  "Within-Person Effects" = c(2,9),
-  "Between-Person Effects" = c(10,16),
-  "Random Effects" = c(17, 23), 
-  "Additional Parameters" = c(24,24)
+  "Within-Person Effects" = c(2,10),
+  "Between-Person Effects" = c(11,17),
+  "Random Effects" = c(18, 24), 
+  "Additional Parameters" = c(25,25)
   )
 
 
 rows_to_pack_ordinal <- list(
   "Intercepts" = c(1,6),
-  "Within-Person Effects" = c(2+5,9+5),
-  "Between-Person Effects" = c(10+5,16+5),
-  "Random Effects" = c(17+5, 23+5), 
-  "Additional Parameters" = c(24+5,24+6)
+  "Within-Person Effects" = c(2+5,10+5),
+  "Between-Person Effects" = c(11+5,17+5),
+  "Random Effects" = c(18+5, 24+5), 
+  "Additional Parameters" = c(25+5,25+6)
   )
 
 ```
@@ -256,6 +258,7 @@ model_rows_fixed_hu <- c(
     'pushing_self_cw', 
     'pushing_partner_cw', 
     'day', 
+    'planPlan',
     'weartime_self_cw',
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -342,6 +345,7 @@ model_rownames_fixed_hu <- c(
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
     "Day", 
+    "Actionplan",
     "Daily weartime",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
@@ -420,26 +424,26 @@ model_rownames_random_hu_ordinal <- c(model_rownames_random_hu,'disc')
 ```{r parameters_for_printing_hu}
 
 rows_to_pack_hu <- list(
-  "Conditional Within-Person Effects" = c(3,10),
-  "Conditional Between-Person Effects" = c(11,17),
+  "Conditional Within-Person Effects" = c(3,11),
+  "Conditional Between-Person Effects" = c(12,18),
   
-  "Hurdle Within-Person Effects" = c(18,25),
-  "Hurdle Between-Person Effects" = c(26,32),
+  "Hurdle Within-Person Effects" = c(19,27),
+  "Hurdle Between-Person Effects" = c(28,34),
   
-  "Random Effects" = c(33, 46), 
-  "Additional Parameters" = c(47,47)
+  "Random Effects" = c(35, 48), 
+  "Additional Parameters" = c(49,49)
   )
 
 rows_to_pack_hu_ordinal <- list(
   "Intercepts" = c(1,7),
-  "Conditional Within-Person Effects" = c(3+5,10+5),
-  "Conditional Between-Person Effects" = c(11+5,17+5),
+  "Conditional Within-Person Effects" = c(3+5,11+5),
+  "Conditional Between-Person Effects" = c(12+5,18+5),
   
-  "Hurdle Within-Person Effects" = c(18+5,25+5),
-  "Hurdle Between-Person Effects" = c(26+5,32+5),
+  "Hurdle Within-Person Effects" = c(19+5,27+5),
+  "Hurdle Between-Person Effects" = c(28+5,34+5),
   
-  "Random Effects" = c(33+5, 46+5), 
-  "Additional Parameters" = c(47+5,47+6)
+  "Random Effects" = c(35+5, 48+5), 
+  "Additional Parameters" = c(49+5,49+6)
   )
 
 ```
@@ -470,6 +474,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
+    plan +
     day + 
     
     # Random effects
@@ -485,6 +490,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
+    plan +
     day + 
     
     # Random effects
@@ -780,6 +786,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
+    plan +
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
@@ -909,6 +916,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
+    plan +
     day +
     
     # Random effects
@@ -1047,6 +1055,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
+    plan +
     day +
     
     # Random effects
@@ -1189,6 +1198,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
+    plan +
     day +
     
     # Random effects
