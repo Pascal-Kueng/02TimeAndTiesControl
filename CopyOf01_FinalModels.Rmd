@@ -120,7 +120,8 @@ model_rows_fixed <- c(
     'pushing_self_cw', 
     'pushing_partner_cw', 
     'day', 
-    'planPlan',
+    'plan_selfPlan',
+    'plan_partnerPlan',
     'weartime_self_cw',
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -177,7 +178,8 @@ model_rownames_fixed <- c(
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
     "Day", 
-    "Actionplan",
+    "Own Actionplan",
+    'Partner Actionplan',
     "Daily weartime",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
@@ -258,7 +260,8 @@ model_rows_fixed_hu <- c(
     'pushing_self_cw', 
     'pushing_partner_cw', 
     'day', 
-    'planPlan',
+    'plan_selfPlan',
+    'plan_partnerPlan',
     'weartime_self_cw',
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -279,7 +282,8 @@ model_rows_fixed_hu <- c(
     'hu_pushing_self_cw', 
     'hu_pushing_partner_cw', 
     'hu_day', 
-    'hu_planPlan',
+    'hu_plan_selfPlan',
+    'hu_plan_partnerPlan',
     'hu_weartime_self_cw',
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -346,7 +350,8 @@ model_rownames_fixed_hu <- c(
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
     "Day", 
-    "Actionplan",
+    "Own actionplan",
+    'Partner actionplan', 
     "Daily weartime",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
@@ -367,7 +372,8 @@ model_rownames_fixed_hu <- c(
     "Hu Daily pushing experienced", 
     "Hu Daily pushing utilized (partner's view)", 
     "Hu Day", 
-    "Hu Actionplan",
+    "Hu Own actionplan",
+    'Hu Partner actionplan', 
     "Hu Daily weartime",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
@@ -426,28 +432,26 @@ model_rownames_random_hu_ordinal <- c(model_rownames_random_hu,'disc')
 ```{r parameters_for_printing_hu}
 
 rows_to_pack_hu <- list(
-  "Conditional Within-Person Effects" = c(3,11),
-  "Conditional Between-Person Effects" = c(12,18),
+  "Conditional Within-Person Effects" = c(3,12),
+  "Conditional Between-Person Effects" = c(13,19),
   
-  "Hurdle Within-Person Effects" = c(19,27),
-  "Hurdle Between-Person Effects" = c(28,34),
+  "Hurdle Within-Person Effects" = c(20,29),
+  "Hurdle Between-Person Effects" = c(30,36),
   
-  "Random Effects" = c(35, 48), 
-  "Additional Parameters" = c(49,49)
+  "Random Effects" = c(37, 50), 
+  "Additional Parameters" = c(51,51)
   )
 
 rows_to_pack_hu_ordinal <- list(
-  "Intercepts" = c(1,7),
-  "Conditional Within-Person Effects" = c(3+5,11+5),
-  "Conditional Between-Person Effects" = c(12+5,18+5),
+  "Conditional Within-Person Effects" = c(3+5,12+5),
+  "Conditional Between-Person Effects" = c(13+5,19+5),
   
-  "Hurdle Within-Person Effects" = c(19+5,27+5),
-  "Hurdle Between-Person Effects" = c(28+5,34+5),
+  "Hurdle Within-Person Effects" = c(20+5,29+5),
+  "Hurdle Between-Person Effects" = c(30+5,36+5),
   
-  "Random Effects" = c(35+5, 48+5), 
-  "Additional Parameters" = c(49+5,49+6)
+  "Random Effects" = c(37+5, 50+5), 
+  "Additional Parameters" = c(51+5,51+6)
   )
-
 ```
 
 
@@ -476,7 +480,8 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    plan_self +
+    plan_partner +
     day + 
     
     # Random effects
@@ -492,7 +497,8 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    plan_self +
+    plan_partner +
     day + 
     
     # Random effects
@@ -788,7 +794,8 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    plan_self +
+    plan_partner +
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
@@ -918,7 +925,8 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    plan_self +
+    plan_partner +
     day +
     
     # Random effects
@@ -1057,7 +1065,8 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    plan_self +
+    plan_partner +
     day +
     
     # Random effects
@@ -1200,7 +1209,8 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    plan_self +
+    plan_partner +
     day +
     
     # Random effects
