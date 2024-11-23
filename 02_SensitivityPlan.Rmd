@@ -123,7 +123,8 @@ model_rows_fixed <- c(
     'day', 
     'weartime_self_cw',
     
-    'planPlan',
+    'plan_selfPlan',
+    'plan_partnerPlan',
     'support_self_cw',
     'support_partner_cw',
     'isWeekendWeekend',
@@ -192,7 +193,8 @@ model_rownames_fixed <- c(
     "Day", 
     "Daily weartime",
     
-    'Actionplan',
+    'Own Actionplan',
+    'Partner Actionplan',
     'Daily support received',
     "Daily support provided (partner's view)",
     'Is a Weekend',
@@ -285,7 +287,8 @@ model_rows_fixed_hu <- c(
     'day', 
     'weartime_self_cw',
   
-    'planPlan',
+    'plan_selfPlan',
+    'plan_partnerPlan',
     'support_self_cw',
     'support_partner_cw',
     'isWeekendWeekend',
@@ -317,7 +320,8 @@ model_rows_fixed_hu <- c(
     'hu_day', 
     'hu_weartime_self_cw',
 
-    'hu_planPlan',
+    'hu_plan_selfPlan',
+    'hu_plan_partnerPlan',
     'hu_support_self_cw',
     'hu_support_partner_cw',
     'hu_isWeekendWeekend',
@@ -396,7 +400,8 @@ model_rownames_fixed_hu <- c(
     "Day", 
     "Daily weartime",
 
-    'Actionplan',
+    'Own Actionplan',
+    'Partner Actionplan',
     'Daily support received',
     "Daily support provided (partner's view)",
     'Is a Weekend',
@@ -428,7 +433,8 @@ model_rownames_fixed_hu <- c(
     "Hu Day", 
     "Hu Daily weartime",
 
-    'Hu Actionplan',
+    'Hu Own Actionplan',
+    'Hu Partner Actionplan',
     'Hu Daily support received',
     "Hu Daily support provided (partner's view)",
     'Hu Is a Weekend',
@@ -496,25 +502,25 @@ model_rownames_random_hu_ordinal <- c(model_rownames_random_hu,'disc')
 ```{r parameters_for_printing_hu}
 
 rows_to_pack_hu <- list(
-  "Conditional Within-Person Effects" = c(3,16),
-  "Conditional Between-Person Effects" = c(17,27),
+  "Conditional Within-Person Effects" = c(3,17),
+  "Conditional Between-Person Effects" = c(18,28),
   
-  "Hurdle Within-Person Effects" = c(28,41),
-  "Hurdle Between-Person Effects" = c(42,52),
+  "Hurdle Within-Person Effects" = c(29,42),
+  "Hurdle Between-Person Effects" = c(44,54),
   
-  "Random Effects" = c(53, 66), 
-  "Additional Parameters" = c(67,67)
+  "Random Effects" = c(55, 68), 
+  "Additional Parameters" = c(69,69)
   )
 
 rows_to_pack_hu_ordinal <- list(
-  "Conditional Within-Person Effects" = c(3+5,16+5),
-  "Conditional Between-Person Effects" = c(17+5,27+5),
+  "Conditional Within-Person Effects" = c(3+5,17+5),
+  "Conditional Between-Person Effects" = c(18+5,28+5),
   
-  "Hurdle Within-Person Effects" = c(28+5,41+5),
-  "Hurdle Between-Person Effects" = c(42+5,52+5),
+  "Hurdle Within-Person Effects" = c(29+5,42+5),
+  "Hurdle Between-Person Effects" = c(44+5,54+5),
   
-  "Random Effects" = c(53+5, 66+5), 
-  "Additional Parameters" = c(67+5,67+6)
+  "Random Effects" = c(55+5, 68+5), 
+  "Additional Parameters" = c(69+5,69+6)
   )
 
 ```
@@ -533,7 +539,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     #support_self_cw + support_partner_cw + 
-    plan +
+    plan_self + plan_partner +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -557,7 +563,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     #support_self_cw + support_partner_cw + 
-    plan +
+    plan_self + plan_partner +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -736,7 +742,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     #support_self_cw + support_partner_cw + 
-    plan +
+    plan_self + plan_partner +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -849,7 +855,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     #support_self_cw + support_partner_cw + 
-    plan +
+    plan_self + plan_partner +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -962,7 +968,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     #support_self_cw + support_partner_cw + 
-    plan +
+    plan_self + plan_partner +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -1089,7 +1095,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     #support_self_cw + support_partner_cw + 
-    plan +
+    plan_self + plan_partner +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +

@@ -254,6 +254,11 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     # Plan as a factor
     dataframe$plan <- factor(dataframe$plan, levels = c(0,1), labels = c("No plan", "Plan"))
     
+    if ("plan_self" %in% names(dataframe)) {
+      dataframe$plan_self <- factor(dataframe$plan_self, levels = c(0,1), labels = c("No plan", "Plan"))
+      dataframe$plan_partner <- factor(dataframe$plan_partner, levels = c(0,1), labels = c("No plan", "Plan"))
+    }
+    
     # Study Group as a Factor
     dataframe$studyGroup <- factor(dataframe$studyGroup - 1, levels = c(0,1,2), labels = c("Allways inerventions", "First 3 weeks interventions", "last 3 weeks interventions"))
     
