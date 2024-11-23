@@ -57,6 +57,14 @@ shutdown = FALSE
 report_ordinal = FALSE
 report_hurdle = TRUE
 do_priorsense = FALSE
+get_bayesfactor = FALSE
+check_models = FALSE # ! set to TRUE !
+
+stats_to_report = ifelse(
+  get_bayesfactor, 
+  c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'), 
+  c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
+)
 
 options(
   dplyr.print_max = 100, 
@@ -88,7 +96,7 @@ warmup = 1000 # 2000
 
 ################################################################
 
-suffix = as.character(iterations)
+suffix = paste0('_final_with_plan_', as.character(iterations))
 
 
 ```
@@ -540,7 +548,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 42,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_finalwithplan_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal", suffix))
   #, file_refit = 'always'
 )
 
@@ -552,8 +560,10 @@ pa_sub_digest <- digest::digest(pa_sub)
 
 
 ```{r check_pa_sub_lognormal, cache=TRUE, cache.extra=pa_sub_digest}
-check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
+if (check_models) {
+  check_brms(pa_sub, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
+}
 ```
 
 
@@ -608,6 +618,7 @@ rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summary_pa_sub_continuous <- summarize_brms(
   pa_sub, 
+  stats_to_report = stats_to_report,
   rope_range = rope_range_continuous,
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
@@ -835,7 +846,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_finalwithplan_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix))
 )
 
 pa_obj_log_digest <- digest::digest(pa_obj_log)
@@ -845,8 +856,10 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 
 
 ```{r check_pa_obj_log_g, cache=TRUE, cache.extra=pa_obj_log_digest}
-check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
+if (check_models) {
+  check_brms(pa_obj_log, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
+}
 ```
 
 
@@ -871,6 +884,7 @@ rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summarize_brms(
   pa_obj_log, 
+  stats_to_report = stats_to_report,
   rope_range = rope_range_log,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
@@ -963,7 +977,7 @@ mood_gauss <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_gauss_finalwithplan_", suffix))
+  file = file.path("models_cache_brms", paste0("mood_gauss", suffix))
 )
 
 mood_gauss_digest <- digest::digest(mood_gauss)
@@ -973,8 +987,10 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 
 
 ```{r check_mood_gauss, cache=TRUE, cache.extra=mood_gauss_digest}
-check_brms(mood_gauss, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood_gauss, integer = FALSE)
+if (check_models) {
+  check_brms(mood_gauss, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_gauss, integer = FALSE)
+}
 ```
 
 
@@ -994,6 +1010,7 @@ if (do_priorsense) {
 
 summarize_brms(
   mood_gauss, 
+  stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -1102,7 +1119,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777
-  , file = file.path("models_cache_brms", paste0("reactance_ordinal_finalwithplan_", suffix))
+  , file = file.path("models_cache_brms", paste0("reactance_ordinal", suffix))
 )
 
 
@@ -1113,8 +1130,10 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 
 
 ```{r check_reactance_ordinal, cache=TRUE, cache.extra=reactance_ordinal_digest}
-check_brms(reactance_ordinal)
-DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
+if (check_models) {
+  check_brms(reactance_ordinal)
+  DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
+}
 ```
 
 
@@ -1134,6 +1153,7 @@ if (do_priorsense) {
 
 summarize_brms(
   reactance_ordinal, 
+  stats_to_report = stats_to_report,
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_ordinal,
   model_rows_random = model_rows_random_ordinal,
@@ -1248,7 +1268,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_finalwithplan_", suffix))
+  file = file.path("models_cache_brms", paste0("is_reactance", suffix))
   #, file_refit = 'always'
 )
 
@@ -1257,8 +1277,10 @@ is_reactance_digest <- digest::digest(is_reactance)
 ```
 
 ```{r check_is_reactance, cache=TRUE, cache.extra=is_reactance_digest}
-check_brms(is_reactance)
-DHARMa.check_brms.all(is_reactance, integer = FALSE)
+if (check_models) {
+  check_brms(is_reactance)
+  DHARMa.check_brms.all(is_reactance, integer = FALSE)
+}
 ```
 
 
@@ -1277,6 +1299,7 @@ if (do_priorsense) {
 
 summarize_brms(
   is_reactance, 
+  stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
