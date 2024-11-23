@@ -85,8 +85,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 2000 # 12'000 per chain to achieve 40'000
-warmup = 1000 # 2000
+iterations = 12000 # 12'000 per chain to achieve 40'000
+warmup = 2000 # 2000
 
 # NO AR!!!
 #corstr = 'ar'
@@ -767,13 +767,6 @@ print('done')
 
 
 
-```{r pa_sub_lognormal_marginaleffects, cache=TRUE, cache.extra=pa_sub_digest}
-
-marginaleffects::avg_predictions(pa_sub)
-
-```
-
-
 ## Device Based MVPA 
 
 ```{r explore_pa_obj_dist}
@@ -1043,12 +1036,6 @@ conditional_spaghetti(
 
 
 
-```{r mood_gauss_marginaleffects, cache=TRUE, cache.extra=mood_gauss_digest}
-
-marginaleffects::avg_predictions(mood_gauss)
-
-```
-
 ## Reactance
 
 ```{r investigatee_reactance}
@@ -1189,13 +1176,6 @@ conditional_spaghetti(
 ```
 
 
-
-```{r reactance_ordinal_marginaleffects, cache=TRUE, cache.extra=reactance_ordinal_digest}
-
-marginaleffects::avg_predictions(reactance_ordinal)
-
-```
-
 ### Binary 
 
 ```{r is_reactance, results='hide', message=FALSE}
@@ -1330,12 +1310,6 @@ conditional_spaghetti(
 
 ```
 
-
-```{r is_reactance_marginaleffects, cache=TRUE, cache.extra=is_reactance_digest}
-
-marginaleffects::avg_predictions(is_reactance)
-
-```
 
 ```{r testingdifferencecoefsbinary}
 

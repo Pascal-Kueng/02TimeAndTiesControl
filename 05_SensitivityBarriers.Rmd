@@ -88,7 +88,7 @@ warmup = 1000
 
 ################################################################
 
-suffix = paste0('_sensitivitySupport_', as.character(iterations))
+suffix = paste0('_sensitivityBarriers_', as.character(iterations))
 
 
 ```
@@ -645,12 +645,12 @@ prior1 <- c(
   , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
 )
 
-#brms::validate_prior(
-#  prior1, 
-#  formula = formula, 
-#  data = df_double, 
-#  family = hurdle_lognormal()
-#)
+brms::validate_prior(
+  prior1, 
+  formula = formula, 
+  data = df_double, 
+  family = hurdle_lognormal()
+)
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
