@@ -77,8 +77,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 12000 # 10'000 per chain to achieve 40'000
-warmup = 2000
+iterations = 2000 # 12'000 per chain to achieve 40'000
+warmup = 1000 # 2000
 
 # NO AR!!!
 #corstr = 'ar'
@@ -540,7 +540,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 42,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_finalwithplan_", suffix))
   #, file_refit = 'always'
 )
 
@@ -835,7 +835,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_finalwithplan_", suffix))
 )
 
 pa_obj_log_digest <- digest::digest(pa_obj_log)
@@ -963,7 +963,7 @@ mood_gauss <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_gauss_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("mood_gauss_finalwithplan_", suffix))
 )
 
 mood_gauss_digest <- digest::digest(mood_gauss)
@@ -1102,7 +1102,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777
-  , file = file.path("models_cache_brms", paste0("reactance_ordinal_NOARNOAR_", suffix))
+  , file = file.path("models_cache_brms", paste0("reactance_ordinal_finalwithplan_", suffix))
 )
 
 
@@ -1248,7 +1248,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_NOARNOAR_", suffix))
+  file = file.path("models_cache_brms", paste0("is_reactance_finalwithplan_", suffix))
   #, file_refit = 'always'
 )
 
@@ -1370,7 +1370,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = process_model_component(rows_to_pack),
-  file.path("Output", "AllModelsFinal.xlsx"), 
+  file.path("Output", "AllModelsFinalWithPlans.xlsx"), 
   merge_option = 'header', 
   simplify_2nd_row = TRUE,
   line_above_rows = c(1,2),
