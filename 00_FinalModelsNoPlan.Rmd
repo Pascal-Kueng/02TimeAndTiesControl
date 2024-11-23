@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - Final Models"
+title: "APIM - Control - Final Models (No Plan)"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -57,6 +57,14 @@ shutdown = FALSE
 report_ordinal = FALSE
 report_hurdle = TRUE
 do_priorsense = FALSE
+get_bayesfactor = FALSE
+check_models = FALSE # ! set to TRUE !
+
+stats_to_report = ifelse(
+  get_bayesfactor, 
+  c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'), 
+  c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
+)
 
 options(
   dplyr.print_max = 100, 
@@ -77,8 +85,8 @@ options(
 
 ####################### Model parameters #######################
 
-iterations = 12000 # 10'000 per chain to achieve 40'000
-warmup = 2000
+iterations = 2000 # 12'000 per chain to achieve 40'000
+warmup = 1000 # 2000
 
 # NO AR!!!
 #corstr = 'ar'
@@ -88,7 +96,7 @@ warmup = 2000
 
 ################################################################
 
-suffix = as.character(iterations)
+suffix = paste0('_final_no_plan_', as.character(iterations))
 
 
 ```
@@ -480,8 +488,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan_self +
-    plan_partner +
+    #plan_self + plan_partner +
     day + 
     
     # Random effects
@@ -497,8 +504,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan_self +
-    plan_partner +
+    #plan_self + plan_partner +
     day + 
     
     # Random effects
@@ -542,7 +548,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 42,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal", suffix))
   #, file_refit = 'always'
 )
 
@@ -554,8 +560,10 @@ pa_sub_digest <- digest::digest(pa_sub)
 
 
 ```{r check_pa_sub_lognormal, cache=TRUE, cache.extra=pa_sub_digest}
-check_brms(pa_sub, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
+if (check_models) {
+  check_brms(pa_sub, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
+}
 ```
 
 
@@ -610,6 +618,7 @@ rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summary_pa_sub_continuous <- summarize_brms(
   pa_sub, 
+  stats_to_report = stats_to_report,
   rope_range = rope_range_continuous,
   model_rows_fixed = model_rows_fixed_hu,
   model_rows_random = model_rows_random_hu,
@@ -752,6 +761,7 @@ for (i in 1:length(conds_eff)) {
   )
 }
 
+print('done')
 
 ```
 
@@ -794,8 +804,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan_self +
-    plan_partner +
+    #plan_self + plan_partner +
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
@@ -838,7 +847,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix))
 )
 
 pa_obj_log_digest <- digest::digest(pa_obj_log)
@@ -848,8 +857,10 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 
 
 ```{r check_pa_obj_log_g, cache=TRUE, cache.extra=pa_obj_log_digest}
-check_brms(pa_obj_log, log_pp_check = TRUE)
-DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
+if (check_models) {
+  check_brms(pa_obj_log, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
+}
 ```
 
 
@@ -874,6 +885,7 @@ rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summarize_brms(
   pa_obj_log, 
+  stats_to_report = stats_to_report,
   rope_range = rope_range_log,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
@@ -925,8 +937,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan_self +
-    plan_partner +
+    #plan_self + plan_partner +
     day +
     
     # Random effects
@@ -967,7 +978,7 @@ mood_gauss <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_gauss_NOAR", suffix))
+  file = file.path("models_cache_brms", paste0("mood_gauss", suffix))
 )
 
 mood_gauss_digest <- digest::digest(mood_gauss)
@@ -977,8 +988,10 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 
 
 ```{r check_mood_gauss, cache=TRUE, cache.extra=mood_gauss_digest}
-check_brms(mood_gauss, log_pp_check = FALSE)
-DHARMa.check_brms.all(mood_gauss, integer = FALSE)
+if (check_models) {
+  check_brms(mood_gauss, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_gauss, integer = FALSE)
+}
 ```
 
 
@@ -998,6 +1011,7 @@ if (do_priorsense) {
 
 summarize_brms(
   mood_gauss, 
+  stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -1065,8 +1079,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan_self +
-    plan_partner +
+    #plan_self + plan_partner +
     day +
     
     # Random effects
@@ -1107,7 +1120,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777
-  , file = file.path("models_cache_brms", paste0("reactance_ordinal_NOARNOAR_", suffix))
+  , file = file.path("models_cache_brms", paste0("reactance_ordinal", suffix))
 )
 
 
@@ -1118,8 +1131,10 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 
 
 ```{r check_reactance_ordinal, cache=TRUE, cache.extra=reactance_ordinal_digest}
-check_brms(reactance_ordinal)
-DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
+if (check_models) {
+  check_brms(reactance_ordinal)
+  DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
+}
 ```
 
 
@@ -1139,6 +1154,7 @@ if (do_priorsense) {
 
 summarize_brms(
   reactance_ordinal, 
+  stats_to_report = stats_to_report,
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_ordinal,
   model_rows_random = model_rows_random_ordinal,
@@ -1209,8 +1225,7 @@ formula <- bf(
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    plan_self +
-    plan_partner +
+    #plan_self + plan_partner +
     day +
     
     # Random effects
@@ -1254,7 +1269,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_NOARNOAR_", suffix))
+  file = file.path("models_cache_brms", paste0("is_reactance", suffix))
   #, file_refit = 'always'
 )
 
@@ -1263,8 +1278,10 @@ is_reactance_digest <- digest::digest(is_reactance)
 ```
 
 ```{r check_is_reactance, cache=TRUE, cache.extra=is_reactance_digest}
-check_brms(is_reactance)
-DHARMa.check_brms.all(is_reactance, integer = FALSE)
+if (check_models) {
+  check_brms(is_reactance)
+  DHARMa.check_brms.all(is_reactance, integer = FALSE)
+}
 ```
 
 
@@ -1283,6 +1300,7 @@ if (do_priorsense) {
 
 summarize_brms(
   is_reactance, 
+  stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
@@ -1376,7 +1394,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = process_model_component(rows_to_pack),
-  file.path("Output", "AllModelsFinal.xlsx"), 
+  file.path("Output", paste0("AllModels", suffix, ".xlsx")), 
   merge_option = 'header', 
   simplify_2nd_row = TRUE,
   line_above_rows = c(1,2),
