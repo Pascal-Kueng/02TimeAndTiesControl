@@ -120,10 +120,10 @@ model_rows_fixed <- c(
     'pressure_partner_cw', 
     'pushing_self_cw', 
     'pushing_partner_cw', 
+    'planPlan',
     'day', 
     'weartime_self_cw',
     
-    'planPlan',
     'support_self_cw',
     'support_partner_cw',
     'isWeekendWeekend',
@@ -189,10 +189,10 @@ model_rownames_fixed <- c(
     "Daily pressure utilized (partner's view)", 
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
+    'Actionplan',
     "Day", 
     "Daily weartime",
     
-    'Actionplan',
     'Daily support received',
     "Daily support provided (partner's view)",
     'Is a Weekend',
@@ -282,10 +282,10 @@ model_rows_fixed_hu <- c(
     'pressure_partner_cw', 
     'pushing_self_cw', 
     'pushing_partner_cw', 
+    'planPlan',
     'day', 
     'weartime_self_cw',
   
-    'planPlan',
     'support_self_cw',
     'support_partner_cw',
     'isWeekendWeekend',
@@ -314,10 +314,10 @@ model_rows_fixed_hu <- c(
     'hu_pressure_partner_cw', 
     'hu_pushing_self_cw', 
     'hu_pushing_partner_cw', 
+    'hu_planPlan',
     'hu_day', 
     'hu_weartime_self_cw',
 
-    'hu_planPlan',
     'hu_support_self_cw',
     'hu_support_partner_cw',
     'hu_isWeekendWeekend',
@@ -393,10 +393,10 @@ model_rownames_fixed_hu <- c(
     "Daily pressure utilized (partner's view)", 
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
+    'Actionplan',
     "Day", 
     "Daily weartime",
 
-    'Actionplan',
     'Daily support received',
     "Daily support provided (partner's view)",
     'Is a Weekend',
@@ -425,10 +425,10 @@ model_rownames_fixed_hu <- c(
     "Hu Daily pressure utilized (partner's view)", 
     "Hu Daily pushing experienced", 
     "Hu Daily pushing utilized (partner's view)", 
+    'Hu Actionplan',
     "Hu Day", 
     "Hu Daily weartime",
 
-    'Hu Actionplan',
     'Hu Daily support received',
     "Hu Daily support provided (partner's view)",
     'Hu Is a Weekend',
@@ -519,8 +519,9 @@ rows_to_pack_hu_ordinal <- list(
 
 ```
 
-## Self-Reported MVPA
 
+
+## Self-Reported MVPA
 
 ### Hurdle Lognormal Model
 ```{r pa_sub_lognormal, results='hide'}
@@ -533,7 +534,6 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     support_self_cw + support_partner_cw + 
-    #plan +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -545,6 +545,7 @@ formula <- bf(
     support_self_cb + support_partner_cb + 
     #studyGroup +
     
+    plan +
     day + 
     
     # Random effects
@@ -557,7 +558,6 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     support_self_cw + support_partner_cw + 
-    #plan +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -569,6 +569,7 @@ formula <- bf(
     support_self_cb + support_partner_cb + 
     #studyGroup +
     
+    plan +
     day + 
     
     # Random effects
@@ -736,7 +737,6 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     support_self_cw + support_partner_cw + 
-    #plan +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -748,6 +748,7 @@ formula <- bf(
     support_self_cb + support_partner_cb + 
     #studyGroup +
     
+    plan +
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
@@ -849,7 +850,6 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     support_self_cw + support_partner_cw + 
-    #plan +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -861,6 +861,7 @@ formula <- bf(
     support_self_cb + support_partner_cb + 
     #studyGroup +
     
+    plan +
     day + 
     
     # Random effects
@@ -962,7 +963,6 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     support_self_cw + support_partner_cw + 
-    #plan +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -974,6 +974,7 @@ formula <- bf(
     support_self_cb + support_partner_cb + 
     #studyGroup +
     
+    plan +
     day + 
     
     # Random effects
@@ -1089,7 +1090,6 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     
     support_self_cw + support_partner_cw + 
-    #plan +
     #isWeekend + 
     #got_JITAI_self + 
     #skilled_support +
@@ -1101,6 +1101,7 @@ formula <- bf(
     support_self_cb + support_partner_cb + 
     #studyGroup +
     
+    plan +
     day + 
     
     # Random effects

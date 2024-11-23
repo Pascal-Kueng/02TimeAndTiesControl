@@ -279,6 +279,7 @@ model_rows_fixed_hu <- c(
     'hu_pushing_self_cw', 
     'hu_pushing_partner_cw', 
     'hu_day', 
+    'hu_planPlan',
     'hu_weartime_self_cw',
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -366,6 +367,7 @@ model_rownames_fixed_hu <- c(
     "Hu Daily pushing experienced", 
     "Hu Daily pushing utilized (partner's view)", 
     "Hu Day", 
+    "Hu Actionplan",
     "Hu Daily weartime",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
