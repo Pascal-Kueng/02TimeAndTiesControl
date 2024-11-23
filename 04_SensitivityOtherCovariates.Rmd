@@ -88,7 +88,7 @@ warmup = 1000
 
 ################################################################
 
-suffix = as.character(iterations)
+suffix = paste0('_sensitivityOtherCovariates_', as.character(iterations))
 
 
 ```
@@ -119,7 +119,8 @@ model_rows_fixed <- c(
     'pressure_partner_cw', 
     'pushing_self_cw', 
     'pushing_partner_cw', 
-    'planPlan',
+    'plan_selfPlan',
+    'plan_partnerPlan',
     'day', 
     'weartime_self_cw',
     
@@ -188,7 +189,8 @@ model_rownames_fixed <- c(
     "Daily pressure utilized (partner's view)", 
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
-    'Actionplan',
+    'Own actionplan',
+    'Partner actionplan',
     "Day", 
     "Daily weartime",
     
@@ -248,19 +250,19 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 ```{r parameters_for_printing}
 
 rows_to_pack <- list(
-  "Within-Person Effects" = c(2,15),
-  "Between-Person Effects" = c(16,26),
-  "Random Effects" = c(27, 33), 
-  "Additional Parameters" = c(34,34)
+  "Within-Person Effects" = c(2,16),
+  "Between-Person Effects" = c(17,27),
+  "Random Effects" = c(28, 34), 
+  "Additional Parameters" = c(35,35)
   )
 
 
 rows_to_pack_ordinal <- list(
   "Intercepts" = c(1,6),
-  "Within-Person Effects" = c(2+5,15+5),
-  "Between-Person Effects" = c(16+5,26+5),
-  "Random Effects" = c(27+5, 33+5), 
-  "Additional Parameters" = c(34+5,34+6)
+  "Within-Person Effects" = c(2+5,16+5),
+  "Between-Person Effects" = c(17+5,27+5),
+  "Random Effects" = c(28+5, 34+5), 
+  "Additional Parameters" = c(35+5,35+6)
   )
 
 
@@ -281,7 +283,8 @@ model_rows_fixed_hu <- c(
     'pressure_partner_cw', 
     'pushing_self_cw', 
     'pushing_partner_cw', 
-    'planPlan',
+    'plan_selfPlan',
+    'plan_partnerPlan',
     'day', 
     'weartime_self_cw',
   
@@ -313,7 +316,8 @@ model_rows_fixed_hu <- c(
     'hu_pressure_partner_cw', 
     'hu_pushing_self_cw', 
     'hu_pushing_partner_cw', 
-    'hu_planPlan',
+    'hu_plan_selfPlan',
+    'hu_plan_partnerPlan',
     'hu_day', 
     'hu_weartime_self_cw',
 
@@ -392,7 +396,8 @@ model_rownames_fixed_hu <- c(
     "Daily pressure utilized (partner's view)", 
     "Daily pushing experienced", 
     "Daily pushing utilized (partner's view)", 
-    'Actionplan',
+    'Own actionplan',
+    'Partner actionplan',
     "Day", 
     "Daily weartime",
 
@@ -424,7 +429,8 @@ model_rownames_fixed_hu <- c(
     "Hu Daily pressure utilized (partner's view)", 
     "Hu Daily pushing experienced", 
     "Hu Daily pushing utilized (partner's view)", 
-    'Hu Actionplan',
+    'Hu Own actionplan',
+    'Hu Partner actionplan',
     "Hu Day", 
     "Hu Daily weartime",
 
@@ -495,28 +501,29 @@ model_rownames_random_hu_ordinal <- c(model_rownames_random_hu,'disc')
 ```{r parameters_for_printing_hu}
 
 rows_to_pack_hu <- list(
-  "Conditional Within-Person Effects" = c(3,16),
-  "Conditional Between-Person Effects" = c(17,27),
+  "Conditional Within-Person Effects" = c(3,17),
+  "Conditional Between-Person Effects" = c(18,28),
   
-  "Hurdle Within-Person Effects" = c(28,41),
-  "Hurdle Between-Person Effects" = c(42,52),
+  "Hurdle Within-Person Effects" = c(29,43),
+  "Hurdle Between-Person Effects" = c(44,54),
   
-  "Random Effects" = c(53, 66), 
-  "Additional Parameters" = c(67,67)
+  "Random Effects" = c(55, 68), 
+  "Additional Parameters" = c(69,69)
   )
 
 rows_to_pack_hu_ordinal <- list(
-  "Conditional Within-Person Effects" = c(3+5,16+5),
-  "Conditional Between-Person Effects" = c(17+5,27+5),
+  "Conditional Within-Person Effects" = c(3+5,17+5),
+  "Conditional Between-Person Effects" = c(18+5,28+5),
   
-  "Hurdle Within-Person Effects" = c(28+5,41+5),
-  "Hurdle Between-Person Effects" = c(42+5,52+5),
+  "Hurdle Within-Person Effects" = c(29+5,43+5),
+  "Hurdle Between-Person Effects" = c(44+5,54+5),
   
-  "Random Effects" = c(53+5, 66+5), 
-  "Additional Parameters" = c(67+5,67+6)
+  "Random Effects" = c(55+5, 68+5), 
+  "Additional Parameters" = c(69+5,69+6)
   )
 
 ```
+
 
 
 ## Self-Reported MVPA
@@ -544,7 +551,7 @@ formula <- bf(
     #support_self_cb + support_partner_cb + 
     studyGroup +
     
-    plan +
+    plan_self + plan_partner +
     day + 
     
     # Random effects
@@ -568,7 +575,7 @@ formula <- bf(
     #support_self_cb + support_partner_cb + 
     studyGroup +
     
-    plan +
+    plan_self + plan_partner +
     day + 
     
     # Random effects
@@ -612,7 +619,7 @@ pa_sub <- my_brm(
   chains = 4,
   cores = 4,
   seed = 42,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_othercov_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal", suffix))
   #, file_refit = 'always'
 )
 
@@ -747,7 +754,7 @@ formula <- bf(
     #support_self_cb + support_partner_cb + 
     studyGroup +
     
-    plan +
+    plan_self + plan_partner +
     day +  + weartime_self_cw + weartime_self_cb +
     
     # Random effects
@@ -790,7 +797,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_othercov_", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix))
 )
 
 pa_obj_log_digest <- digest::digest(pa_obj_log)
@@ -860,7 +867,7 @@ formula <- bf(
     #support_self_cb + support_partner_cb + 
     studyGroup +
     
-    plan +
+    plan_self + plan_partner +
     day + 
     
     # Random effects
@@ -901,7 +908,7 @@ mood_gauss <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_gauss_othercov_", suffix))
+  file = file.path("models_cache_brms", paste0("mood_gauss", suffix))
 )
 
 mood_gauss_digest <- digest::digest(mood_gauss)
@@ -973,7 +980,7 @@ formula <- bf(
     #support_self_cb + support_partner_cb + 
     studyGroup +
     
-    plan +
+    plan_self + plan_partner +
     day + 
     
     # Random effects
@@ -1014,7 +1021,7 @@ reactance_ordinal <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777
-  , file = file.path("models_cache_brms", paste0("reactance_ordinal_othercov_", suffix))
+  , file = file.path("models_cache_brms", paste0("reactance_ordinal", suffix))
 )
 
 
@@ -1100,7 +1107,7 @@ formula <- bf(
     #support_self_cb + support_partner_cb + 
     studyGroup +
     
-    plan +
+    plan_self + plan_partner +
     day + 
     
     # Random effects
@@ -1144,7 +1151,7 @@ is_reactance <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("is_reactance_othercov_", suffix))
+  file = file.path("models_cache_brms", paste0("is_reactance", suffix))
   #, file_refit = 'always'
 )
 
@@ -1239,7 +1246,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = process_model_component(rows_to_pack),
-  file.path("Output", "AllModels_otherCovariates.xlsx"), 
+  file.path("Output", paste0("AllModels", suffix, ".xlsx")), 
   merge_option = 'header', 
   simplify_2nd_row = TRUE,
   line_above_rows = c(1,2),

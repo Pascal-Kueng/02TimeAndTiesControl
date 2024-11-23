@@ -1393,7 +1393,7 @@ summary_all_models <- all_models %>%
 export_xlsx(
   summary_all_models, 
   rows_to_pack = process_model_component(rows_to_pack),
-  file.path("Output", "AllModelsFinalWithPlans.xlsx"), 
+  file.path("Output", paste0("AllModels", suffix, ".xlsx")), 
   merge_option = 'header', 
   simplify_2nd_row = TRUE,
   line_above_rows = c(1,2),
