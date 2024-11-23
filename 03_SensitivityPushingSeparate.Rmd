@@ -1124,7 +1124,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    #plan +
     day + 
     
     # Random effects
@@ -1133,6 +1133,7 @@ formula <- bf(
   hu = ~ pushing_self_cw + pushing_partner_cw +
     pushing_self_cb + pushing_partner_cb +
     
+    #plan +
     day + 
     
     # Random effects
@@ -1289,7 +1290,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    #plan +
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
@@ -1387,7 +1388,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    #plan +
     day +
     
     # Random effects
@@ -1489,7 +1490,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    #plan +
     day +
     
     # Random effects
@@ -1593,7 +1594,7 @@ formula <- bf(
     pushing_self_cw + pushing_partner_cw +
     pushing_self_cb + pushing_partner_cb +
     
-    plan +
+    #plan +
     day +
     
     # Random effects
