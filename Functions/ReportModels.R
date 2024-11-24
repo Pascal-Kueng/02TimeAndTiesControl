@@ -198,9 +198,9 @@ summarize_brms <- function(model,
       pd_significance <- FALSE
     } else {
       significance_fixed <- case_when(
-        p_dir$pd > 0.9995 ~ '***',
-        p_dir$pd > 0.995  ~ '**',
-        p_dir$pd > 0.975  ~ '*',
+        p_dir$pd >= 0.9995 ~ '***',
+        p_dir$pd >= 0.995  ~ '**',
+        p_dir$pd >= 0.975  ~ '*',
         TRUE              ~ ''
       )
     }
