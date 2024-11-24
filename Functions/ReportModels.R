@@ -104,7 +104,8 @@ summarize_brms <- function(model,
                            stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
                            pd_significance = TRUE, # otherwise CI is used
-                           pd_one_tailed = FALSE, # only an option if pd_significance is TRUE
+                           alpha = c(0.05, 0.01, 0.001),
+                           one_tailed = FALSE, # only an option if pd_significance is TRUE
                            
                            model_rows_fixed = NULL,
                            model_rows_random = NULL,
@@ -197,11 +198,14 @@ summarize_brms <- function(model,
       warning('To compute significance stars based on pd, include it in stats_to_report. Fallback to CI is used.')
       pd_significance <- FALSE
     } else {
+      if (!one_tailed) {
+        alpha <- alpha / 2
+      }
       significance_fixed <- case_when(
-        p_dir$pd >= 0.9995 ~ '***',
-        p_dir$pd >= 0.995  ~ '**',
-        p_dir$pd >= 0.975  ~ '*',
-        TRUE              ~ ''
+        round(p_dir$pd,3) >= 1 - alpha[3]  ~ '***',
+        round(p_dir$pd,3) >= 1 - alpha[2]  ~ '**',
+        round(p_dir$pd,3) >= 1 - alpha[1]  ~ '*',
+        TRUE                      ~ ''
       )
     }
     
