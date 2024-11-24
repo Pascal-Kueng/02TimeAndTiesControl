@@ -57,14 +57,14 @@ shutdown = FALSE
 report_ordinal = FALSE
 report_hurdle = TRUE
 do_priorsense = FALSE
-get_bayesfactor = FALSE
-check_models = FALSE # ! set to TRUE !
+get_bayesfactor = TRUE
+check_models = TRUE # ! set to TRUE !
 
-stats_to_report = ifelse(
-  get_bayesfactor, 
-  c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'), 
-  c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
-)
+if (get_bayesfactor) {
+  stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
+} else {
+  stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS')
+}
 
 options(
   dplyr.print_max = 100, 
