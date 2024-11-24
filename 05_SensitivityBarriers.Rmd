@@ -682,6 +682,127 @@ pa_sub_digest <- digest::digest(pa_sub)
 
 
 
+```{r}
+
+df_double$pa_sub_lognormal <- ifelse(df_double$pa_sub > 0, df_double$pa_sub, NA)
+
+formula <- bf(
+  pa_sub_lognormal ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    mi(barriers_self_gc) + mi(barriers_partner_gc) +
+    #support_self_cw + support_partner_cw + 
+    #isWeekend + 
+    #got_JITAI_self + 
+    #skilled_support +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    #support_self_cb + support_partner_cb + 
+    #studyGroup +
+    
+    plan_self + plan_partner +
+    day + 
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | coupleID)
+  #, autocor = autocor_str
+) + bf(
+  barriers_self_gc | mi() ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    #mi(barriers_self_gc) + 
+    mi(barriers_partner_gc) +
+    support_self_cw + support_partner_cw + 
+    isWeekend + 
+    got_JITAI_self + 
+    #skilled_support +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    support_self_cb + support_partner_cb + 
+    #studyGroup +
+    
+    plan_self + plan_partner +
+    day + (1 | coupleID)
+) + bf(
+  barriers_partner_gc | mi() ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    mi(barriers_self_gc) + 
+    #mi(barriers_partner_gc) +
+    support_self_cw + support_partner_cw + 
+    isWeekend + 
+    got_JITAI_self + 
+    #skilled_support +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    #support_self_cb + support_partner_cb + 
+    #studyGroup +
+    
+    plan_self + plan_partner +
+    
+    pa_sub + pa_obj +  aff + reactance + 
+    day + (1 | coupleID)
+) + set_rescor(FALSE)
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
+  #, brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  #, brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+brms::validate_prior(
+  prior1, 
+  formula = formula, 
+  data = df_double, 
+  family = lognormal()
+)
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_sub_lognormalpart <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::lognormal(), 
+  #family = brms::hurdle_negbinomial(), 
+  #family = brms::hurdle_poisson(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 42,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_part1", suffix))
+  #, file_refit = 'always'
+)
+
+
+
+
+```
+
+
 ```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300}
 
 # summarize with rope range for hurdle part
