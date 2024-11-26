@@ -261,15 +261,31 @@ cors <- wbCorr(
   df_full$coupleID, 
   method = 'spearman')
 
-main_cors <- summary(cors, 'wb')$merged_wb
+main_cors <- summary(cors, 'wb')
 
-
-openxlsx::write.xlsx(
-  main_cors, 
-  file.path('Output', 'Correlations.xlsx')
+to_excel(
+  main_cors,
+  file.path('Output', 'CorrelationsMain.xlsx')
 )
 
-print_df(main_cors, width = '7em')
+
+print_df(main_cors[[1]], width = '7em')
+
+cors <- wbCorr(
+  df_full[,c(all_constructs)], 
+  df_full$coupleID, 
+  method = 'spearman')
+
+full_cors <- summary(cors, 'wb')
+
+
+to_excel(
+  full_cors,
+  file.path('Output', 'CorrelationsAll.xlsx')
+)
+
+
+print_df(full_cors[[1]], width = '7em')
 
 ```
 
@@ -292,15 +308,15 @@ cors <- wbCorr(
   df_original$coupleID, 
   method = 'spearman')
 
-self_partner_report_cors <- summary(cors, 'wb')$merged_wb
+self_partner_report_cors <- summary(cors, 'wb')
 
-
-openxlsx::write.xlsx(
-  self_partner_report_cors, 
+to_excel(
+  self_partner_report_cors,
   file.path('Output', 'SelfVsPartnerReport.xlsx')
 )
 
-print_df(self_partner_report_cors, width = '7em')
+
+print_df(self_partner_report_cors[[1]], width = '7em')
 
 ```
 
