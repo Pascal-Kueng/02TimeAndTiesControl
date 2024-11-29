@@ -122,7 +122,7 @@ summarize_brms <- function(model,
   random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars)
   
   # Add p_direction to fixed effects
-  if ('pd' %in% stats_to_report) {
+  if ('pd' %in% stats_to_report | pd_significance) {
     p_dir <- as.data.frame(bayestestR::p_direction(
       model,
       effects = 'fixed'
@@ -130,6 +130,7 @@ summarize_brms <- function(model,
     fixed_effects$pd <- format_number(p_dir$pd,3)
     random_effects$pd <- NA
   }
+
   # Add ROPE
   if ('ROPE' %in% stats_to_report) {
     rope_df <- as.data.frame(bayestestR::rope(
@@ -194,24 +195,16 @@ summarize_brms <- function(model,
   # compute significance stars
   ## based on pd if TRUE
   if (pd_significance) {
-    if (! 'pd' %in% stats_to_report) {
-      warning('To compute significance stars based on pd, include it in stats_to_report. Fallback to CI is used.')
-      pd_significance <- FALSE
-    } else {
-      if (!one_tailed) {
-        alpha <- alpha / 2
-      }
-      significance_fixed <- case_when(
-        round(p_dir$pd,3) >= 1 - alpha[3]  ~ '***',
-        round(p_dir$pd,3) >= 1 - alpha[2]  ~ '**',
-        round(p_dir$pd,3) >= 1 - alpha[1]  ~ '*',
-        TRUE                      ~ ''
-      )
+    if (!one_tailed) {
+      alpha <- alpha / 2
     }
-    
-  } 
-  
-  if (!pd_significance) {
+    significance_fixed <- case_when(
+      round(p_dir$pd,3) >= 1 - alpha[3]  ~ '***',
+      round(p_dir$pd,3) >= 1 - alpha[2]  ~ '**',
+      round(p_dir$pd,3) >= 1 - alpha[1]  ~ '*',
+      TRUE                      ~ ''
+    )
+  } else if (!pd_significance) {
     # compute significance stars based on CI
     is_significant <- function(low, high) {
       (low > 0 & high > 0) | (low < 0 & high < 0)
@@ -328,6 +321,10 @@ summarize_brms <- function(model,
   }
   
   names(full_results_subset)[1] <- correct_name
+  
+  
+  
+  
   
   
   

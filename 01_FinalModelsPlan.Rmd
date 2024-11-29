@@ -253,215 +253,6 @@ rows_to_pack_ordinal <- list(
 ```
 
 
-HURDLE MODELS
-```{r set_report_order_persuasion_hu}
-
-# For indistinguishable Dyads
-model_rows_fixed_hu <- c(
-    'Intercept', 
-    'hu_Intercept',
-    # '-- WITHIN PERSON MAIN EFFECTS --', 
-    'persuasion_self_cw', 
-    'persuasion_partner_cw', 
-    'pressure_self_cw', 
-    'pressure_partner_cw', 
-    'pushing_self_cw', 
-    'pushing_partner_cw', 
-    'day', 
-    'plan_selfPlan',
-    'plan_partnerPlan',
-    'weartime_self_cw',
-    
-    # '-- BETWEEN PERSON MAIN EFFECTS',
-    'persuasion_self_cb',
-    'persuasion_partner_cb',
-    'pressure_self_cb',
-    'pressure_partner_cb',
-    'pushing_self_cb',
-    'pushing_partner_cb',
-    'weartime_self_cb',
-    
-    # HURDLE MODEL
-    # '-- WITHIN PERSON MAIN EFFECTS --', 
-    'hu_persuasion_self_cw', 
-    'hu_persuasion_partner_cw', 
-    'hu_pressure_self_cw', 
-    'hu_pressure_partner_cw', 
-    'hu_pushing_self_cw', 
-    'hu_pushing_partner_cw', 
-    'hu_day', 
-    'hu_plan_selfPlan',
-    'hu_plan_partnerPlan',
-    'hu_weartime_self_cw',
-    
-    # '-- BETWEEN PERSON MAIN EFFECTS',
-    'hu_persuasion_self_cb',
-    'hu_persuasion_partner_cb',
-    'hu_pressure_self_cb',
-    'hu_pressure_partner_cb',
-    'hu_pushing_self_cb',
-    'hu_pushing_partner_cb',
-    'hu_weartime_self_cb'
-  )
-
-model_rows_fixed_hu_ordinal <- c(
-  model_rows_fixed_hu[1:2],
-  'Intercept[1]',
-  'Intercept[2]',
-  'Intercept[3]',
-  'Intercept[4]',
-  'Intercept[5]',
-  model_rows_fixed_hu[3:length(model_rows_fixed_hu)]
-)
-
-
-model_rows_random_hu <- c(
-  # '--------------',
-  # '-- RANDOM EFFECTS --',
-  'sd(Intercept)', 
-  'sd(hu_Intercept)',
-  'sd(persuasion_self_cw)',
-  'sd(persuasion_partner_cw)',
-  'sd(pressure_self_cw)',
-  'sd(pressure_partner_cw)',
-  'sd(pushing_self_cw)',
-  'sd(pushing_partner_cw)',
-  # HURDLE
-  'sd(hu_persuasion_self_cw)',
-  'sd(hu_persuasion_partner_cw)',
-  'sd(hu_pressure_self_cw)',
-  'sd(hu_pressure_partner_cw)',
-  'sd(hu_pushing_self_cw)',
-  'sd(hu_pushing_partner_cw)',
-  # '-- CORRELATION STRUCTURE -- ', 
-  'sigma'
-)
-
-model_rows_random_hu_ordinal <- c(model_rows_random_hu,'disc')
-
-
-```
-
-
-
-```{r set_display_names_alt_hu}
-
-# For indistinguishable Dyads
-model_rownames_fixed_hu <- c(
-    "Intercept", 
-    "Hurdle Intercept",
-    # "-- WITHIN PERSON MAIN EFFECTS --", 
-    "Daily persuasion experienced", 
-    "Daily persuasion utilized (partner's view)", # OR partner received
-    "Daily pressure experienced", 
-    "Daily pressure utilized (partner's view)", 
-    "Daily pushing experienced", 
-    "Daily pushing utilized (partner's view)", 
-    "Day", 
-    "Own actionplan",
-    'Partner actionplan', 
-    "Daily weartime",
-    
-    # "-- BETWEEN PERSON MAIN EFFECTS",
-    "Mean persuasion experienced", 
-    "Mean persuasion utilized (partner's view)", 
-    "Mean pressure experienced", 
-    "Mean pressure utilized (partner's view)", 
-    "Mean pushing experienced", 
-    "Mean pushing utilized (partner's view)", 
-    "Mean weartime",
-    
-    # HURDLE
-    # "-- WITHIN PERSON MAIN EFFECTS --", 
-    "Hu Daily persuasion experienced", 
-    "Hu Daily persuasion utilized (partner's view)", # OR partner received
-    "Hu Daily pressure experienced", 
-    "Hu Daily pressure utilized (partner's view)", 
-    "Hu Daily pushing experienced", 
-    "Hu Daily pushing utilized (partner's view)", 
-    "Hu Day", 
-    "Hu Own actionplan",
-    'Hu Partner actionplan', 
-    "Hu Daily weartime",
-    
-    # "-- BETWEEN PERSON MAIN EFFECTS",
-    "Hu Mean persuasion experienced", 
-    "Hu Mean persuasion utilized (partner's view)", 
-    "Hu Mean pressure experienced", 
-    "Hu Mean pressure utilized (partner's view)", 
-    "Hu Mean pushing experienced", 
-    "Hu Mean pushing utilized (partner's view)", 
-    "Hu Mean weartime"
-  )
-
-
-
-model_rownames_fixed_hu_ordinal <- c(
-  model_rownames_fixed_hu[1:2],
-  'Intercept[1]',
-  'Intercept[2]',
-  'Intercept[3]',
-  'Intercept[4]',
-  'Intercept[5]',
-  model_rownames_fixed_hu[3:length(model_rownames_fixed_hu)]
-)
-
-
-
-model_rownames_random_hu <- c(
-  # '--------------',
-  # '-- RANDOM EFFECTS --',
-  'sd(Intercept)', 
-  'sd(Hurdle Intercept)', 
-  "sd(Daily persuasion experienced)", 
-  "sd(Daily persuasion utilized (partner's view))", # OR partner received
-  "sd(Daily pressure experienced)", 
-  "sd(Daily pressure utilized (partner's view))", 
-  "sd(Daily pushing experienced)", 
-  "sd(Daily pushing utilized (partner's view))", 
-  
-  # Hurdle
-  "sd(Hu Daily persuasion experienced)", 
-  "sd(Hu Daily persuasion utilized (partner's view))", # OR partner received
-  "sd(Hu Daily pressure experienced)", 
-  "sd(Hu Daily pressure utilized (partner's view))", 
-  "sd(Hu Daily pushing experienced)", 
-  "sd(Hu Daily pushing utilized (partner's view))", 
-  # '-- CORRELATION STRUCTURE -- ', 
-  'sigma'
-)
-
-model_rownames_random_hu_ordinal <- c(model_rownames_random_hu,'disc')
-
-
-```
-
-
-```{r parameters_for_printing_hu}
-
-rows_to_pack_hu <- list(
-  "Conditional Within-Person Effects" = c(3,12),
-  "Conditional Between-Person Effects" = c(13,19),
-  
-  "Hurdle Within-Person Effects" = c(20,29),
-  "Hurdle Between-Person Effects" = c(30,36),
-  
-  "Random Effects" = c(37, 50), 
-  "Additional Parameters" = c(51,51)
-  )
-
-rows_to_pack_hu_ordinal <- list(
-  "Conditional Within-Person Effects" = c(3+5,12+5),
-  "Conditional Between-Person Effects" = c(13+5,19+5),
-  
-  "Hurdle Within-Person Effects" = c(20+5,29+5),
-  "Hurdle Between-Person Effects" = c(30+5,36+5),
-  
-  "Random Effects" = c(37+5, 50+5), 
-  "Additional Parameters" = c(51+5,51+6)
-  )
-```
-
 
 ## Self-Reported MVPA
 
@@ -606,10 +397,10 @@ summary_pa_sub_hurdle <- summarize_brms(
   pa_sub, 
   stats_to_report = c('pd','ROPE'),
   rope_range = c(-0.18, 0.18),
-  model_rows_fixed = model_rows_fixed_hu,
-  model_rows_random = model_rows_random_hu,
-  model_rownames_fixed = model_rownames_fixed_hu,
-  model_rownames_random = model_rownames_random_hu,
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
   exponentiate = T) 
 
 # rope range for continuous part of the model
@@ -620,10 +411,10 @@ summary_pa_sub_continuous <- summarize_brms(
   pa_sub, 
   stats_to_report = stats_to_report,
   rope_range = rope_range_continuous,
-  model_rows_fixed = model_rows_fixed_hu,
-  model_rows_random = model_rows_random_hu,
-  model_rownames_fixed = model_rownames_fixed_hu,
-  model_rownames_random = model_rownames_random_hu,
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
   exponentiate = T) 
 
 
