@@ -101,6 +101,7 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
 summarize_brms <- function(model, 
                            exponentiate = FALSE,
                            invert_hurdle_OR = TRUE,
+                           side_by_side_hurdle = TRUE,
                            stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
                            pd_significance = TRUE, # otherwise CI is used
@@ -322,9 +323,30 @@ summarize_brms <- function(model,
   
   names(full_results_subset)[1] <- correct_name
   
-  
-  
-  
+  # If hurdle model or zi model, put components next to each other if requested
+  if (side_by_side_hurdle) {
+    hurdle_rows <- grepl('hu_', rownames(full_results_subset))
+    
+    # Split the results into hurdle and nonzero components
+    hurdle_report <- full_results_subset[hurdle_rows, ]
+    nonzero_report <- full_results_subset[!hurdle_rows, ]
+    
+    # Remove 'hu_' from the row names of hurdle_report
+    rownames(hurdle_report) <- gsub('hu_', '', rownames(hurdle_report))
+    
+    # Merge the two dataframes by row names, with custom suffixes
+    full_results_subset <- merge(
+      hurdle_report, 
+      nonzero_report, 
+      by = "row.names", 
+      all = TRUE, 
+      suffixes = c("_hu", "_nonzero")
+    )
+    
+    # Restore the row names from the merged dataframe and drop the temporary row name column
+    rownames(full_results_subset) <- full_results_subset$Row.names
+    full_results_subset$Row.names <- NULL
+  }
   
   
   
@@ -341,6 +363,20 @@ summarize_brms <- function(model,
   )
   colnames(empty_df) <- colnames(full_results_subset)
   rownames(empty_df) <- desired_rows
+  
+  
+  
+  # Warn if some variables from the model are omitted
+  if (!all(rownames(full_results_subset) %in% desired_rows)) {
+    which_missing <- !rownames(full_results_subset) %in% desired_rows
+    names_missing <- rownames(full_results_subset)[which_missing]
+    warning(
+      sprintf(
+        "Some rows from the model were omitted due to your provided model_rows_fixed or model_rows_random vectors. Missing rows: %s", 
+        paste(names_missing, collapse = ", ")
+        )
+      )
+    }
   
   # Fill in the data where available
   available_rows <- intersect(desired_rows, rownames(full_results_subset))

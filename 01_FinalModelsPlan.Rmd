@@ -55,7 +55,6 @@ system("shutdown /a")
 use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
-report_hurdle = TRUE
 do_priorsense = FALSE
 get_bayesfactor = TRUE
 check_models = TRUE # ! set to TRUE !
@@ -1124,16 +1123,6 @@ hypothesis(is_reactance, "exp(pressure_self_cw) > exp(pushing_self_cw)")
 
 ```{r report_sidebyside, results = 'asis'}
 
-process_model_component <- function(obj) {
-  # Convert to string, modify, and evaluate
-  name <- deparse(substitute(obj))
-  if (report_hurdle) name <- paste0(name, '_hu')
-  if (report_ordinal) name <- paste0(name, '_ordinal')
-  return(get(name, envir = parent.frame()))
-}
-
-
-
 all_models <- report_side_by_side(
   pa_sub,
   pa_obj_log,
@@ -1143,10 +1132,10 @@ all_models <- report_side_by_side(
   
   stats_to_report = c('CI', 'pd'),
   
-  model_rows_random = process_model_component(model_rows_random),
-  model_rows_fixed = process_model_component(model_rows_fixed),
-  model_rownames_random = process_model_component(model_rownames_random),
-  model_rownames_fixed = process_model_component(model_rownames_fixed)
+  model_rows_random = model_rows_random,
+  model_rows_fixed = model_rows_fixed,
+  model_rownames_random = model_rownames_random,
+  model_rownames_fixed = model_rownames_fixed
 ) 
 
 
@@ -1156,7 +1145,7 @@ all_models <- report_side_by_side(
 # pretty printing
 
 summary_all_models <- all_models %>%
-  print_df(rows_to_pack = process_model_component(rows_to_pack)) %>%
+  print_df(rows_to_pack = rows_to_pack) %>%
   add_header_above(
     c(" ", "Subjective MVPA Hurdle Lognormal" = (length(all_models) / 5),  
       "Device-Based MVPA Log (Gaussian)" = (length(all_models) / 5), 
@@ -1168,7 +1157,7 @@ summary_all_models <- all_models %>%
 
 export_xlsx(
   summary_all_models, 
-  rows_to_pack = process_model_component(rows_to_pack),
+  rows_to_pack = rows_to_pack,
   file.path("Output", paste0("AllModels", suffix, ".xlsx")), 
   merge_option = 'header', 
   simplify_2nd_row = TRUE,
