@@ -1347,7 +1347,7 @@ all_models <- report_side_by_side(
   pa_sub,
   pa_obj_log,
   mood_gauss,
-  reactance_ordinal,
+  #reactance_ordinal,
   is_reactance,
   
   stats_to_report = c('CI', 'pd'),
@@ -1370,7 +1370,7 @@ summary_all_models <- all_models %>%
     c(" ", "Subjective MVPA Hurdle Lognormal" = (length(all_models) / 5),  
       "Device-Based MVPA Log (Gaussian)" = (length(all_models) / 5), 
       "Mood Gaussian" = (length(all_models) / 5),
-      "Reactance Ordinal" = (length(all_models) / 5),
+      #"Reactance Ordinal" = (length(all_models) / 5),
       "Reactance Dichotome" = (length(all_models) / 5))
   )
 
