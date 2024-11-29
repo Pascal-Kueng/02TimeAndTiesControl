@@ -765,6 +765,15 @@ print('done')
 
 ```
 
+### Comparing effect size of pressure and pushing
+
+```{r compare_effects_pa_sub}
+
+hypothesis(pa_sub, "pressure_self_cw < pushing_self_cw")
+
+```
+
+
 
 
 ## Device Based MVPA 
@@ -1314,7 +1323,7 @@ conditional_spaghetti(
 
 ```{r testingdifferencecoefsbinary}
 
-hypothesis(is_reactance, "pressure_self_cw > pushing_self_cw")
+hypothesis(is_reactance, "exp(pressure_self_cw) > exp(pushing_self_cw)")
 
 ```
 
