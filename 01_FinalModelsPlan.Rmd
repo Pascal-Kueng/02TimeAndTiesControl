@@ -53,7 +53,7 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = FALSE
+shutdown = TRUE
 report_ordinal = FALSE
 do_priorsense = FALSE
 get_bayesfactor = TRUE
@@ -504,7 +504,7 @@ print(conds_eff)
 **Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
 The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
 
-```{r eval=FALSE}
+```{r include=FALSE}
 
 x_label = c(
     'Received Persuasion',
@@ -527,7 +527,7 @@ for (i in 1:length(conds_eff)) {
     file.path(output_dir, 'BeautifulPlotWithNote.Rmd'), 
     output_file = file.path(output_dir, paste0('Graphic_', effname, '.pdf')),
     params = list(
-      home_dir = home_dir
+      home_dir = home_dir,
       output_dir = output_dir,
       p_i = eff_plot,
       p_name = effname,
@@ -1117,7 +1117,7 @@ all_models <- report_side_by_side(
   #reactance_ordinal,
   is_reactance,
   
-  stats_to_report = c('CI', 'pd'),
+  stats_to_report = c('CI'),
   
   model_rows_random = model_rows_random,
   model_rows_fixed = model_rows_fixed,
@@ -1134,12 +1134,13 @@ all_models <- report_side_by_side(
 summary_all_models <- all_models %>%
   print_df(rows_to_pack = rows_to_pack) %>%
   add_header_above(
-    c(" ", "Subjective MVPA Hurdle Lognormal" = (length(all_models) / 5),  
-      "Device-Based MVPA Log (Gaussian)" = (length(all_models) / 5), 
-      "Mood Gaussian" = (length(all_models) / 5),
-      #"Reactance Ordinal" = (length(all_models) / 5),
-      "Reactance Dichotome" = (length(all_models) / 5))
+    c(" ", "Subjective MVPA Hurdle Lognormal" = 4,  
+      "Device-Based MVPA Log (Gaussian)" = 2, 
+      "Mood Gaussian" = 2,
+      #"Reactance Ordinal" = 2,
+      "Reactance Dichotome" = 2
   )
+)
 
 
 export_xlsx(

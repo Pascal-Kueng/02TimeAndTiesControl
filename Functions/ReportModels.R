@@ -166,7 +166,7 @@ summarize_brms <- function(model,
     random_effects$ROPE <- NA
     random_effects$`inside ROPE` <- NA
     
-    if (!is.null(hu_rope_range)) {
+    if (!is.null(hu_rope_range) & any(grepl('hu_', rownames(fixed_effects)))) {
       fixed_effects[grepl('hu_', rownames(fixed_effects)),] <- compute_rope(range = hu_rope_range)[grepl('hu_', rownames(fixed_effects)),]
     }
   }
@@ -334,7 +334,7 @@ summarize_brms <- function(model,
   names(full_results_subset)[1] <- correct_name
   
   # If hurdle model or zi model, put components next to each other if requested
-  if (side_by_side_hurdle) {
+  if (side_by_side_hurdle & any(grepl('hu_', rownames(fixed_effects)))) {
     hurdle_rows <- grepl('hu_', rownames(full_results_subset))
     
     # Split the results into hurdle and nonzero components
