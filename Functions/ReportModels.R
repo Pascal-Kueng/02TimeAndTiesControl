@@ -104,6 +104,7 @@ summarize_brms <- function(model,
                            side_by_side_hurdle = TRUE,
                            stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
+                           hu_rope_range = NULL,
                            pd_significance = TRUE, # otherwise CI is used
                            alpha = c(0.05, 0.01, 0.001),
                            one_tailed = FALSE, # only an option if pd_significance is TRUE
@@ -134,31 +135,40 @@ summarize_brms <- function(model,
 
   # Add ROPE
   if ('ROPE' %in% stats_to_report) {
-    rope_df <- as.data.frame(bayestestR::rope(
-      model,
-      effects = 'fixed',
-      range = rope_range,
-      ci = 1,
-      verbose = FALSE
-    ))
+    compute_rope <- function(range) {
+      rope_df <- as.data.frame(bayestestR::rope(
+        model,
+        effects = 'fixed',
+        range = range,
+        ci = 1,
+        verbose = FALSE
+      ))
+      
+      # Format ROPE
+      if (exponentiate) {
+        rope_df$ROPE_low <-exp(rope_df$ROPE_low)
+        rope_df$ROPE_high <- exp(rope_df$ROPE_high)
+      } 
+      
+      fixed_effects$ROPE <- paste0(
+        '[',
+        format_number(rope_df$ROPE_low), 
+        ', ',
+        format_number( rope_df$ROPE_high),
+        ']'
+      )
+      fixed_effects$`inside ROPE` <- format_number(rope_df$ROPE_Percentage,3)
+      return(fixed_effects)
+    }
     
-    # Format ROPE
-    if (exponentiate) {
-      rope_df$ROPE_low <-exp(rope_df$ROPE_low)
-      rope_df$ROPE_high <- exp(rope_df$ROPE_high)
-    } 
+    fixed_effects <- compute_rope(range = rope_range)
     
-    fixed_effects$ROPE <- paste0(
-      '[',
-      format_number(rope_df$ROPE_low), 
-      ', ',
-      format_number( rope_df$ROPE_high),
-      ']'
-    )
     random_effects$ROPE <- NA
-    
-    fixed_effects$`inside ROPE` <- format_number(rope_df$ROPE_Percentage,3)
     random_effects$`inside ROPE` <- NA
+    
+    if (!is.null(hu_rope_range)) {
+      fixed_effects[grepl('hu_', rownames(fixed_effects)),] <- compute_rope(range = hu_rope_range)[grepl('hu_', rownames(fixed_effects)),]
+    }
   }
   
   # Calculate Bayes Factor for fixed effects

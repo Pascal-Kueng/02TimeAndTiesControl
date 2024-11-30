@@ -391,39 +391,22 @@ if (do_priorsense) {
 
 ```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
 
-# summarize with rope range for hurdle part
-summary_pa_sub_hurdle <- summarize_brms(
-  pa_sub, 
-  stats_to_report = c('pd','ROPE'),
-  rope_range = c(-0.18, 0.18),
-  model_rows_fixed = model_rows_fixed,
-  model_rows_random = model_rows_random,
-  model_rownames_fixed = model_rownames_fixed,
-  model_rownames_random = model_rownames_random,
-  exponentiate = T) 
-
 # rope range for continuous part of the model
 rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
 rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
-summary_pa_sub_continuous <- summarize_brms(
+summary_pa_sub <- summarize_brms(
   pa_sub, 
-  stats_to_report = stats_to_report,
+  #stats_to_report = stats_to_report,
+  stats_to_report = c('ROPE'),
   rope_range = rope_range_continuous,
+  hu_rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
   exponentiate = T) 
 
-
-# Replace only the ROPE and % in Rope columns for rows with 'Hu'
-summary_pa_sub <- summary_pa_sub_continuous
-
-columns_to_replace <- c("ROPE", "inside ROPE")
-
-summary_pa_sub[grepl('Hu', rownames(summary_pa_sub)), columns_to_replace] <- 
-  summary_pa_sub_hurdle[grepl('Hu', rownames(summary_pa_sub_hurdle)), columns_to_replace]
 
 # Print the updated dataframe
 summary_pa_sub %>%
