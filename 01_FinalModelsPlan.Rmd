@@ -515,14 +515,20 @@ x_label = c(
     'Exerted Plan-Related Pushing'
   )
 
+home_dir <- getwd()
+output_dir <- file.path(home_dir, 'Output', 'Plots')
+
 for (i in 1:length(conds_eff)) {
   effname <- names(conds_eff)[i]
   eff_plot <- conds_eff[[i]]
   x_label_i <- x_label[[i]]
+  
   rmarkdown::render(
-    "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/BeautifulPlotWithNote.Rmd", 
-    output_file = paste0('C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_', effname, '.pdf'),
+    file.path(output_dir, 'BeautifulPlotWithNote.Rmd'), 
+    output_file = file.path(output_dir, paste0('Graphic_', effname, '.pdf')),
     params = list(
+      home_dir = home_dir
+      output_dir = output_dir,
       p_i = eff_plot,
       p_name = effname,
       x_label = x_label_i

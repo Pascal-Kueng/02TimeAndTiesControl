@@ -12,6 +12,8 @@ params:
   p_i: NULL
   p_name: NULL
   x_label: NULL
+  home_dir: NULL
+  output_dir: NULL
 ---
 
 ```{r setup, message=FALSE, warning=FALSE, results='hide', echo=FALSE}
@@ -19,8 +21,10 @@ params:
 p_i <- params$p_i
 p_name <- params$p_name
 x_label <- params$x_label
+home_dir <- params$home_dir
+output_dir <- params$output_dir
 
-source("C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Functions/ReportModels.R")
+source(file.path(home_dir, "Functions", "ReportModels.R"))
 
 ```
 
@@ -30,45 +34,24 @@ source("C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Functions/ReportModels.
 
 
 ggsave(
-  paste0(
-    'C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw',
-    p_name, 
-    '.svg'
-  )
-  , p_i, width = 12, height = 11, dpi = 900
+  file.path(output_dir, paste0(p_name, '.svg')),
+  p_i, width = 12, height = 11, dpi = 900
 )
 
 rsvg::rsvg_pdf(
-  paste0(
-    "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
-    p_name, 
-    ".svg"), 
-  paste0(
-    "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
-    p_name,
-    ".pdf"
-    )
+    file.path(output_dir, paste0(p_name, '.svg')), 
+    file.path(output_dir, paste0(p_name, '.pdf'))
 )
 
 if (FALSE) {
   rsvg::rsvg_png(
-    paste0(
-      "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
-      p_name,
-      ".svg"), 
-    paste0(
-      "C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw",
-      p_name,
-      ".png"), 
+    file.path(output_dir, paste0(p_name, '.svg')),
+    file.path(output_dir, paste0(p_name, '.png')),
     width = 18000, height = 16500)
 }
   
 knitr::include_graphics(
-  paste0(
-    'C:/Users/kueng/DataAnalysis/02TimeAndTiesControl/Output/Plots/Graphic_raw',
-    p_name,
-    ".pdf"
-  )
+  file.path(output_dir, paste0(p_name, '.pdf'))
 )
 
 
