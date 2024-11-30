@@ -234,19 +234,18 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 ```{r parameters_for_printing}
 
 rows_to_pack <- list(
-  "Within-Person Effects" = c(2,10),
-  "Between-Person Effects" = c(11,17),
-  "Random Effects" = c(18, 24), 
-  "Additional Parameters" = c(25,25)
+  "Within-Person Effects" = c(2,11),
+  "Between-Person Effects" = c(12,18),
+  "Random Effects" = c(19, 25), 
+  "Additional Parameters" = c(26,26)
   )
 
 
 rows_to_pack_ordinal <- list(
-  "Intercepts" = c(1,6),
-  "Within-Person Effects" = c(2+5,10+5),
-  "Between-Person Effects" = c(11+5,17+5),
-  "Random Effects" = c(18+5, 24+5), 
-  "Additional Parameters" = c(25+5,25+6)
+  "Within-Person Effects" = c(2+5,11+5),
+  "Between-Person Effects" = c(12+5,18+5),
+  "Random Effects" = c(19+5, 25+5), 
+  "Additional Parameters" = c(26+5,26+6)
   )
 
 ```
@@ -397,8 +396,7 @@ rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
 summary_pa_sub <- summarize_brms(
   pa_sub, 
-  #stats_to_report = stats_to_report,
-  stats_to_report = c('ROPE'),
+  stats_to_report = stats_to_report,
   rope_range = rope_range_continuous,
   hu_rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed,
@@ -410,7 +408,7 @@ summary_pa_sub <- summarize_brms(
 
 # Print the updated dataframe
 summary_pa_sub %>%
-  print_df(rows_to_pack = rows_to_pack_hu)
+  print_df(rows_to_pack = rows_to_pack)
 
 
 # Plot continuous part of model
@@ -469,7 +467,7 @@ plot(
 
 ```
 
-
+Hurdle part of the model on the left, non-zero part towards the right side of the table
 
 ```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
 
