@@ -100,8 +100,9 @@ my_brm <- function(data, imputed_data = NULL, mi = FALSE, file = NULL, ...) {
 
 summarize_brms <- function(model, 
                            exponentiate = FALSE,
-                           invert_hurdle_OR = TRUE,
-                           side_by_side_hurdle = TRUE,
+                           invert_zero_component_OR = TRUE,
+                           side_by_side_components = TRUE,
+                           multivariate_outcomes = c(),
                            stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS'),
                            rope_range = NULL,
                            hu_rope_range = NULL,
@@ -117,11 +118,30 @@ summarize_brms <- function(model,
   
   format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
   
+  # determine type of model
+  is_multivariate <- any(class(model$family) == 'list')
+  is_hurdle_model <- any(grepl("^hurdle_", model$family$family))
+  is_zi_model <- any(grepl("^zero_inflated_", model$family$family))
+  is_cumulative_model <- any(model$family$family == 'cumulative')
+  
+  if (is_hurdle_model) {
+    prefix_to_grep <- 'hu_'
+    suffix_to_add <- '_hu'
+  } else if (is_zi_model) {
+    prefix_to_grep <- 'zi_'
+    suffix_to_add <- '_zi'
+  }
+  
+  if ('ROPE' %in% stats_to_report & is_multivariate) {
+    warning("ROPE is not supported for multivariate models and was excluded")
+    stats_to_report <- stats_to_report[stats_to_report != 'ROPE']
+  }
+  
   # Extract summaries
   summ_og <- summary(model, robust = TRUE)
   fixed_effects <- summ_og$fixed
   random_effects <- summ_og$random[[1]][grep('sd\\(', rownames(summ_og$random[[1]])), ]
-  random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars)
+  random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars, summ_og$rescor_pars)
   
   # Add p_direction to fixed effects
   if ('pd' %in% stats_to_report | pd_significance) {
@@ -232,9 +252,9 @@ summarize_brms <- function(model,
   names(fixed_effects)[2] <- "SE" 
   names(random_effects)[2] <- "SE" 
   
-  if (invert_hurdle_OR) {
+  if ((is_zi_model | is_hurdle_model) & invert_zero_component_OR) {
     # Create an index for the rows to invert
-    invert_index <- grepl('hu_', rownames(fixed_effects)) | grepl('_hu', rownames(fixed_effects))
+    invert_index <- grepl(prefix_to_grep, rownames(fixed_effects)) | grepl(prefix_to_grep, rownames(fixed_effects))
     
     # Invert the log-odds for those rows
     fixed_effects$Estimate[invert_index] <- -fixed_effects$Estimate[invert_index]
@@ -333,16 +353,17 @@ summarize_brms <- function(model,
   
   names(full_results_subset)[1] <- correct_name
   
+  
   # If hurdle model or zi model, put components next to each other if requested
-  if (side_by_side_hurdle & any(grepl('hu_', rownames(fixed_effects)))) {
-    hurdle_rows <- grepl('hu_', rownames(full_results_subset))
+  if ((is_hurdle_model | is_zi_model) & side_by_side_components) {
+    hurdle_rows <- grepl(prefix_to_grep, rownames(full_results_subset))
     
     # Split the results into hurdle and nonzero components
     hurdle_report <- full_results_subset[hurdle_rows, ]
     nonzero_report <- full_results_subset[!hurdle_rows, ]
     
     # Remove 'hu_' from the row names of hurdle_report
-    rownames(hurdle_report) <- gsub('hu_', '', rownames(hurdle_report))
+    rownames(hurdle_report) <- gsub(prefix_to_grep, '', rownames(hurdle_report))
     
     # Merge the two dataframes by row names, with custom suffixes
     full_results_subset <- merge(
@@ -350,7 +371,7 @@ summarize_brms <- function(model,
       nonzero_report, 
       by = "row.names", 
       all = TRUE, 
-      suffixes = c("_hu", "_nonzero")
+      suffixes = c(suffix_to_add, "_nonzero")
     )
     
     # Restore the row names from the merged dataframe and drop the temporary row name column
@@ -358,6 +379,61 @@ summarize_brms <- function(model,
     full_results_subset$Row.names <- NULL
   }
   
+  
+  # Check if it's a hurdle or multivariate model
+  if (!is.null(multivariate_outcomes)) {
+    to_grepl <- paste0(multivariate_outcomes, '_|_', multivariate_outcomes)  # Use provided list for multivariate models
+    rename_str <- paste0("_", multivariate_outcomes)
+  
+    # If side-by-side components requested
+    rescor_df <- NULL
+    if (side_by_side_components & any(grepl(paste(to_grepl, collapse = "|"), rownames(fixed_effects)))) {
+      
+      # Create an empty dataframe for iterative merging
+      formatted_results <- NULL
+      rescor_df <- full_results_subset[grepl('rescor', rownames(full_results_subset)),]
+      
+      for (i in 1:length(to_grepl)) {
+        pattern <- to_grepl[[i]]
+        rename_str_i <- rename_str[[i]]
+        if (!any(grepl(pattern, rownames(fixed_effects)))) {
+          stop(paste(pattern, "not found in rows!"))
+        }
+        # Identify rows matching the current pattern
+        component_rows <- grepl(pattern, rownames(full_results_subset))
+        
+        # Extract the component and clean row names
+        component_report <- full_results_subset[component_rows, ]
+        rownames(component_report) <- gsub(pattern, '', rownames(component_report))
+        
+        # Add back the rescor
+        component_report <- rbind(component_report, rescor_df)
+        
+        # Add the suffix to all columns of the current component
+        colnames(component_report) <- paste0(colnames(component_report), rename_str_i)
+        
+        # If formatted_results is NULL (first iteration), initialize it
+        if (is.null(formatted_results)) {
+          formatted_results <- component_report
+        } else {
+          # Merge with the existing formatted_results
+          formatted_results <- merge(
+            formatted_results,
+            component_report,
+            by = "row.names",
+            all = TRUE
+          )
+          
+          # Restore row names and drop temporary column
+          rownames(formatted_results) <- formatted_results$Row.names
+          formatted_results$Row.names <- NULL
+        }
+      }
+      
+      # Replace the full_results_subset with the formatted output
+      full_results_subset <- formatted_results
+    }
+  }
   
   
   # Select rows and handle missing ones
