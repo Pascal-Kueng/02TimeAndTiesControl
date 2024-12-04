@@ -114,7 +114,7 @@ summarize_brms <- function(model,
                            model_rows_random = NULL,
                            model_rownames_fixed = NULL,
                            model_rownames_random = NULL
-                           ) {
+) {
   
   format_number <- function(x, digits = 2) format(round(x, digits), nsmall = digits)
   
@@ -152,7 +152,7 @@ summarize_brms <- function(model,
     fixed_effects$pd <- format_number(p_dir$pd,3)
     random_effects$pd <- NA
   }
-
+  
   # Add ROPE
   if ('ROPE' %in% stats_to_report) {
     compute_rope <- function(range) {
@@ -381,10 +381,10 @@ summarize_brms <- function(model,
   
   
   # Check if it's a hurdle or multivariate model
-  if (!is.null(multivariate_outcomes)) {
+  if (!is.null(multivariate_outcomes) & is_multivariate) {
     to_grepl <- paste0(multivariate_outcomes, '_|_', multivariate_outcomes)  # Use provided list for multivariate models
     rename_str <- paste0("_", multivariate_outcomes)
-  
+    
     # If side-by-side components requested
     rescor_df <- NULL
     if (side_by_side_components & any(grepl(paste(to_grepl, collapse = "|"), rownames(fixed_effects)))) {
@@ -393,7 +393,7 @@ summarize_brms <- function(model,
       formatted_results <- NULL
       rescor_df <- full_results_subset[grepl('rescor', rownames(full_results_subset)),]
       
-      for (i in 1:length(to_grepl)) {
+      for (i in seq_along(to_grepl)) {
         pattern <- to_grepl[[i]]
         rename_str_i <- rename_str[[i]]
         if (!any(grepl(pattern, rownames(fixed_effects)))) {
@@ -460,9 +460,9 @@ summarize_brms <- function(model,
       sprintf(
         "Some rows from the model were omitted due to your provided model_rows_fixed or model_rows_random vectors. Missing rows: %s", 
         paste(names_missing, collapse = ", ")
-        )
       )
-    }
+    )
+  }
   
   # Fill in the data where available
   available_rows <- intersect(desired_rows, rownames(full_results_subset))
@@ -482,6 +482,7 @@ summarize_brms <- function(model,
   
   return(full_results_subset)
 }
+
 
 
 
