@@ -19,7 +19,8 @@ output:
 
 knitr::opts_chunk$set(echo = TRUE)
 
-cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
+#cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
+#cmdstanr::set_cmdstan_path(path = "C:/Users/pascku/.cmdstan/cmdstan-2.36.0")
 
 library(tidyverse)
 library(R.utils)
