@@ -275,7 +275,7 @@ formula <- bf(
     
     # Random effects
     (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw | coupleID),
+    pressure_self_cw + pressure_partner_cw | dd | coupleID),
   
   hu = ~ persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
@@ -288,7 +288,7 @@ formula <- bf(
     
     # Random effects
     (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw | coupleID)
+    pressure_self_cw + pressure_partner_cw | dd | coupleID)
   #, autocor = autocor_str
 ) 
 
