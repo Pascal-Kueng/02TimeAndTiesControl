@@ -54,7 +54,7 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = TRUE
+shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
 get_bayesfactor = TRUE
@@ -349,7 +349,7 @@ pa_sub_digest <- digest::digest(pa_sub)
 ```
 
 
-```{r check_pa_sub_lognormal, cache=TRUE, cache.extra=pa_sub_digest}
+```{r check_pa_sub_lognormal}
 if (check_models) {
   check_brms(pa_sub, log_pp_check = TRUE)
   DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
@@ -636,7 +636,7 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 ```
 
 
-```{r check_pa_obj_log_g, cache=TRUE, cache.extra=pa_obj_log_digest}
+```{r check_pa_obj_log_g}
 if (check_models) {
   check_brms(pa_obj_log, log_pp_check = TRUE)
   DHARMa.check_brms.all(pa_obj_log, integer = TRUE, outliers_type = 'bootstrap')
@@ -767,7 +767,7 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 ```
 
 
-```{r check_mood_gauss, cache=TRUE, cache.extra=mood_gauss_digest}
+```{r check_mood_gauss}
 if (check_models) {
   check_brms(mood_gauss, log_pp_check = FALSE)
   DHARMa.check_brms.all(mood_gauss, integer = FALSE)
@@ -905,7 +905,7 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 ```
 
 
-```{r check_reactance_ordinal, cache=TRUE, cache.extra=reactance_ordinal_digest}
+```{r check_reactance_ordinal}
 if (check_models) {
   check_brms(reactance_ordinal)
   DHARMa.check_brms.all(reactance_ordinal, outliers_type = 'bootstrap')
@@ -1045,7 +1045,7 @@ is_reactance_digest <- digest::digest(is_reactance)
 
 ```
 
-```{r check_is_reactance, cache=TRUE, cache.extra=is_reactance_digest}
+```{r check_is_reactance}
 if (check_models) {
   check_brms(is_reactance)
   DHARMa.check_brms.all(is_reactance, integer = FALSE)
