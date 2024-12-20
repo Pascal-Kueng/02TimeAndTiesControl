@@ -1948,7 +1948,7 @@ check_brms <- function(
 ) { 
   # Check for Multicollinearity
   print(performance::check_collinearity(model))
-  print(performance::check_distribution(model))
+  try(print(performance::check_distribution(model)))
   rstan::check_hmc_diagnostics(model$fit)
   plot(model, ask = FALSE, nvariables = 3)
   plot(pp_check(model, type = 'ecdf_overlay'))

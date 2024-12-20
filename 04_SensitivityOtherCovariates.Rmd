@@ -335,6 +335,8 @@ formula <- bf(
     (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | dd | coupleID)
+  
+  , decomp = 'QR'
   #, autocor = autocor_str
 ) 
 
@@ -495,6 +497,8 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
+  
+  , decomp = 'QR'
   #, autocor = autocor_str
 )
 
@@ -608,6 +612,8 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
+  
+  , decomp = 'QR'
   #, autocor = autocor_str
 )
 
@@ -721,6 +727,8 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
+  
+  , decomp = 'QR'
   #, autocor = autocor_str
 )
 
@@ -838,6 +846,8 @@ formula <- bf(
     (persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | coupleID)
+  
+  , decomp = 'QR'
   #, autocor = autocor_str
   )
 
