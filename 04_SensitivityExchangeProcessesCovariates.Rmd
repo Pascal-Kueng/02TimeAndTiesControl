@@ -19,6 +19,8 @@ output:
 
 knitr::opts_chunk$set(echo = TRUE)
 
+rm(list = ls())
+
 #cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
 #cmdstanr::set_cmdstan_path(path = "C:/Users/pascku/.cmdstan/cmdstan-2.36.0")
 
@@ -54,11 +56,11 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = TRUE
+shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = FALSE
-check_models = FALSE 
+get_bayesfactor = TRUE
+check_models = TRUE #
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -129,9 +131,9 @@ model_rows_fixed <- c(
     'pressure_partner_cw', 
     'pushing_self_cw', 
     'pushing_partner_cw', 
+    'day', 
     'plan_selfPlan',
     'plan_partnerPlan',
-    'day', 
     'weartime_self_cw',
     
     'support_self_cw',
@@ -148,7 +150,7 @@ model_rows_fixed <- c(
     'pressure_partner_cb',
     'pushing_self_cb',
     'pushing_partner_cb',
-    'weartime_self_cb',
+    'weartime_self_cb'
     
     'support_self_cb',
     'support_partner_cb',
@@ -193,15 +195,15 @@ model_rows_random_ordinal <- c(model_rows_random,'disc')
 model_rownames_fixed <- c(
     "Intercept", 
     # "-- WITHIN PERSON MAIN EFFECTS --", 
-    "Daily persuasion experienced", 
-    "Daily persuasion utilized (partner's view)", # OR partner received
-    "Daily pressure experienced", 
-    "Daily pressure utilized (partner's view)", 
-    "Daily pushing experienced", 
-    "Daily pushing utilized (partner's view)", 
-    'Own actionplan',
-    'Partner actionplan',
+    "Daily individual's experienced persuasion",  
+    "Daily partner's experienced persuasion", 
+    "Daily individual's experienced pressure", 
+    "Daily partner's experienced pressure", 
+    "Daily individual's experienced pushing", 
+    "Daily partner's experienced pushing", 
     "Day", 
+    "Own Actionplan",
+    'Partner Actionplan',
     "Daily weartime",
     
     'Daily support received',
@@ -211,16 +213,16 @@ model_rownames_fixed <- c(
     'Days post skilled support intervention',
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
-    "Mean persuasion experienced", 
-    "Mean persuasion utilized (partner's view)", 
-    "Mean pressure experienced", 
-    "Mean pressure utilized (partner's view)", 
-    "Mean pushing experienced", 
-    "Mean pushing utilized (partner's view)", 
+    "Mean individual's experienced persuasion", 
+    "Mean partner's experienced persuasion", 
+    "Mean individual's experienced pressure", 
+    "Mean partner's experienced pressure", 
+    "Mean individual's experienced pushing", 
+    "Mean partner's experienced pushing", 
     "Mean weartime",
     
-    'Mean support received',
-    "Mean support provided (partner's view)",
+    "Mean individual's received support",
+    "Mean partner's received support",
     'Difference study group 2',
     'Difference study group 3'
   )
@@ -240,15 +242,16 @@ model_rownames_random <- c(
   # '--------------',
   # '-- RANDOM EFFECTS --',
   'sd(Intercept)', 
-  "sd(Daily persuasion experienced)", 
-  "sd(Daily persuasion utilized (partner's view))", # OR partner received
-  "sd(Daily pressure experienced)", 
-  "sd(Daily pressure utilized (partner's view))", 
-  "sd(Daily pushing experienced)", 
-  "sd(Daily pushing utilized (partner's view))", 
+  "sd(Daily individual's experienced persuasion)", 
+  "sd(Daily partner's experienced persuasion)", # OR partner received
+  "sd(Daily individual's experienced pressure)", 
+  "sd(Daily partner's experienced pressure)", 
+  "sd(Daily individual's experienced pushing)", 
+  "sd(Daily partner's experienced pushing)", 
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
+
 
 model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 
@@ -551,15 +554,17 @@ pa_obj_log_digest <- digest::digest(pa_obj_log)
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
 rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
 
-summarize_brms(
+summary_pa_obj <- summarize_brms(
   pa_obj_log, 
-  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
+  stats_to_report = stats_to_report,
   rope_range = rope_range_log,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T) %>%
+  exponentiate = T) 
+
+summary_pa_obj %>%
   print_df(rows_to_pack = rows_to_pack)
 
 
@@ -660,14 +665,16 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 
 ```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300}
 
-summarize_brms(
+summary_mood <- summarize_brms(
   mood_gauss, 
-  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
+  stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = F) %>%
+  exponentiate = F) 
+
+summary_mood %>%
   print_df(rows_to_pack = rows_to_pack)
 
 
@@ -776,15 +783,17 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 
 ```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
-summarize_brms(
+summary_reactance_ordinal <- summarize_brms(
   reactance_ordinal,
-  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
+  stats_to_report = stats_to_report,
   rope_range = c(-0.18, 0.18),
   model_rows_fixed = model_rows_fixed_ordinal,
   model_rows_random = model_rows_random_ordinal,
   model_rownames_fixed = model_rownames_fixed_ordinal,
   model_rownames_random = model_rownames_random_ordinal,
-  exponentiate = T) %>%
+  exponentiate = T) 
+
+summary_reactance_ordinal %>%
   print_df(rows_to_pack = rows_to_pack_ordinal)
 
 
@@ -899,14 +908,16 @@ is_reactance_digest <- digest::digest(is_reactance)
 
 ```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
 
-summarize_brms(
+summary_is_reactance <- summarize_brms(
   is_reactance, 
-  stats_to_report = c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS'),
+  stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
-  exponentiate = T) %>%
+  exponentiate = T) 
+
+summary_is_reactance %>%
   print_df(rows_to_pack = rows_to_pack)
 
 plot(
@@ -935,42 +946,42 @@ conditional_spaghetti(
 
 # Report All Models
 
-# Report All Models
-
 ```{r report_sidebyside, results = 'asis'}
 
-all_models <- report_side_by_side(
-  pa_sub,
-  pa_obj_log,
-  mood_gauss,
-  #reactance_ordinal,
-  is_reactance,
-  
-  stats_to_report = c('CI'),
-  
-  model_rows_random = model_rows_random,
-  model_rows_fixed = model_rows_fixed,
-  model_rownames_random = model_rownames_random,
-  model_rownames_fixed = model_rownames_fixed
-) 
-
-
+all_models <- cbind(
+  summary_pa_sub[, !grepl('Rhat|ESS', colnames(summary_pa_sub))],
+  summary_pa_obj[, !grepl('Rhat|ESS', colnames(summary_pa_obj))],
+  summary_mood[, !grepl('Rhat|ESS', colnames(summary_mood))], 
+  summary_is_reactance[, !grepl('Rhat|ESS', colnames(summary_is_reactance))]
+  #, summary_reactance_ordinal[, !grepl('Rhat|ESS', colnames(summary_reactance_ordinal))]
+)
 
 
 
 # pretty printing
-
-summary_all_models <- all_models %>%
+if (get_bayesfactor) {
+  summary_all_models <- all_models %>%
   print_df(rows_to_pack = rows_to_pack) %>%
   add_header_above(
-    c(" ", "Subjective MVPA Hurdle Lognormal" = 4,  
-      "Device-Based MVPA Log (Gaussian)" = 2, 
-      "Mood Gaussian" = 2,
-      #"Reactance Ordinal" = 2,
-      "Reactance Dichotome" = 2
+    c(" ", "Subjective MVPA Hurdle Lognormal" = 16,  
+      "Device-Based MVPA Log (Gaussian)" = 8, 
+      "Mood Gaussian" = 8,
+      #"Reactance Ordinal" = 8,
+      "Reactance Dichotome" = 8
   )
 )
-
+} else {
+  summary_all_models <- all_models %>%
+    print_df(rows_to_pack = rows_to_pack) %>%
+    add_header_above(
+      c(" ", "Subjective MVPA Hurdle Lognormal" = 12,  
+        "Device-Based MVPA Log (Gaussian)" = 6, 
+        "Mood Gaussian" = 6,
+        #"Reactance Ordinal" = 6,
+        "Reactance Dichotome" = 6
+    )
+  )
+}
 
 export_xlsx(
   summary_all_models, 
@@ -983,7 +994,7 @@ export_xlsx(
 )
 
   
-print(summary_all_models)
+summary_all_models
 
 ```
 
