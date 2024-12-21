@@ -150,7 +150,7 @@ model_rows_fixed <- c(
     'pressure_partner_cb',
     'pushing_self_cb',
     'pushing_partner_cb',
-    'weartime_self_cb'
+    'weartime_self_cb',
     
     'support_self_cb',
     'support_partner_cb',
