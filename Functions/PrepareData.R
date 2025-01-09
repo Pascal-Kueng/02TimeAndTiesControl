@@ -1,7 +1,7 @@
 
 # Data Preparation
 
-prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_code_studyGroup = FALSE) {
+prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_code_studyGroup = FALSE, use_exerted_control = FALSE) {
     
   
   
@@ -35,6 +35,8 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
   all_variables <- c(predictors_not_to_center, predictors_to_center)
   
   cat('Constructing scales\n')
+  
+  
   df <- df %>% 
     mutate(ss_affect1 = ss_affect1 + 1, # re-code items from 0-5 to 1-6 scale.
            ss_affect2 = ss_affect2 + 1, 
@@ -74,17 +76,38 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
              1, 0
            )
            
-    )%>% 
-    rename(persuasion = sp_psc_more,
-           pressure = sp_nsc_more,
-           pushing = sp_push_plan,
-           reactance = ss_reactance,
-           weartime = wear_minutes,
-           
-           support = sp_emo_pleasure,
-           comf = sp_emo_comf,
-           reas = sp_emo_reass
-    ) %>%
+    ) 
+  
+  
+    if (use_exerted_control) {
+      df <- df %>% 
+        rename(
+          persuasion = ss_psc_more,
+          pressure = ss_nsc_more,
+          pushing = ss_push_plan,
+          reactance = ss_reactance,
+          weartime = wear_minutes,
+          
+          support = ss_emo_pleasure,
+          comf = ss_emo_comf,
+          reas = ss_emo_reass
+        ) 
+    } else {
+      df <- df %>% 
+        rename(
+          persuasion = sp_psc_more,
+          pressure = sp_nsc_more,
+          pushing = sp_push_plan,
+          reactance = ss_reactance,
+          weartime = wear_minutes,
+          
+          support = sp_emo_pleasure,
+          comf = sp_emo_comf,
+          reas = sp_emo_reass
+        ) 
+    }
+  
+  df <- df %>%
     arrange(
       coupleID,
       day
