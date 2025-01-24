@@ -59,7 +59,7 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = TRUE
+get_bayesfactor = FALSE
 check_models = TRUE #
 
 if (get_bayesfactor) {
@@ -847,46 +847,41 @@ plot(
 
 ```{r report_sidebyside, results = 'asis'}
 
-all_models <- cbind(
-  summary_pa_sub[, !grepl('Rhat|ESS', colnames(summary_pa_sub))],
-  summary_pa_obj[, !grepl('Rhat|ESS', colnames(summary_pa_obj))],
-  summary_mood[, !grepl('Rhat|ESS', colnames(summary_mood))], 
-  summary_is_reactance[, !grepl('Rhat|ESS', colnames(summary_is_reactance))]
-  #, summary_reactance_ordinal[, !grepl('Rhat|ESS', colnames(summary_reactance_ordinal))]
+summary_all_models <- report_side_by_side(
+  pa_sub,
+  pa_obj_log,
+  mood_gauss,
+  is_reactance,
+  
+  stats_to_report = c('CI'),
+  model_rows_random = model_rows_random,
+  model_rows_fixed = model_rows_fixed,
+  model_rownames_random = model_rownames_random,
+  model_rownames_fixed = model_rownames_fixed
 )
 
-
-
-# pretty printing
-if (get_bayesfactor) {
-  summary_all_models <- all_models %>%
+summary_all_models <- summary_all_models %>%
   print_df(rows_to_pack = rows_to_pack) %>%
   add_header_above(
-    c(" ", "Subjective MVPA Hurdle Lognormal" = 16,  
-      "Device-Based MVPA Log (Gaussian)" = 8, 
-      "Mood Gaussian" = 8,
-      #"Reactance Ordinal" = 8,
-      "Reactance Dichotome" = 8
-  )
-)
-} else {
-  summary_all_models <- all_models %>%
-    print_df(rows_to_pack = rows_to_pack) %>%
-    add_header_above(
-      c(" ", "Subjective MVPA Hurdle Lognormal" = 12,  
-        "Device-Based MVPA Log (Gaussian)" = 6, 
-        "Mood Gaussian" = 6,
-        #"Reactance Ordinal" = 6,
-        "Reactance Dichotome" = 6
+    c(
+      " ", "Hurdle Component" = 2, "Non-Zero Component" = 2,
+      " " = 6
+    )
+  ) %>%
+  add_header_above(
+    c(" ", "Subjective MVPA Hurdle Lognormal" = 4,  
+      "Device-Based MVPA Log (Gaussian)" = 2, 
+      "Mood Gaussian" = 2,
+      #"Reactance Ordinal" = 2,
+      "Reactance Dichotome" = 2
     )
   )
-}
 
 export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack,
   file.path("Output", paste0("AllModels", suffix_nopushing, ".xlsx")), 
-  merge_option = 'header', 
+  merge_option = 'both', 
   simplify_2nd_row = TRUE,
   line_above_rows = c(1,2),
   line_below_rows = c(-1)
@@ -1481,46 +1476,41 @@ conditional_spaghetti(
 
 ```{r report_sidebyside_pushingonly, results = 'asis'}
 
-all_models <- cbind(
-  summary_pa_sub[, !grepl('Rhat|ESS', colnames(summary_pa_sub))],
-  summary_pa_obj[, !grepl('Rhat|ESS', colnames(summary_pa_obj))],
-  summary_mood[, !grepl('Rhat|ESS', colnames(summary_mood))], 
-  summary_is_reactance[, !grepl('Rhat|ESS', colnames(summary_is_reactance))]
-  #, summary_reactance_ordinal[, !grepl('Rhat|ESS', colnames(summary_reactance_ordinal))]
+summary_all_models <- report_side_by_side(
+  pa_sub,
+  pa_obj_log,
+  mood_gauss,
+  is_reactance,
+  
+  stats_to_report = c('CI'),
+  model_rows_random = model_rows_random,
+  model_rows_fixed = model_rows_fixed,
+  model_rownames_random = model_rownames_random,
+  model_rownames_fixed = model_rownames_fixed
 )
 
-
-
-# pretty printing
-if (get_bayesfactor) {
-  summary_all_models <- all_models %>%
+summary_all_models <- summary_all_models %>%
   print_df(rows_to_pack = rows_to_pack) %>%
   add_header_above(
-    c(" ", "Subjective MVPA Hurdle Lognormal" = 16,  
-      "Device-Based MVPA Log (Gaussian)" = 8, 
-      "Mood Gaussian" = 8,
-      #"Reactance Ordinal" = 8,
-      "Reactance Dichotome" = 8
-  )
-)
-} else {
-  summary_all_models <- all_models %>%
-    print_df(rows_to_pack = rows_to_pack) %>%
-    add_header_above(
-      c(" ", "Subjective MVPA Hurdle Lognormal" = 12,  
-        "Device-Based MVPA Log (Gaussian)" = 6, 
-        "Mood Gaussian" = 6,
-        #"Reactance Ordinal" = 6,
-        "Reactance Dichotome" = 6
+    c(
+      " ", "Hurdle Component" = 2, "Non-Zero Component" = 2,
+      " " = 6
+    )
+  ) %>%
+  add_header_above(
+    c(" ", "Subjective MVPA Hurdle Lognormal" = 4,  
+      "Device-Based MVPA Log (Gaussian)" = 2, 
+      "Mood Gaussian" = 2,
+      #"Reactance Ordinal" = 2,
+      "Reactance Dichotome" = 2
     )
   )
-}
 
 export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack,
   file.path("Output", paste0("AllModels", suffix_onlypushing, ".xlsx")), 
-  merge_option = 'header', 
+  merge_option = 'both', 
   simplify_2nd_row = TRUE,
   line_above_rows = c(1,2),
   line_below_rows = c(-1)
