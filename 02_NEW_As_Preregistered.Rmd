@@ -119,7 +119,7 @@ summary(df_double$pushing)
 
 ```{r apim_preparations}
 
-
+# double Stack centred pa_obj
 
 ```
 
