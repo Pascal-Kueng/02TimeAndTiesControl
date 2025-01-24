@@ -136,15 +136,32 @@ validate_file_path <- function(file) {
 
 # Helper function to merge identical cells in a row
 merge_identical_cells <- function(wb, sheet, final, row_index, is_header = FALSE) {
-  row_data <- if (is_header) names(final) else unlist(final[row_index - 1, ])
+  row_data <- if (is_header) {
+    names(final)
+  } else {
+    unlist(final[row_index - 1, ])
+  }
+  
   col <- 1
   while (col <= length(row_data)) {
     start_col <- col
-    while (col < length(row_data) && identical(row_data[col], row_data[col + 1])) {
+    
+    # Continue as long as adjacent cells are identical AND not empty
+    while (
+      col < length(row_data) && 
+      !is.na(row_data[col]) && 
+      row_data[col] != "" && 
+      identical(row_data[col], row_data[col + 1])
+    ) {
       col <- col + 1
     }
     
-    if (col > start_col) {
+    # Merge only if we found a span of identical cells and the first one isn't empty
+    if (
+      col > start_col && 
+      !is.na(row_data[start_col]) && 
+      row_data[start_col] != ""
+    ) {
       mergeCells(wb, sheet, cols = start_col:col, rows = row_index)
       style <- createStyle(halign = "center")
       if (is_header) {
@@ -152,18 +169,19 @@ merge_identical_cells <- function(wb, sheet, final, row_index, is_header = FALSE
       }
       addStyle(
         wb,
-        sheet = sheet,
-        style = style,
-        rows = row_index,
-        cols = start_col:col,
+        sheet  = sheet,
+        style  = style,
+        rows   = row_index,
+        cols   = start_col:col,
         gridExpand = TRUE,
-        stack = TRUE
+        stack      = TRUE
       )
     }
     
     col <- col + 1
   }
 }
+
 
 # Main function to export HTML table to Excel
 export_xlsx <- function(html_table, 
