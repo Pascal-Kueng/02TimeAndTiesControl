@@ -226,7 +226,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "coupleID", 
     "day", 
     c("persuasion", "pressure", "pushing", 
-      "weartime", "barriers", "plan", "support", "got_JITAI")
+      "weartime", "barriers", "plan", "support", "got_JITAI", "pa_obj")
   )
   
   df_double_full <- reshape_4field(
@@ -234,7 +234,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "coupleID", 
     "day", 
     c("persuasion", "pressure", "pushing", 
-      "weartime", "barriers", "plan", "support", "got_JITAI")
+      "weartime", "barriers", "plan", "support", "got_JITAI", "pa_obj")
   )
   
   

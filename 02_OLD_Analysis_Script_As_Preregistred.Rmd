@@ -1019,9 +1019,9 @@ formula <- bf(
     (0 + 
     is_A + is_B + # Intercepts
     is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
-    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw | coupleID),
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw | coupleID)
 
-  autocor = ~ ar(time = day, gr = coupleID:AorB, p = 1)
+  #,autocor = ~ ar(time = day, gr = coupleID:AorB, p = 1)
 )
 
 
@@ -1033,16 +1033,16 @@ prior1 <- c(
   
   brms::set_prior("normal(0, 10)", class = "sd", group = "coupleID", lb = 0),
   
-  brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
+  #brms::set_prior("cauchy(0, 5)", class = "ar", lb = -1, ub = 1),
   brms::set_prior("cauchy(0, 20)", class = "shape"), 
   brms::set_prior("cauchy(0, 10)", class='sderr')
 )
 
-df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+df_minimal <- df_double[, c(all.vars(as.formula(formula)))]
 
 persuasion_pa_sub_apim <- brm(
   formula, 
-  prior = prior1,
+  #prior = prior1,
   data = df_minimal, 
   family = brms::negbinomial(),
   #control = list(adapt_delta = 0.99),
@@ -1050,8 +1050,8 @@ persuasion_pa_sub_apim <- brm(
   warmup = 1000,
   chains = 4,
   cores = 4,
-  seed = 7777,
-  file = file.path("models_cache_brms", "as_preregistered_persuasion_pa_sub_apim")
+  seed = 7777
+  #,file = file.path("models_cache_brms", "as_preregistered_persuasion_pa_sub_apim")
 )
 
 
