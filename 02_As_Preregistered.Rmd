@@ -1195,11 +1195,11 @@ if (use_mi) {
 formula <- bf(
   is_reactance ~ 0 + 
     is_A + is_B + # Intercepts
-    is_A:pushing_self_cw + is_B:pushing_self_cw + 
-    is_A:pushing_partner_cw + is_B:pushing_partner_cw +
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw +
     
-    is_A:pushing_self_cb + is_B:pushing_self_cb + 
-    is_A:pushing_partner_cb + is_B:pushing_partner_cb +
+    is_A:persuasion_self_cb + is_B:persuasion_self_cb + 
+    is_A:persuasion_partner_cb + is_B:persuasion_partner_cb +
     
     is_A:plan_self + is_B:plan_self + 
     is_A:plan_partner + is_B:plan_partner +
@@ -1208,8 +1208,8 @@ formula <- bf(
     # Random effects
     (0 + 
     is_A + is_B + # Intercepts
-    is_A:pushing_self_cw + is_B:pushing_self_cw + 
-    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw |dd| coupleID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -1295,11 +1295,11 @@ summary_is_reactance %>%
 formula <- bf(
   is_reactance ~ 0 + 
     is_A + is_B + # Intercepts
-    is_A:pushing_self_cw + is_B:pushing_self_cw + 
-    is_A:pushing_partner_cw + is_B:pushing_partner_cw +
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw +
     
-    is_A:pushing_self_cb + is_B:pushing_self_cb + 
-    is_A:pushing_partner_cb + is_B:pushing_partner_cb +
+    is_A:pressure_self_cb + is_B:pressure_self_cb + 
+    is_A:pressure_partner_cb + is_B:pressure_partner_cb +
     
     is_A:plan_self + is_B:plan_self + 
     is_A:plan_partner + is_B:plan_partner +
@@ -1308,8 +1308,8 @@ formula <- bf(
     # Random effects
     (0 + 
     is_A + is_B + # Intercepts
-    is_A:pushing_self_cw + is_B:pushing_self_cw + 
-    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw |dd| coupleID)
   
   , decomp = 'QR'
   #, autocor = autocor_str

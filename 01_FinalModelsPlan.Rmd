@@ -474,7 +474,9 @@ plot(
 
 Hurdle part of the model on the left, non-zero part towards the right side of the table
 
-```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest}
+```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest, warnings = FALSE}
+
+
 
 conds_eff <- conditional_spaghetti(
   pa_sub, 

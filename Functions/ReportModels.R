@@ -959,6 +959,7 @@ plot_hurdle_model <- function(
   library(grid)  
   library(ggridges)
   library(extrafont)
+  font_import(pattern = "Candara", prompt = FALSE)
   suppressMessages(suppressWarnings(extrafont::loadfonts()))
   
   plots_list <- list()
