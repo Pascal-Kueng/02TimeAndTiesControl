@@ -1,5 +1,5 @@
 
-report_measures <- function(data, measures, ICC = TRUE, cluster_var = NULL) {
+report_measures <- function(data, measures, ICC = TRUE, cluster_var = NULL, n_without_missings = TRUE) {
   
   if (ICC & any(sapply(data[,measures], is.factor))) {
     warning("Cannot add ICCs when Factors are in Dataframe.")
@@ -42,6 +42,11 @@ report_measures <- function(data, measures, ICC = TRUE, cluster_var = NULL) {
   )
   
   
+  if (n_without_missings) {
+    measures_table$n_Obs <- ifelse(is.na(measures_table$percentage_Missing), measures_table$n_Obs, measures_table$n_Obs * (1 - (measures_table$percentage_Missing / 100)))
+  }
+  
+  
   
   finished_df <- measures_table
   
@@ -49,8 +54,8 @@ report_measures <- function(data, measures, ICC = TRUE, cluster_var = NULL) {
     cors <- wbCorr(data[,measures], cluster_var)
     
     finished_df <- cbind(
-      measures_table[, c('Variable', 'n_Obs', 'Missing', 'Mean', 'SD', 'Range')],
-      ICC = format(round(get_icc(cors)$ICC, 2), nsmall = 2)
+      measures_table[, c('Variable', 'n_Obs', 'Missing', 'Mean', 'SD', 'Range')]
+      , ICC = format(round(get_icc(cors)$ICC, 2), nsmall = 2)
     )
   } else {
     measures_table$percentage_Obs <- ifelse(
@@ -69,3 +74,5 @@ report_measures <- function(data, measures, ICC = TRUE, cluster_var = NULL) {
   
   return(finished_df)
 }
+
+
