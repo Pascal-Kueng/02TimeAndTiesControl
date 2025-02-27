@@ -59,11 +59,11 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
            barriers = (ss_barr_1 + ss_barr_2 + ss_barr_3 + ss_barr_4 + ss_barr_5 + ss_barr_6 + ss_barr_7) / 7,
            
            
-           
-           plan = ifelse(
-             is.na(ss_pa_no), 
-             ifelse(ss_pa_yes_0 == 1 | ss_pa_yes_1 == 1 | ss_pa_yes_2 == 1 | ss_pa_yes_3 == 1, 1,0),
-             ifelse(ss_pa_no ==1, 1, 0)
+           plan = case_when(
+             !is.na(ss_pa_no) ~ ss_pa_no,  # if ss_pa_no is available, use it (0 or 1)
+             is.na(ss_pa_no) & (ss_pa_yes_0 == 1 | ss_pa_yes_1 == 1 | ss_pa_yes_2 == 1 | ss_pa_yes_3 == 1) ~ 1,
+             is.na(ss_pa_no) & ss_pa_yes_4 == 1 ~ 0,
+             TRUE ~ NA
            ), 
            
            got_JITAI = ifelse(((userID %% 2 != 0) & (trig_target_slot_0 %in% c("A", "C") | trig_target_slot_1 %in% c("A", "C") | trig_target_slot_2 %in% c("A", "C"))) |
