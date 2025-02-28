@@ -59,8 +59,8 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = TRUE
-check_models = TRUE 
+get_bayesfactor = FALSE
+check_models = FALSE 
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -905,7 +905,7 @@ reactance_ordinal <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::cumulative(),
-  #control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.95),
   iter = iterations,
   warmup = warmup,
   chains = 4,
