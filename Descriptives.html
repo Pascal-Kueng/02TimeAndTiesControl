@@ -11,7 +11,7 @@
 
 <meta name="author" content="Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD" />
 
-<meta name="date" content="2024-11-30" />
+<meta name="date" content="2025-02-28" />
 
 <title>APIM - Descriptives</title>
 
@@ -1898,7 +1898,7 @@ font-size: 0.95em;
 <h1 class="title toc-ignore">APIM - Descriptives</h1>
 <h4 class="author">Pascal Küng, MSc, Patrick Höhener, MSc, James M.
 Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD</h4>
-<h4 class="date">2024-11-30</h4>
+<h4 class="date">2025-02-28</h4>
 
 </div>
 
@@ -1920,146 +1920,145 @@ Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD</h4>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>df_full <span class="ot">&lt;-</span> dfs[[<span class="dv">2</span>]]</span></code></pre></div>
 <div id="sample-statistics" class="section level1">
 <h1>Sample Statistics</h1>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Income (mean of both partner&#39;s report)</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>merge_income <span class="ot">&lt;-</span> <span class="cf">function</span>(income1, income2) {</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  merged_income <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(income1))</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  </span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="co"># Loop through each pair of incomes</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(income1)) {</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    <span class="co"># Handle NA</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.na</span>(income1[i])) {</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income2[i]</span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    } </span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>    </span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">is.na</span>(income2[i])) {</span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income1[i]</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>    }</span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>    </span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>    <span class="co"># if both are informative, take mean and round</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (income1[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span> <span class="sc">&amp;&amp;</span> income2[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>) {</span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> <span class="fu">round</span>((income1[i] <span class="sc">+</span> income2[i]) <span class="sc">/</span> <span class="dv">2</span>)</span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>    }</span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>    </span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>    <span class="co"># if one is informative and the other not, use the informative one. </span></span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (income1[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>) {</span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income1[i]</span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>    }</span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (income2[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>) {</span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income2[i]</span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>    }</span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>    </span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>    <span class="co"># Now we only have cases, where both are either 70 or 99. We simply report &quot;undisclosed&quot;. </span></span>
-<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>    <span class="cf">else</span> {</span>
-<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> <span class="dv">99</span></span>
-<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>    }</span>
-<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>  }</span>
-<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>  </span>
-<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>  <span class="co"># Convert to factor</span></span>
-<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>  merged_income <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
-<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>    merged_income, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">70</span>,<span class="dv">99</span>), </span>
-<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(</span>
-<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>      <span class="st">&quot;up to CHF 2&#39;000.-&quot;</span>, </span>
-<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>      <span class="st">&quot;CHF 2&#39;001.- to CHF 4&#39;000.-&quot;</span>,</span>
-<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>      <span class="st">&quot;CHF 4&#39;001.- to CHF 6&#39;000.-&quot;</span>,</span>
-<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>      <span class="st">&quot;CHF 6&#39;001.- to CHF 8&#39;000.-&quot;</span>,</span>
-<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>      <span class="st">&quot;CHF 8&#39;001.- to CHF 10&#39;000.-&quot;</span>, </span>
-<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>      <span class="st">&quot;above CHF 10&#39;000.-&quot;</span>, </span>
-<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a>      <span class="st">&quot;I don&#39;t know&quot;</span>,</span>
-<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>      <span class="st">&quot;Undisclosed&quot;</span></span>
-<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>  )</span>
-<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a>  )</span>
-<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>  </span>
-<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>  <span class="fu">return</span>(merged_income)</span>
-<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a>}</span>
-<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a></span>
-<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a></span>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Sample Statistics</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co"># Income (mean of both partner&#39;s report)</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>merge_income <span class="ot">&lt;-</span> <span class="cf">function</span>(income1, income2) {</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  merged_income <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(income1))</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  </span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="co"># Loop through each pair of incomes</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(income1)) {</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>    <span class="co"># Handle NA</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.na</span>(income1[i])) {</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income2[i]</span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>    } </span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>    </span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">is.na</span>(income2[i])) {</span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income1[i]</span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a>    }</span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a>    </span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a>    <span class="co"># if both are informative, take mean and round</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (income1[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span> <span class="sc">&amp;&amp;</span> income2[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>) {</span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> <span class="fu">round</span>((income1[i] <span class="sc">+</span> income2[i]) <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>    }</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>    </span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a>    <span class="co"># if one is informative and the other not, use the informative one. </span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (income1[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>) {</span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income1[i]</span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a>    }</span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (income2[i] <span class="sc">%in%</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>) {</span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> income2[i]</span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>    }</span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a>    </span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a>    <span class="co"># Now we only have cases, where both are either 70 or 99. We simply report &quot;Undisclosed&quot;. </span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a>    <span class="cf">else</span> {</span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a>      merged_income[i] <span class="ot">&lt;-</span> <span class="dv">99</span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a>    }</span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a>  }</span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a>  </span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a>  <span class="co"># Convert to factor</span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a>  merged_income <span class="ot">&lt;-</span> <span class="fu">factor</span>(</span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a>    merged_income, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">70</span>,<span class="dv">99</span>), </span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(</span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a>      <span class="st">&quot;Up to CHF 2&#39;000&quot;</span>, </span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a>      <span class="st">&quot;CHF 2&#39;001 to CHF 4&#39;000&quot;</span>,</span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a>      <span class="st">&quot;CHF 4&#39;001 to CHF 6&#39;000&quot;</span>,</span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a>      <span class="st">&quot;CHF 6&#39;001 to CHF 8&#39;000&quot;</span>,</span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a>      <span class="st">&quot;CHF 8&#39;001 to CHF 10&#39;000&quot;</span>, </span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a>      <span class="st">&quot;Above CHF 10&#39;000&quot;</span>, </span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a>      <span class="st">&quot;I do not know&quot;</span>,</span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a>      <span class="st">&quot;Undisclosed&quot;</span></span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a>  )</span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a>  )</span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a>  </span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a>  <span class="fu">return</span>(merged_income)</span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a>}</span>
 <span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a></span>
 <span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a>df_sample_report <span class="ot">&lt;-</span> df_full <span class="sc">%&gt;%</span></span>
 <span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a>  <span class="fu">group_by</span>(coupleID) <span class="sc">%&gt;%</span></span>
 <span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a>  <span class="fu">arrange</span>(userID) <span class="sc">%&gt;%</span></span>
 <span id="cb3-58"><a href="#cb3-58" tabindex="-1"></a>  <span class="co"># Computing couple level variables</span></span>
 <span id="cb3-59"><a href="#cb3-59" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a>    <span class="at">Household_Income =</span> <span class="fu">merge_income</span>(<span class="fu">first</span>(pre_income_1), <span class="fu">last</span>(pre_income_1)),</span>
+<span id="cb3-60"><a href="#cb3-60" tabindex="-1"></a>    <span class="st">&quot;Household income&quot;</span> <span class="ot">=</span> <span class="fu">merge_income</span>(<span class="fu">first</span>(pre_income_1), <span class="fu">last</span>(pre_income_1)),</span>
 <span id="cb3-61"><a href="#cb3-61" tabindex="-1"></a>    </span>
 <span id="cb3-62"><a href="#cb3-62" tabindex="-1"></a>    <span class="at">reldur =</span> pre_rel_duration_m <span class="sc">/</span> <span class="dv">12</span> <span class="sc">+</span> pre_rel_duration_y,</span>
-<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a>    <span class="at">Relationship_duration =</span> <span class="fu">mean</span>(reldur, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb3-63"><a href="#cb3-63" tabindex="-1"></a>    <span class="st">&quot;Relationship duration&quot;</span> <span class="ot">=</span> <span class="fu">mean</span>(reldur, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb3-64"><a href="#cb3-64" tabindex="-1"></a>    </span>
 <span id="cb3-65"><a href="#cb3-65" tabindex="-1"></a>    <span class="at">habdur =</span> pre_hab_duration_m <span class="sc">/</span> <span class="dv">12</span> <span class="sc">+</span> pre_hab_duration_y,</span>
-<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a>    <span class="at">Cohabiting_duration =</span> <span class="fu">mean</span>(habdur, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb3-66"><a href="#cb3-66" tabindex="-1"></a>    <span class="st">&quot;Cohabiting duration&quot;</span> <span class="ot">=</span> <span class="fu">mean</span>(habdur, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb3-67"><a href="#cb3-67" tabindex="-1"></a>    </span>
-<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a>    <span class="at">Marital_status =</span> <span class="fu">factor</span>(</span>
+<span id="cb3-68"><a href="#cb3-68" tabindex="-1"></a>    <span class="st">&quot;Marital status&quot;</span> <span class="ot">=</span> <span class="fu">factor</span>(</span>
 <span id="cb3-69"><a href="#cb3-69" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
 <span id="cb3-70"><a href="#cb3-70" tabindex="-1"></a>        <span class="fu">all</span>(pre_mat_stat <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">~</span> <span class="st">&quot;Married&quot;</span>,</span>
-<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a>        <span class="fu">any</span>(pre_mat_stat <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">~</span> <span class="st">&quot;One Partner Married&quot;</span>,</span>
-<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;Not Married&quot;</span></span>
+<span id="cb3-71"><a href="#cb3-71" tabindex="-1"></a>        <span class="fu">any</span>(pre_mat_stat <span class="sc">==</span> <span class="dv">1</span>) <span class="sc">~</span> <span class="st">&quot;One partner married&quot;</span>,</span>
+<span id="cb3-72"><a href="#cb3-72" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;Not married&quot;</span></span>
 <span id="cb3-73"><a href="#cb3-73" tabindex="-1"></a>      )</span>
 <span id="cb3-74"><a href="#cb3-74" tabindex="-1"></a>    ),</span>
 <span id="cb3-75"><a href="#cb3-75" tabindex="-1"></a>    </span>
-<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a>    <span class="at">Have_children =</span> <span class="fu">factor</span>(</span>
+<span id="cb3-76"><a href="#cb3-76" tabindex="-1"></a>    <span class="st">&quot;Have children&quot;</span> <span class="ot">=</span> <span class="fu">factor</span>(</span>
 <span id="cb3-77"><a href="#cb3-77" tabindex="-1"></a>      (<span class="fu">first</span>(pre_child_option) <span class="sc">+</span> <span class="fu">last</span>(pre_child_option)) <span class="sc">&gt;</span> <span class="dv">0</span>, </span>
 <span id="cb3-78"><a href="#cb3-78" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="cn">FALSE</span>, <span class="cn">TRUE</span>), </span>
-<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&#39;Have Children&#39;</span>, <span class="st">&#39;No Children&#39;</span>)),</span>
+<span id="cb3-79"><a href="#cb3-79" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Have children&quot;</span>, <span class="st">&quot;No children&quot;</span>)),</span>
 <span id="cb3-80"><a href="#cb3-80" tabindex="-1"></a>    </span>
 <span id="cb3-81"><a href="#cb3-81" tabindex="-1"></a>    <span class="at">Gender =</span> <span class="fu">factor</span>(</span>
 <span id="cb3-82"><a href="#cb3-82" tabindex="-1"></a>      gender, </span>
 <span id="cb3-83"><a href="#cb3-83" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>), </span>
-<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&#39;Male&#39;</span>,<span class="st">&#39;Female&#39;</span>, <span class="st">&#39;Other&#39;</span>)),</span>
+<span id="cb3-84"><a href="#cb3-84" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Male&quot;</span>, <span class="st">&quot;Female&quot;</span>, <span class="st">&quot;Other&quot;</span>)),</span>
 <span id="cb3-85"><a href="#cb3-85" tabindex="-1"></a>    </span>
-<span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a></span>
-<span id="cb3-87"><a href="#cb3-87" tabindex="-1"></a>    <span class="at">Couple_type =</span> <span class="fu">as.factor</span>(</span>
-<span id="cb3-88"><a href="#cb3-88" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
-<span id="cb3-89"><a href="#cb3-89" tabindex="-1"></a>        <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="fu">last</span>(Gender) <span class="sc">&amp;</span> <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="st">&#39;Male&#39;</span> <span class="sc">~</span> <span class="st">&#39;Same-Sex Couple (Male)&#39;</span>,</span>
-<span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a>        <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="fu">last</span>(Gender) <span class="sc">&amp;</span> <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="st">&#39;Female&#39;</span> <span class="sc">~</span> <span class="st">&#39;Same-Sex Couple (Female)&#39;</span>,</span>
-<span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&#39;Mixed-sex Couple&#39;</span></span>
-<span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a>      )</span>
-<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a>    )</span>
-<span id="cb3-94"><a href="#cb3-94" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb3-95"><a href="#cb3-95" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb3-96"><a href="#cb3-96" tabindex="-1"></a>  <span class="co"># Individual level variables</span></span>
-<span id="cb3-97"><a href="#cb3-97" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb3-98"><a href="#cb3-98" tabindex="-1"></a>    <span class="at">Age =</span> pre_age,</span>
-<span id="cb3-99"><a href="#cb3-99" tabindex="-1"></a>    <span class="at">Handedness =</span> <span class="fu">factor</span>(</span>
-<span id="cb3-100"><a href="#cb3-100" tabindex="-1"></a>      pre_handedness, </span>
-<span id="cb3-101"><a href="#cb3-101" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>), </span>
-<span id="cb3-102"><a href="#cb3-102" tabindex="-1"></a>      <span class="fu">c</span>(<span class="st">&#39;Right&#39;</span>,<span class="st">&#39;Left&#39;</span>, <span class="st">&#39;Ambidextrous&#39;</span>)),</span>
-<span id="cb3-103"><a href="#cb3-103" tabindex="-1"></a>  <span class="at">Highest_Education =</span> <span class="fu">factor</span>(</span>
-<span id="cb3-104"><a href="#cb3-104" tabindex="-1"></a>    pre_education, </span>
-<span id="cb3-105"><a href="#cb3-105" tabindex="-1"></a>    <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>), </span>
-<span id="cb3-106"><a href="#cb3-106" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(</span>
-<span id="cb3-107"><a href="#cb3-107" tabindex="-1"></a>      <span class="st">&quot;(still) no school diploma&quot;</span>,</span>
-<span id="cb3-108"><a href="#cb3-108" tabindex="-1"></a>      <span class="st">&quot;compulsory education (9 years)&quot;</span>,</span>
-<span id="cb3-109"><a href="#cb3-109" tabindex="-1"></a>      <span class="st">&quot;vocational training (apprenticeship)&quot;</span>,</span>
-<span id="cb3-110"><a href="#cb3-110" tabindex="-1"></a>      <span class="st">&quot;Matura (university entrance qualification)&quot;</span>,</span>
-<span id="cb3-111"><a href="#cb3-111" tabindex="-1"></a>      <span class="st">&quot;Bachelor&#39;s degree&quot;</span>, </span>
-<span id="cb3-112"><a href="#cb3-112" tabindex="-1"></a>      <span class="st">&quot;Master&#39;s degree&quot;</span>,</span>
-<span id="cb3-113"><a href="#cb3-113" tabindex="-1"></a>      <span class="st">&quot;Doctorate degree&quot;</span></span>
-<span id="cb3-114"><a href="#cb3-114" tabindex="-1"></a>      )</span>
-<span id="cb3-115"><a href="#cb3-115" tabindex="-1"></a>    ),</span>
-<span id="cb3-116"><a href="#cb3-116" tabindex="-1"></a>  <span class="at">BMI =</span> pre_weight <span class="sc">/</span> ((pre_height <span class="sc">/</span> <span class="dv">100</span>)<span class="sc">^</span><span class="dv">2</span>) <span class="co"># to meters</span></span>
-<span id="cb3-117"><a href="#cb3-117" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb3-118"><a href="#cb3-118" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">c</span>(Relationship_duration, Cohabiting_duration, Couple_type, Household_Income, </span>
-<span id="cb3-119"><a href="#cb3-119" tabindex="-1"></a>            Marital_status, Have_children, </span>
-<span id="cb3-120"><a href="#cb3-120" tabindex="-1"></a>            Gender, Age, Handedness, Highest_Education, BMI))</span>
+<span id="cb3-86"><a href="#cb3-86" tabindex="-1"></a>    <span class="st">&quot;Couple type&quot;</span> <span class="ot">=</span> <span class="fu">as.factor</span>(</span>
+<span id="cb3-87"><a href="#cb3-87" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
+<span id="cb3-88"><a href="#cb3-88" tabindex="-1"></a>        <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="fu">last</span>(Gender) <span class="sc">&amp;</span> <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="st">&quot;Male&quot;</span> <span class="sc">~</span> <span class="st">&quot;Same-sex couple (male)&quot;</span>,</span>
+<span id="cb3-89"><a href="#cb3-89" tabindex="-1"></a>        <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="fu">last</span>(Gender) <span class="sc">&amp;</span> <span class="fu">first</span>(Gender) <span class="sc">==</span> <span class="st">&quot;Female&quot;</span> <span class="sc">~</span> <span class="st">&quot;Same-sex couple (female)&quot;</span>,</span>
+<span id="cb3-90"><a href="#cb3-90" tabindex="-1"></a>        <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;Mixed-sex couple&quot;</span></span>
+<span id="cb3-91"><a href="#cb3-91" tabindex="-1"></a>      )</span>
+<span id="cb3-92"><a href="#cb3-92" tabindex="-1"></a>    )</span>
+<span id="cb3-93"><a href="#cb3-93" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb3-94"><a href="#cb3-94" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-95"><a href="#cb3-95" tabindex="-1"></a>  <span class="co"># Individual level variables</span></span>
+<span id="cb3-96"><a href="#cb3-96" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-97"><a href="#cb3-97" tabindex="-1"></a>    <span class="at">Age =</span> pre_age,</span>
+<span id="cb3-98"><a href="#cb3-98" tabindex="-1"></a>    <span class="at">Handedness =</span> <span class="fu">factor</span>(</span>
+<span id="cb3-99"><a href="#cb3-99" tabindex="-1"></a>      pre_handedness, </span>
+<span id="cb3-100"><a href="#cb3-100" tabindex="-1"></a>      <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>), </span>
+<span id="cb3-101"><a href="#cb3-101" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;Right&quot;</span>, <span class="st">&quot;Left&quot;</span>, <span class="st">&quot;Ambidextrous&quot;</span>)),</span>
+<span id="cb3-102"><a href="#cb3-102" tabindex="-1"></a>  <span class="st">&quot;Highest education&quot;</span> <span class="ot">=</span> <span class="fu">factor</span>(</span>
+<span id="cb3-103"><a href="#cb3-103" tabindex="-1"></a>    pre_education, </span>
+<span id="cb3-104"><a href="#cb3-104" tabindex="-1"></a>    <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>,<span class="dv">7</span>), </span>
+<span id="cb3-105"><a href="#cb3-105" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(</span>
+<span id="cb3-106"><a href="#cb3-106" tabindex="-1"></a>      <span class="st">&quot;(Still) no school diploma&quot;</span>,</span>
+<span id="cb3-107"><a href="#cb3-107" tabindex="-1"></a>      <span class="st">&quot;Compulsory education (9 years)&quot;</span>,</span>
+<span id="cb3-108"><a href="#cb3-108" tabindex="-1"></a>      <span class="st">&quot;Vocational training (apprenticeship)&quot;</span>,</span>
+<span id="cb3-109"><a href="#cb3-109" tabindex="-1"></a>      <span class="st">&quot;Matura (university entrance qualification)&quot;</span>,</span>
+<span id="cb3-110"><a href="#cb3-110" tabindex="-1"></a>      <span class="st">&quot;Bachelor&#39;s degree&quot;</span>, </span>
+<span id="cb3-111"><a href="#cb3-111" tabindex="-1"></a>      <span class="st">&quot;Master&#39;s degree&quot;</span>,</span>
+<span id="cb3-112"><a href="#cb3-112" tabindex="-1"></a>      <span class="st">&quot;Doctorate degree&quot;</span></span>
+<span id="cb3-113"><a href="#cb3-113" tabindex="-1"></a>      )</span>
+<span id="cb3-114"><a href="#cb3-114" tabindex="-1"></a>    ),</span>
+<span id="cb3-115"><a href="#cb3-115" tabindex="-1"></a>  <span class="at">BMI =</span> pre_weight <span class="sc">/</span> ((pre_height <span class="sc">/</span> <span class="dv">100</span>)<span class="sc">^</span><span class="dv">2</span>) <span class="co"># to meters</span></span>
+<span id="cb3-116"><a href="#cb3-116" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb3-117"><a href="#cb3-117" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">c</span>(<span class="st">&quot;Relationship duration&quot;</span>, <span class="st">&quot;Cohabiting duration&quot;</span>, <span class="st">&quot;Couple type&quot;</span>, <span class="st">&quot;Household income&quot;</span>, </span>
+<span id="cb3-118"><a href="#cb3-118" tabindex="-1"></a>            <span class="st">&quot;Marital status&quot;</span>, <span class="st">&quot;Have children&quot;</span>, </span>
+<span id="cb3-119"><a href="#cb3-119" tabindex="-1"></a>            Gender, Age, Handedness, <span class="st">&quot;Highest education&quot;</span>, BMI))</span>
+<span id="cb3-120"><a href="#cb3-120" tabindex="-1"></a></span>
 <span id="cb3-121"><a href="#cb3-121" tabindex="-1"></a></span>
-<span id="cb3-122"><a href="#cb3-122" tabindex="-1"></a></span>
-<span id="cb3-123"><a href="#cb3-123" tabindex="-1"></a>sample_table <span class="ot">&lt;-</span> <span class="fu">report_measures</span>(df_sample_report, <span class="at">ICC =</span> F)</span>
-<span id="cb3-124"><a href="#cb3-124" tabindex="-1"></a>sample_table<span class="sc">$</span>n_Obs <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(sample_table<span class="sc">$</span>n_Obs) <span class="sc">/</span> <span class="dv">55</span></span>
-<span id="cb3-125"><a href="#cb3-125" tabindex="-1"></a><span class="fu">rownames</span>(sample_table) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb3-126"><a href="#cb3-126" tabindex="-1"></a></span>
-<span id="cb3-127"><a href="#cb3-127" tabindex="-1"></a>n_couple_vars <span class="ot">&lt;-</span> <span class="dv">17</span></span>
-<span id="cb3-128"><a href="#cb3-128" tabindex="-1"></a>sample_table<span class="sc">$</span>n_Obs[<span class="dv">1</span><span class="sc">:</span>n_couple_vars] <span class="ot">&lt;-</span> sample_table<span class="sc">$</span>n_Obs[<span class="dv">1</span><span class="sc">:</span>n_couple_vars] <span class="sc">/</span> <span class="dv">2</span></span>
-<span id="cb3-129"><a href="#cb3-129" tabindex="-1"></a></span>
-<span id="cb3-130"><a href="#cb3-130" tabindex="-1"></a>packing_sample <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb3-131"><a href="#cb3-131" tabindex="-1"></a>    <span class="st">&quot;Couple level variables (38 couples)&quot;</span> <span class="ot">=</span> </span>
-<span id="cb3-132"><a href="#cb3-132" tabindex="-1"></a>      <span class="fu">c</span>(<span class="dv">1</span>, n_couple_vars),</span>
-<span id="cb3-133"><a href="#cb3-133" tabindex="-1"></a>    <span class="st">&quot;Individual level variables (76 individuals)&quot;</span> </span>
-<span id="cb3-134"><a href="#cb3-134" tabindex="-1"></a>    <span class="ot">=</span> <span class="fu">c</span>(n_couple_vars<span class="sc">+</span><span class="dv">1</span>, <span class="fu">nrow</span>(sample_table))</span>
-<span id="cb3-135"><a href="#cb3-135" tabindex="-1"></a>    ) </span>
-<span id="cb3-136"><a href="#cb3-136" tabindex="-1"></a></span>
-<span id="cb3-137"><a href="#cb3-137" tabindex="-1"></a>df_sample_summary <span class="ot">&lt;-</span> <span class="fu">print_df</span>(</span>
-<span id="cb3-138"><a href="#cb3-138" tabindex="-1"></a>  sample_table,</span>
-<span id="cb3-139"><a href="#cb3-139" tabindex="-1"></a>  <span class="at">rows_to_pack =</span> packing_sample</span>
-<span id="cb3-140"><a href="#cb3-140" tabindex="-1"></a>)</span></code></pre></div>
+<span id="cb3-122"><a href="#cb3-122" tabindex="-1"></a>sample_table <span class="ot">&lt;-</span> <span class="fu">report_measures</span>(df_sample_report, <span class="at">ICC =</span> F)</span>
+<span id="cb3-123"><a href="#cb3-123" tabindex="-1"></a>sample_table<span class="sc">$</span>n_Obs <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(sample_table<span class="sc">$</span>n_Obs) <span class="sc">/</span> <span class="dv">55</span></span>
+<span id="cb3-124"><a href="#cb3-124" tabindex="-1"></a><span class="fu">rownames</span>(sample_table) <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb3-125"><a href="#cb3-125" tabindex="-1"></a></span>
+<span id="cb3-126"><a href="#cb3-126" tabindex="-1"></a>n_couple_vars <span class="ot">&lt;-</span> <span class="dv">17</span></span>
+<span id="cb3-127"><a href="#cb3-127" tabindex="-1"></a>sample_table<span class="sc">$</span>n_Obs[<span class="dv">1</span><span class="sc">:</span>n_couple_vars] <span class="ot">&lt;-</span> sample_table<span class="sc">$</span>n_Obs[<span class="dv">1</span><span class="sc">:</span>n_couple_vars] <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb3-128"><a href="#cb3-128" tabindex="-1"></a></span>
+<span id="cb3-129"><a href="#cb3-129" tabindex="-1"></a>packing_sample <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb3-130"><a href="#cb3-130" tabindex="-1"></a>    <span class="st">&quot;Couple level variables (38 couples)&quot;</span> <span class="ot">=</span> </span>
+<span id="cb3-131"><a href="#cb3-131" tabindex="-1"></a>      <span class="fu">c</span>(<span class="dv">1</span>, n_couple_vars),</span>
+<span id="cb3-132"><a href="#cb3-132" tabindex="-1"></a>    <span class="st">&quot;Individual level variables (76 individuals)&quot;</span> </span>
+<span id="cb3-133"><a href="#cb3-133" tabindex="-1"></a>    <span class="ot">=</span> <span class="fu">c</span>(n_couple_vars<span class="sc">+</span><span class="dv">1</span>, <span class="fu">nrow</span>(sample_table))</span>
+<span id="cb3-134"><a href="#cb3-134" tabindex="-1"></a>    ) </span>
+<span id="cb3-135"><a href="#cb3-135" tabindex="-1"></a></span>
+<span id="cb3-136"><a href="#cb3-136" tabindex="-1"></a>df_sample_summary <span class="ot">&lt;-</span> <span class="fu">print_df</span>(</span>
+<span id="cb3-137"><a href="#cb3-137" tabindex="-1"></a>  sample_table,</span>
+<span id="cb3-138"><a href="#cb3-138" tabindex="-1"></a>  <span class="at">rows_to_pack =</span> packing_sample</span>
+<span id="cb3-139"><a href="#cb3-139" tabindex="-1"></a>)</span></code></pre></div>
 <pre><code>## 
 ## Attaching package: &#39;kableExtra&#39;</code></pre>
 <pre><code>## The following object is masked from &#39;package:dplyr&#39;:
@@ -2115,7 +2114,7 @@ Range
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Relationship_duration
+Relationship duration
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -2141,7 +2140,7 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Cohabiting_duration
+Cohabiting duration
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -2167,10 +2166,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Couple_type
+Couple type
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-Same-Sex Couple (Male)
+Same-sex couple (male)
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 1
@@ -2193,10 +2192,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Couple_type
+Couple type
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-Same-Sex Couple (Female)
+Same-sex couple (female)
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 1
@@ -2219,10 +2218,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Couple_type
+Couple type
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-Mixed-sex Couple
+Mixed-sex couple
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 36
@@ -2245,10 +2244,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-I don’t know
+I do not know
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 0
@@ -2271,10 +2270,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-up to CHF 2’000.-
+Up to CHF 2’000
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 2
@@ -2297,10 +2296,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-CHF 2’001.- to CHF 4’000.-
+CHF 2’001 to CHF 4’000
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 3
@@ -2323,10 +2322,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-CHF 6’001.- to CHF 8’000.-
+CHF 6’001 to CHF 8’000
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 3
@@ -2349,10 +2348,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-CHF 4’001.- to CHF 6’000.-
+CHF 4’001 to CHF 6’000
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 5
@@ -2375,7 +2374,7 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 Undisclosed
@@ -2401,10 +2400,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-CHF 8’001.- to CHF 10’000.-
+CHF 8’001 to CHF 10’000
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 8
@@ -2427,10 +2426,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Household_Income
+Household income
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-above CHF 10’000.-
+Above CHF 10’000
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 12
@@ -2453,7 +2452,7 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Marital_status
+Marital status
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 Married
@@ -2479,10 +2478,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Marital_status
+Marital status
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-Not Married
+Not married
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 25
@@ -2505,10 +2504,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Have_children
+Have children
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-No Children
+No children
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 11
@@ -2531,10 +2530,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Have_children
+Have children
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-Have Children
+Have children
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 27
@@ -2744,10 +2743,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Highest_Education
+Highest education
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-(still) no school diploma
+(Still) no school diploma
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 0
@@ -2770,10 +2769,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Highest_Education
+Highest education
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-compulsory education (9 years)
+Compulsory education (9 years)
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 0
@@ -2796,7 +2795,7 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Highest_Education
+Highest education
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 Doctorate degree
@@ -2822,10 +2821,10 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Highest_Education
+Highest education
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-vocational training (apprenticeship)
+Vocational training (apprenticeship)
 </td>
 <td style="text-align:right;width: auto; white-space: nowrap;">
 8
@@ -2848,7 +2847,7 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Highest_Education
+Highest education
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 Master’s degree
@@ -2874,7 +2873,7 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Highest_Education
+Highest education
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 Bachelor’s degree
@@ -2900,7 +2899,7 @@ NA
 </tr>
 <tr>
 <td style="text-align:left;white-space: nowrap;padding-left: 2em;" indentlevel="1">
-Highest_Education
+Highest education
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 Matura (university entrance qualification)
@@ -3007,7 +3006,7 @@ ICC
 persuasion
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3936
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 6%
@@ -3030,7 +3029,7 @@ persuasion
 pressure
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3931
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 6%
@@ -3053,10 +3052,10 @@ pressure
 pushing
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3905
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-6%
+7%
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 0.16
@@ -3076,7 +3075,7 @@ pushing
 pa_sub
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3943
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 6%
@@ -3099,7 +3098,7 @@ pa_sub
 pa_obj
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3706
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 11%
@@ -3122,7 +3121,7 @@ pa_obj
 aff
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3944
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 6%
@@ -3145,7 +3144,7 @@ aff
 reactance
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+795
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 81%
@@ -3229,7 +3228,7 @@ persuasion
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3936
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3255,7 +3254,7 @@ pressure
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3931
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3281,13 +3280,13 @@ pushing
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3905
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-6%
+7%
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 0.16
@@ -3307,7 +3306,7 @@ pa_sub
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3943
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3333,7 +3332,7 @@ pa_obj
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3706
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3359,7 +3358,7 @@ aff
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3944
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3385,7 +3384,7 @@ reactance
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+795
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3437,7 +3436,7 @@ weartime
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+4124
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3515,10 +3514,10 @@ plan
 missing
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-238
+272
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-6%
+7%
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3567,10 +3566,10 @@ plan
 No plan
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-2082
+2048
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-50%
+49%
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -3671,7 +3670,7 @@ support
 NA
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
-4180
+3927
 </td>
 <td style="text-align:left;width: auto; white-space: nowrap;">
 NA
@@ -4094,10 +4093,10 @@ pressure
 pushing
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.63***
+0.62***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.40*
+0.41*
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 [0.08]
@@ -4106,13 +4105,13 @@ pushing
 0.14***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.05**
+0.06***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.01
+0.02
 </td>
 <td style="text-align:left;white-space: nowrap;">
-0.07*
+0.08*
 </td>
 </tr>
 <tr>
@@ -4126,7 +4125,7 @@ pa_sub
 -0.10
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.24
+0.23
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 [0.15]
@@ -4152,7 +4151,7 @@ pa_obj
 -0.08
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.27
+0.26
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.51***
@@ -4178,7 +4177,7 @@ aff
 -0.07
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.29
+0.28
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.52***
@@ -4204,7 +4203,7 @@ reactance
 0.23
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.11
+0.10
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.06
@@ -4357,7 +4356,7 @@ persuasion
 0.01
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.10***
+0.11***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
@@ -4407,7 +4406,7 @@ pressure
 -0.00
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.03*
+0.03
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
@@ -4427,10 +4426,10 @@ NA
 pushing
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.63***
+0.62***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.40*
+0.41*
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 [0.08]
@@ -4439,13 +4438,13 @@ pushing
 0.14***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.05**
+0.06***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.01
+0.02
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.07*
+0.08*
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 -0.04*
@@ -4457,19 +4456,19 @@ pushing
 -0.01
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.23***
+0.24***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.24***
+0.25***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.02
 </td>
 <td style="text-align:left;white-space: nowrap;">
--0.03
+-0.02
 </td>
 </tr>
 <tr>
@@ -4483,7 +4482,7 @@ pa_sub
 -0.10
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.24
+0.23
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 [0.15]
@@ -4507,7 +4506,7 @@ pa_sub
 0.04*
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.46***
+0.47***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
@@ -4533,7 +4532,7 @@ pa_obj
 -0.08
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.27
+0.26
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.51***
@@ -4557,7 +4556,7 @@ pa_obj
 0.06***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.09***
+0.10***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
@@ -4583,7 +4582,7 @@ aff
 -0.07
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.29
+0.28
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.52***
@@ -4633,7 +4632,7 @@ reactance
 0.23
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.11
+0.10
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.06
@@ -4707,7 +4706,7 @@ NA
 -0.08***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
--0.03*
+-0.03
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
@@ -4827,37 +4826,37 @@ NA
 plan
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.18
+0.20
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.14
+0.15
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.34*
+0.36*
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.67***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.28
+0.30
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.33*
+0.34*
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
--0.01
-</td>
-<td style="text-align:left;width: 7em; white-space: nowrap;">
-NA
-</td>
-<td style="text-align:left;width: 7em; white-space: nowrap;">
--0.02
+0.00
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-[0.13]
+-0.03
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+NA
+</td>
+<td style="text-align:left;width: 7em; white-space: nowrap;">
+[0.14]
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 NA
@@ -4866,7 +4865,7 @@ NA
 0.16***
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.08***
+0.07***
 </td>
 <td style="text-align:left;white-space: nowrap;">
 -0.01
@@ -4883,7 +4882,7 @@ studyGroup
 0.11
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.05
+0.04
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.13
@@ -4907,7 +4906,7 @@ NA
 NA
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
--0.07
+-0.08
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 [1.00]
@@ -4957,7 +4956,7 @@ NA
 NA
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
-0.44**
+0.46**
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 -0.05
@@ -4983,7 +4982,7 @@ got_JITAI
 -0.12
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
--0.02
+-0.03
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 0.10
@@ -5033,7 +5032,7 @@ skilled_support
 -0.19
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
--0.08
+-0.07
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 -0.24
@@ -5057,7 +5056,7 @@ NA
 NA
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
--0.16
+-0.15
 </td>
 <td style="text-align:left;width: 7em; white-space: nowrap;">
 -0.85***
@@ -5080,13 +5079,13 @@ correlations are below the diagonal. On the diagonal are intraclass
 correlations (ICCs)</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">report_system</span>()</span></code></pre></div>
 <p>Analyses were conducted using the R Statistical language (version
-4.4.1; R Core Team, 2024) on Windows 11 x64 (build 22635)</p>
+4.4.2; R Core Team, 2024) on Windows 11 x64 (build 26100)</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a>report<span class="sc">::</span><span class="fu">report_packages</span>()</span></code></pre></div>
 <ul>
 <li>lubridate (version 1.9.3; Grolemund G, Wickham H, 2011)</li>
 <li>wbCorr (version 0.1.22; Küng P, 2023)</li>
 <li>tibble (version 3.2.1; Müller K, Wickham H, 2023)</li>
-<li>R (version 4.4.1; R Core Team, 2024)</li>
+<li>R (version 4.4.2; R Core Team, 2024)</li>
 <li>openxlsx (version 4.2.7.1; Schauberger P, Walker A, 2024)</li>
 <li>ggplot2 (version 3.5.1; Wickham H, 2016)</li>
 <li>forcats (version 1.0.0; Wickham H, 2023)</li>
@@ -5109,20 +5108,20 @@ lubridate.” <em>Journal of Statistical Software</em>, <em>40</em>(3),
 <li>Küng P (2023). <em>wbCorr: Bivariate Within- and Between-Cluster
 Correlations</em>. University of Zürich. R package version 0.1.22. <a href="https://github.com/Pascal-Kueng/wbCorr" class="uri">https://github.com/Pascal-Kueng/wbCorr</a>.</li>
 <li>Müller K, Wickham H (2023). <em>tibble: Simple Data Frames</em>. R
-package version 3.2.1, <a href="https://CRAN.R-project.org/package=tibble" class="uri">https://CRAN.R-project.org/package=tibble</a>.</li>
+package version 3.2.1, <a href="https://github.com/tidyverse/tibble" class="uri">https://github.com/tidyverse/tibble</a>, <a href="https://tibble.tidyverse.org/" class="uri">https://tibble.tidyverse.org/</a>.</li>
 <li>R Core Team (2024). <em>R: A Language and Environment for
 Statistical Computing</em>. R Foundation for Statistical Computing,
 Vienna, Austria. <a href="https://www.R-project.org/" class="uri">https://www.R-project.org/</a>.</li>
 <li>Schauberger P, Walker A (2024). <em>openxlsx: Read, Write and Edit
-xlsx Files</em>. R package version 4.2.7.1, <a href="https://CRAN.R-project.org/package=openxlsx" class="uri">https://CRAN.R-project.org/package=openxlsx</a>.</li>
+xlsx Files</em>. R package version 4.2.7.1, <a href="https://github.com/ycphs/openxlsx" class="uri">https://github.com/ycphs/openxlsx</a>, <a href="https://ycphs.github.io/openxlsx/index.html" class="uri">https://ycphs.github.io/openxlsx/index.html</a>.</li>
 <li>Wickham H (2016). <em>ggplot2: Elegant Graphics for Data
 Analysis</em>. Springer-Verlag New York. ISBN 978-3-319-24277-4, <a href="https://ggplot2.tidyverse.org" class="uri">https://ggplot2.tidyverse.org</a>.</li>
 <li>Wickham H (2023). <em>forcats: Tools for Working with Categorical
-Variables (Factors)</em>. R package version 1.0.0, <a href="https://CRAN.R-project.org/package=forcats" class="uri">https://CRAN.R-project.org/package=forcats</a>.</li>
+Variables (Factors)</em>. R package version 1.0.0, <a href="https://github.com/tidyverse/forcats" class="uri">https://github.com/tidyverse/forcats</a>, <a href="https://forcats.tidyverse.org/" class="uri">https://forcats.tidyverse.org/</a>.</li>
 <li>Wickham H (2023). <em>stringr: Simple, Consistent Wrappers for
-Common String Operations</em>. R package version 1.5.1, <a href="https://CRAN.R-project.org/package=stringr" class="uri">https://CRAN.R-project.org/package=stringr</a>.</li>
+Common String Operations</em>. R package version 1.5.1, <a href="https://github.com/tidyverse/stringr" class="uri">https://github.com/tidyverse/stringr</a>, <a href="https://stringr.tidyverse.org" class="uri">https://stringr.tidyverse.org</a>.</li>
 <li>Wickham H (2024). <em>rvest: Easily Harvest (Scrape) Web Pages</em>.
-R package version 1.0.4, <a href="https://CRAN.R-project.org/package=rvest" class="uri">https://CRAN.R-project.org/package=rvest</a>.</li>
+R package version 1.0.4, <a href="https://github.com/tidyverse/rvest" class="uri">https://github.com/tidyverse/rvest</a>, <a href="https://rvest.tidyverse.org/" class="uri">https://rvest.tidyverse.org/</a>.</li>
 <li>Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R,
 Grolemund G, Hayes A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E,
 Bache SM, Müller K, Ooms J, Robinson D, Seidel DP, Spinu V, Takahashi K,
@@ -5131,15 +5130,15 @@ Vaughan D, Wilke C, Woo K, Yutani H (2019). “Welcome to the tidyverse.”
 <a href="https://doi.org/10.21105/joss.01686" class="uri">https://doi.org/10.21105/joss.01686</a>.</li>
 <li>Wickham H, François R, Henry L, Müller K, Vaughan D (2023).
 <em>dplyr: A Grammar of Data Manipulation</em>. R package version 1.1.4,
-<a href="https://CRAN.R-project.org/package=dplyr" class="uri">https://CRAN.R-project.org/package=dplyr</a>.</li>
+<a href="https://github.com/tidyverse/dplyr" class="uri">https://github.com/tidyverse/dplyr</a>, <a href="https://dplyr.tidyverse.org" class="uri">https://dplyr.tidyverse.org</a>.</li>
 <li>Wickham H, Henry L (2023). <em>purrr: Functional Programming
-Tools</em>. R package version 1.0.2, <a href="https://CRAN.R-project.org/package=purrr" class="uri">https://CRAN.R-project.org/package=purrr</a>.</li>
+Tools</em>. R package version 1.0.2, <a href="https://github.com/tidyverse/purrr" class="uri">https://github.com/tidyverse/purrr</a>, <a href="https://purrr.tidyverse.org/" class="uri">https://purrr.tidyverse.org/</a>.</li>
 <li>Wickham H, Hester J, Bryan J (2024). <em>readr: Read Rectangular
-Text Data</em>. R package version 2.1.5, <a href="https://CRAN.R-project.org/package=readr" class="uri">https://CRAN.R-project.org/package=readr</a>.</li>
+Text Data</em>. R package version 2.1.5, <a href="https://github.com/tidyverse/readr" class="uri">https://github.com/tidyverse/readr</a>, <a href="https://readr.tidyverse.org" class="uri">https://readr.tidyverse.org</a>.</li>
 <li>Wickham H, Hester J, Ooms J (2023). <em>xml2: Parse XML</em>. R
-package version 1.3.6, <a href="https://CRAN.R-project.org/package=xml2" class="uri">https://CRAN.R-project.org/package=xml2</a>.</li>
+package version 1.3.6, <a href="https://github.com/r-lib/xml2" class="uri">https://github.com/r-lib/xml2</a>, <a href="https://xml2.r-lib.org/" class="uri">https://xml2.r-lib.org/</a>.</li>
 <li>Wickham H, Vaughan D, Girlich M (2024). <em>tidyr: Tidy Messy
-Data</em>. R package version 1.3.1, <a href="https://CRAN.R-project.org/package=tidyr" class="uri">https://CRAN.R-project.org/package=tidyr</a>.</li>
+Data</em>. R package version 1.3.1, <a href="https://github.com/tidyverse/tidyr" class="uri">https://github.com/tidyverse/tidyr</a>, <a href="https://tidyr.tidyverse.org" class="uri">https://tidyr.tidyverse.org</a>.</li>
 <li>Xie Y (2024). <em>knitr: A General-Purpose Package for Dynamic
 Report Generation in R</em>. R package version 1.49, <a href="https://yihui.org/knitr/" class="uri">https://yihui.org/knitr/</a>. Xie Y (2015). <em>Dynamic
 Documents with R and knitr</em>, 2nd edition. Chapman and Hall/CRC, Boca
@@ -5148,7 +5147,7 @@ Comprehensive Tool for Reproducible Research in R.” In Stodden V, Leisch
 F, Peng RD (eds.), <em>Implementing Reproducible Computational
 Research</em>. Chapman and Hall/CRC. ISBN 978-1466561595.</li>
 <li>Zhu H (2024). <em>kableExtra: Construct Complex Table with ‘kable’
-and Pipe Syntax</em>. R package version 1.4.0, <a href="https://CRAN.R-project.org/package=kableExtra" class="uri">https://CRAN.R-project.org/package=kableExtra</a>.</li>
+and Pipe Syntax</em>. R package version 1.4.0, <a href="https://github.com/haozhu233/kableExtra" class="uri">https://github.com/haozhu233/kableExtra</a>, <a href="http://haozhu233.github.io/kableExtra/" class="uri">http://haozhu233.github.io/kableExtra/</a>.</li>
 </ul>
 </div>
 

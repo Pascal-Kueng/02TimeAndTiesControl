@@ -59,8 +59,8 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = TRUE
-check_models = TRUE #
+get_bayesfactor = FALSE
+check_models = FALSE #
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -342,7 +342,7 @@ pa_sub <- my_brm(
   family = brms::hurdle_lognormal(), 
   #family = brms::hurdle_negbinomial(), 
   #family = brms::hurdle_poisson(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  control = list(adapt_delta = 0.90),
   iter = iterations,
   warmup = warmup,
   chains = 4,
