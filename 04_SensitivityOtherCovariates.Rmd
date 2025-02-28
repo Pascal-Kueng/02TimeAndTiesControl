@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - SensitivityOtherCovariates"
+title: "Social Control - SensitivityOtherCovariates"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -60,7 +60,7 @@ shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
 get_bayesfactor = FALSE
-check_models = TRUE #
+check_models = FALSE #
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')

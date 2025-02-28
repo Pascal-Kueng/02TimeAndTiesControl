@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - Final Models"
+title: "Social Control - Final Models"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -59,8 +59,8 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = FALSE
-check_models = FALSE #
+get_bayesfactor = TRUE
+check_models = TRUE 
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')

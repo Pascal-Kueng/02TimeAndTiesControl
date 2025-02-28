@@ -1,5 +1,5 @@
 ---
-title: "APIM - Descriptives"
+title: "Social Control - Descriptives"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -171,6 +171,8 @@ rownames(sample_table) <- NULL
 n_couple_vars <- 17
 sample_table$n_Obs[1:n_couple_vars] <- sample_table$n_Obs[1:n_couple_vars] / 2
 
+names(sample_table) <- c('Variable', 'Level', 'n Observations', '% Observations', 'Missing', 'Mean', 'SD', 'Range')
+
 packing_sample <- list(
     "Couple level variables (38 couples)" = 
       c(1, n_couple_vars),
@@ -183,11 +185,15 @@ df_sample_summary <- print_df(
   rows_to_pack = packing_sample
 )
 
+
 export_xlsx(df_sample_summary,
             file.path('Output', 'SampleDescription.xlsx'),
             merge_option = 'both',
             rows_to_pack = packing_sample,
-            colwidths = c(20,35,7,7,7,7,7,10)
+            colwidths = c(20,35,7,7,7,7,7,10),
+            simplify_2nd_row = FALSE,
+            line_above_rows = c(0,1),
+            line_below_rows = c(-1)
             )
 
 df_sample_summary
@@ -213,12 +219,25 @@ main_descriptives <- report_measures(
   ICC = TRUE, 
   cluster_var = df_full$userID)
 
-openxlsx::write.xlsx(
-  main_descriptives, 
-  file.path('Output', 'DescriptivesMain.xlsx')
-  )
+names(main_descriptives) <- c('Variable', 'n Observations', 'Missing', 'Mean', 'SD', 'Range')
 
-print_df(main_descriptives)
+
+df_main_descriptives <- print_df(
+  main_descriptives
+)
+
+
+export_xlsx(
+  df_main_descriptives,
+  file.path('Output', 'DescriptivesMain.xlsx'),
+  merge_option = 'both',
+  #colwidths = c(20,35,7,7,7,7,7,10),
+  simplify_2nd_row = FALSE,
+  line_above_rows = c(0,1),
+  line_below_rows = c(-1)
+)
+
+df_main_descriptives
 
 
 ```
@@ -242,12 +261,25 @@ all_constructs <- c(
 
 all_descriptives <- report_measures(df_full, all_constructs, ICC = F)
 
-openxlsx::write.xlsx(
-  all_descriptives, 
-  file.path('Output', 'DescriptivesAll.xlsx')
+names(all_descriptives) <- c('Variable', 'Level', 'n Observations', '% Observations', 'Missing', 'Mean', 'SD', 'Range')
+
+df_all_descriptives <- print_df(
+  all_descriptives
 )
 
-print_df(all_descriptives)
+
+export_xlsx(
+  df_all_descriptives,
+  file.path('Output', 'DescriptivesAll.xlsx'),
+  merge_option = 'both',
+  #colwidths = c(20,35,7,7,7,7,7,10),
+  simplify_2nd_row = FALSE,
+  line_above_rows = c(0,1),
+  line_below_rows = c(-1)
+)
+
+df_all_descriptives
+
 
 ```
 

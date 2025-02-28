@@ -1,5 +1,5 @@
 ---
-title: "APIM - Control - Pushing Separate"
+title: "Social Control - Pushing Separate"
 author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
 date: "`r Sys.Date()`"
 output: 
@@ -60,7 +60,7 @@ shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
 get_bayesfactor = FALSE
-check_models = TRUE #
+check_models = FALSE #
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -680,7 +680,7 @@ reactance_ordinal <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::cumulative(),
-  #control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.90),
   iter = iterations,
   warmup = warmup,
   chains = 4,
@@ -798,7 +798,7 @@ is_reactance <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::bernoulli(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  control = list(adapt_delta = 0.95),
   iter = iterations,
   warmup = warmup,
   chains = 4,
@@ -816,9 +816,9 @@ is_reactance_digest <- digest::digest(is_reactance)
 ```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summary_is_reactance <- summarize_brms(
-  is_reactance, 
-  stats_to_report = stats_to_report,
-  model_rows_fixed = model_rows_fixed,
+  is_reactance,
+  stats_to_report = stats_to_report, 
+  model_rows_fixed = model_rows_fixed, 
   model_rows_random = model_rows_random,
   model_rownames_fixed = model_rownames_fixed,
   model_rownames_random = model_rownames_random,
@@ -951,7 +951,7 @@ pa_sub <- my_brm(
   family = brms::hurdle_lognormal(), 
   #family = brms::hurdle_negbinomial(), 
   #family = brms::hurdle_poisson(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  control = list(adapt_delta = 0.90),
   iter = iterations,
   warmup = warmup,
   chains = 4,
@@ -1305,7 +1305,7 @@ reactance_ordinal <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::cumulative(),
-  #control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.90),
   iter = iterations,
   warmup = warmup,
   chains = 4,
@@ -1416,7 +1416,7 @@ is_reactance <- my_brm(
   prior = prior1,
   data = df_double, 
   family = brms::bernoulli(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  control = list(adapt_delta = 0.95),
   iter = iterations,
   warmup = warmup,
   chains = 4,
