@@ -251,6 +251,8 @@ all_constructs <- c(
   "day",
   "weartime",
   "isWeekend",
+  "barriers",
+  "facilitators",
   "plan",
   "studyGroup",
   "support",

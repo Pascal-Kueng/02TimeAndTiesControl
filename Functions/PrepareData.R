@@ -10,6 +10,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
                             'pushing', 
                             'weartime',
                             'barriers',
+                            'facilitators',
                             'support',
                             'comf',
                             'reas')
@@ -56,9 +57,28 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
            day = day/54,
            
            
-           barriers = (ss_barr_1 + ss_barr_2 + ss_barr_3 + ss_barr_4 + ss_barr_5 + ss_barr_6 + ss_barr_7) / 7,
+           #barriers = (ss_barr_1 + ss_barr_2 + ss_barr_3 + ss_barr_4 + ss_barr_5 + ss_barr_6 + ss_barr_7) / 7,
            
+           # sum up all negative values (set positive one's to 0) and divide by 7 to average.
+           barriers = if_else(
+             if_all(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7), is.na),
+             NA_real_,
+             rowSums(
+               across(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7),
+                      ~ if_else(. < 0, abs(.), 0))
+             ) / 7
+           ),
            
+           # sum up all positive values (set negative one's to 0) and divide by 7 to average.
+           facilitators = if_else(
+             if_all(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7), is.na),
+             NA_real_,
+             rowSums(
+               across(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7),
+                      ~ if_else(. > 0, ., 0))
+             ) / 7
+            ),
+
            plan = case_when(
              !is.na(ss_pa_no) ~ ss_pa_no,  # if ss_pa_no is available, use it (0 or 1)
              is.na(ss_pa_no) & (ss_pa_yes_0 == 1 | ss_pa_yes_1 == 1 | ss_pa_yes_2 == 1 | ss_pa_yes_3 == 1) ~ 1,
@@ -118,7 +138,11 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
   
   df_full <- df
   df <- df %>%
-    select(all_of(all_variables))
+    select(
+      all_of(
+        c(all_variables, c("ss_barr_1", "ss_barr_2", "ss_barr_3", "ss_barr_4", "ss_barr_5", "ss_barr_6", "ss_barr_7"))
+        )
+      )
   
   
   # pushing can only occur if there was a plan! Therefore, we set it to zero if there was no plan. 
@@ -226,7 +250,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "coupleID", 
     "day", 
     c("persuasion", "pressure", "pushing", 
-      "weartime", "barriers", "plan", "support", "got_JITAI", "pa_obj")
+      "weartime", "barriers", "facilitators", "plan", "support", "got_JITAI", "pa_obj")
   )
   
   df_double_full <- reshape_4field(
@@ -234,7 +258,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "coupleID", 
     "day", 
     c("persuasion", "pressure", "pushing", 
-      "weartime", "barriers", "plan", "support", "got_JITAI", "pa_obj")
+      "weartime", "barriers", "facilitators", "plan", "support", "got_JITAI", "pa_obj")
   )
   
   
