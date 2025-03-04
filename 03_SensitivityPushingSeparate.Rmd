@@ -1322,7 +1322,7 @@ reactance_ordinal_digest <- digest::digest(reactance_ordinal)
 
 
 
-```{r report_reactance_ordinal_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300}
+```{r report_reactance_ordinal_pushingonly, results='asis', fig.width=8, fig.height=6, dpi=300, include = FALSE}
 
 summary_reactance_ordinal <- summarize_brms(
   reactance_ordinal, 
