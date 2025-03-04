@@ -1341,144 +1341,230 @@ plot(p2)
 ```{r}
 
 
-# Assuming your model is stored in 'pa_sub' and your data in 'df_double'
-moderator <- "barriers_self_cw"  
+library(tidybayes)
+library(dplyr)
+library(ggplot2)
 
-# Generate 100 moderator values within its range
-moderator_seq <- seq(
-  from = min(df_double[[moderator]], na.rm = TRUE),
-  to   = max(df_double[[moderator]], na.rm = TRUE),
-  length.out = 1000
+plot_slope_by_moderator <- function(
+  mod,            
+  df,             
+  moderator,      
+  predictor_par,  
+  interaction_par,
+  exponentiate = FALSE,   
+  n_points = 1000,
+  fill_colors = c("Significant" = "steelblue",
+                  "Non-significant" = "coral"),
+  line_colors = fill_colors,  # Reuse fill colors by default
+  vjust_val = -1.5
+) {
+  
+  # Generate a sequence of moderator values
+  moderator_seq <- seq(
+    from = min(df[[moderator]], na.rm = TRUE),
+    to = max(df[[moderator]], na.rm = TRUE),
+    length.out = n_points
+  )
+  
+  # Extract posterior draws for the parameters of interest
+  library(rlang)
+  predictor_sym <- rlang::sym(predictor_par)
+  interaction_sym <- rlang::sym(interaction_par)
+
+  post_draws <- mod %>%
+    spread_draws(!!predictor_sym, !!interaction_sym)
+  
+  # For each moderator value, compute the slope for each posterior draw
+  slope_list <- lapply(moderator_seq, function(mod_val) {
+    tibble(
+      moderator_value = mod_val,
+      slope = - (post_draws[[predictor_par]] + mod_val * post_draws[[interaction_par]])
+    )
+  })
+  
+  # Combine the list into a single data frame
+  slope_df <- bind_rows(slope_list)
+  
+  # Summarize the posterior for each moderator value (using a 95% credible interval)
+  slope_summary <- slope_df %>%
+    group_by(moderator_value) %>%
+    summarize(
+      slope_median = median(slope),
+      slope_lower  = quantile(slope, probs = 0.025),
+      slope_upper  = quantile(slope, probs = 0.975)
+    ) %>%
+    # Create significance flag: "sig" if CI excludes 0, "ns" otherwise
+    mutate(sig_flag = if_else(slope_lower > 0 | slope_upper < 0, "sig", "ns")) %>%
+    arrange(moderator_value)
+  
+  # If exponentiate == TRUE, transform slope columns
+  if (exponentiate) {
+    slope_summary <- slope_summary %>%
+      mutate(
+        slope_median_exp = exp(slope_median),
+        slope_lower_exp  = exp(slope_lower),
+        slope_upper_exp  = exp(slope_upper)
+      )
+  }
+  
+  # Identify boundary rows and duplicate them for each category
+  slope_summary <- slope_summary %>%
+    mutate(
+      next_sig_flag = lead(sig_flag),
+      is_boundary   = sig_flag != next_sig_flag & !is.na(next_sig_flag)
+    )
+  
+  boundary_rows <- slope_summary %>%
+    filter(is_boundary)
+  
+  boundary_rows_next <- boundary_rows
+  boundary_rows_next$sig_flag <- boundary_rows_next$next_sig_flag
+  
+  slope_summary_extended <- bind_rows(slope_summary, boundary_rows_next)
+  
+  # Split into "sig" and "ns"
+  slope_summary_sig <- slope_summary_extended %>% filter(sig_flag == "sig")
+  slope_summary_ns  <- slope_summary_extended %>% filter(sig_flag == "ns")
+  
+  # Build the base plot:
+  #    We'll use either slope_{median, lower, upper} or slope_{median_exp, lower_exp, upper_exp} 
+  #    depending on exponentiate.
+  if (exponentiate) {
+    median_col <- "slope_median_exp"
+    lower_col <- "slope_lower_exp"
+    upper_col <- "slope_upper_exp"
+    y_lab <- "Odds Ratio (Exponentiated Slope)"
+    ref_line <- 1  # reference line for ORs is 1
+  } else {
+    median_col <- "slope_median"
+    lower_col <- "slope_lower"
+    upper_col <- "slope_upper"
+    y_lab <- "Slope (Log-Odds Scale)"
+    ref_line <- 0
+  }
+  
+  p <- ggplot() +
+    # Non-significant region
+    geom_ribbon(
+      data = slope_summary_ns,
+      aes_string(
+        x = "moderator_value",
+        ymin = lower_col,
+        ymax = upper_col,
+        fill = '"Non-significant"'
+      ),
+      alpha = 0.2
+    ) +
+    geom_line(
+      data = slope_summary_ns,
+      aes_string(
+        x = "moderator_value",
+        y = median_col,
+        color = '"Non-significant"'
+      ),
+      size = 1
+    ) +
+    # Significant region
+    geom_ribbon(
+      data = slope_summary_sig,
+      aes_string(
+        x = "moderator_value",
+        ymin = lower_col,
+        ymax = upper_col,
+        fill = '"Significant"'
+      ),
+      alpha = 0.2
+    ) +
+    geom_line(
+      data = slope_summary_sig,
+      aes_string(
+        x = "moderator_value",
+        y = median_col,
+        color = '"Significant"'
+      ),
+      size = 1
+    ) +
+    # Reference line (0 for log-odds, 1 for odds-ratios)
+    geom_hline(
+      yintercept = ref_line, 
+      linetype = "dashed"
+    ) +
+    # Manual scales for fill & color
+    scale_fill_manual(
+      values = fill_colors
+    ) +
+    scale_color_manual(
+      values = line_colors
+    ) +
+    labs(
+      x = moderator,
+      y = y_lab,
+      fill = "Significance",
+      color = "Significance"
+    ) +
+    theme_minimal()
+  
+  # Add boundary lines (where significance changes) & labels
+  p2 <- p +
+    geom_vline(
+      data = boundary_rows,
+      aes(xintercept = moderator_value),
+      color = fill_colors["Significant"],
+      alpha = 0.35,
+      size = 0.7,
+      linetype = "dashed"
+    ) +
+    geom_text(
+      data = boundary_rows,
+      aes(x = moderator_value, y = -Inf, label = round(moderator_value, 3)),
+      vjust = vjust_val,
+      size  = 3.7
+    )
+  
+  return(p2)
+}
+
+
+p_log_odds <- plot_slope_by_moderator(
+  mod = pa_sub, 
+  df = df_double, 
+  moderator = "barriers_self_cw", 
+  predictor_par = "b_hu_pushing_self_cw", 
+  interaction_par = "b_hu_barriers_self_cw:pushing_self_cw",
+  exponentiate = FALSE
 )
 
-# Extract posterior draws for the parameters of interest.
-post_draws <- spread_draws(
-  pa_sub,
-  b_hu_pushing_self_cw,
-  `b_hu_barriers_self_cw:pushing_self_cw`
+p_log_odds
+
+p_odds_ratio <- plot_slope_by_moderator(
+  mod = pa_sub, 
+  df = df_double, 
+  moderator = "barriers_self_cw", 
+  predictor_par = "b_hu_pushing_self_cw", 
+  interaction_par = "b_hu_barriers_self_cw:pushing_self_cw",
+  exponentiate = TRUE,
+  vjust_val = -12,
+) + coord_cartesian(ylim = c(1, 18))
+
+p_odds_ratio
+
+
+# Export
+ggsave(
+  filename = file.path("Output", "InteractPlot_log_odds.png"), 
+  plot = p_log_odds,
+  width = 8,
+  height = 5,
+  dpi = 300
 )
 
-# For each moderator value, compute the slope for each posterior draw.
-slope_list <- lapply(moderator_seq, function(mod_val) {
-  tibble(
-    moderator_value = mod_val,
-    slope = -(post_draws$b_hu_pushing_self_cw + mod_val * post_draws$`b_hu_barriers_self_cw:pushing_self_cw`)
-  )
-})
-
-# Combine the list into a single data frame
-slope_df <- bind_rows(slope_list)
-
-# Summarize the posterior for each moderator value (using a 95% credible interval)
-slope_summary <- slope_df %>%
-  group_by(moderator_value) %>%
-  summarize(
-    slope_median = median(slope),
-    slope_lower  = quantile(slope, probs = 0.025),
-    slope_upper  = quantile(slope, probs = 0.975)
-  ) %>%
-  # Create significance flag: "sig" if CI excludes 0, "ns" otherwise
-  mutate(sig_flag = if_else(slope_lower > 0 | slope_upper < 0, "sig", "ns"))
-
-
-# 1) Make sure slope_summary is sorted
-slope_summary <- slope_summary %>%
-  arrange(moderator_value)
-
-# 2) Identify boundary rows
-slope_summary <- slope_summary %>%
-  mutate(
-    next_sig_flag = lead(sig_flag),
-    is_boundary   = sig_flag != next_sig_flag & !is.na(next_sig_flag)
-  )
-
-# 3) Duplicate boundary rows for each category
-boundary_rows <- slope_summary %>%
-  filter(is_boundary)
-
-boundary_rows_next <- boundary_rows
-boundary_rows_next$sig_flag <- boundary_rows_next$next_sig_flag
-
-# 4) Combine original + duplicated boundary rows
-slope_summary_extended <- bind_rows(slope_summary, boundary_rows_next)
-
-# 5) Split into "sig" and "ns"
-slope_summary_sig <- slope_summary_extended %>% filter(sig_flag == "sig")
-slope_summary_ns  <- slope_summary_extended %>% filter(sig_flag == "ns")
-
-
-slope_summary <- slope_summary %>%
-  mutate(
-    slope_median_exp = exp(slope_median),
-    slope_lower_exp  = exp(slope_lower),
-    slope_upper_exp  = exp(slope_upper)
-  )
-
-
-# 6) Plot with a legend for significance
-p <- ggplot() +
-  # --- Non-significant region ---
-  geom_ribbon(
-    data = slope_summary_ns,
-    aes(x = moderator_value, ymin = slope_lower, ymax = slope_upper,
-        fill = "Non-significant"), 
-    alpha = 0.2
-  ) +
-  geom_line(
-    data = slope_summary_ns,
-    aes(x = moderator_value, y = slope_median,
-        color = "Non-significant"), 
-    size = 1
-  ) +
-  # --- Significant region ---
-  geom_ribbon(
-    data = slope_summary_sig,
-    aes(x = moderator_value, ymin = slope_lower, ymax = slope_upper,
-        fill = "Significant"), 
-    alpha = 0.2
-  ) +
-  geom_line(
-    data = slope_summary_sig,
-    aes(x = moderator_value, y = slope_median,
-        color = "Significant"),
-    size = 1
-  ) +
-  # Reference line
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  # Manual scales for fill & color
-  scale_fill_manual(
-    values = c("Significant" = "steelblue",
-               "Non-significant" = "coral")
-  ) +
-  scale_color_manual(
-    values = c("Significant" = "steelblue",
-               "Non-significant" = "coral")
-  ) +
-  labs(
-    x = "Daily Barriers",
-    y = "Slope (Plan-Related Pushing)",
-    fill = "Significance",       # legend title for ribbons
-    color = "Significance"       # legend title for lines
-  ) +
-  theme_minimal()
-
-p2 <- p +
-  geom_vline(
-    data = boundary_rows,
-    aes(xintercept = moderator_value),
-    color = "steelblue",
-    alpha = 0.35,
-    size = 0.7,
-    linetype = "dashed"
-  ) +
-  geom_text(
-    data = boundary_rows,
-    aes(x = moderator_value, y = -Inf, label = round(moderator_value, 3)),
-    vjust = -1.5,
-    size = 3.7
-  )
-
-p2
+ggsave(
+  filename = file.path("Output", "InteractPlot_odds_ratio.png"), 
+  plot = p_odds_ratio, 
+  width = 8, 
+  height = 5, 
+  dpi = 300
+)
 
 
 ```
