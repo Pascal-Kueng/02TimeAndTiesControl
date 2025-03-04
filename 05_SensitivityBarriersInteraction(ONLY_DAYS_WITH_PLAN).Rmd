@@ -61,8 +61,8 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = FALSE
-check_models = FALSE 
+get_bayesfactor = TRUE
+check_models = TRUE 
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -220,7 +220,7 @@ model_rownames_fixed <- c(
     'Partner actionplan',
     "Daily barriers",
     "Daily facilitators",
-    "Daily weartime",
+    "Daily wear time",
     
 
     # "-- BETWEEN PERSON MAIN EFFECTS",
@@ -232,7 +232,7 @@ model_rownames_fixed <- c(
     "Mean partner's experienced pushing", 
     'Mean barriers',
     "Mean facilitators",
-    "Mean weartime",
+    "Mean wear time",
     
     # Interactions
     'persuasion_self_cw:barriers_self_cw',
@@ -1331,8 +1331,11 @@ p2[[1]]$estimate__ <- 1 - p[[1]]$estimate__
 p2[[1]]$lower__ <- 1 - p[[1]]$upper__
 p2[[1]]$upper__ <- 1 - p[[1]]$lower__
 
-plot(p2)
+plots <- plot(p2, theme = theme_minimal(), plot = FALSE) 
 
+plots[[1]] + 
+  scale_color_manual(values = c("steelblue", "forestgreen", "coral")) +
+  scale_fill_manual(values = c("steelblue", "forestgreen", "coral"))
 
 ```
 
@@ -1555,7 +1558,8 @@ ggsave(
   plot = p_log_odds,
   width = 8,
   height = 5,
-  dpi = 300
+  dpi = 300,
+  bg = 'white'
 )
 
 ggsave(
@@ -1563,7 +1567,8 @@ ggsave(
   plot = p_odds_ratio, 
   width = 8, 
   height = 5, 
-  dpi = 300
+  dpi = 300,
+  bg = 'white'
 )
 
 

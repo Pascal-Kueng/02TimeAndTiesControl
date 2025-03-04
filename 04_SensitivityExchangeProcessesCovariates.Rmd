@@ -204,7 +204,7 @@ model_rownames_fixed <- c(
     "Day", 
     "Own Actionplan",
     'Partner Actionplan',
-    "Daily weartime",
+    "Daily wear time",
     
     'Daily support received',
     "Daily support provided (partner's view)",
@@ -219,7 +219,7 @@ model_rownames_fixed <- c(
     "Mean partner's experienced pressure", 
     "Mean individual's experienced pushing", 
     "Mean partner's experienced pushing", 
-    "Mean weartime",
+    "Mean wear time",
     
     "Mean individual's received support",
     "Mean partner's received support",

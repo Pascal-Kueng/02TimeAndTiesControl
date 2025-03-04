@@ -196,7 +196,7 @@ model_rownames_fixed <- c(
     'Partner actionplan',
     "Daily barriers",
     "Daily facilitators",
-    "Daily weartime",
+    "Daily wear time",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
     "Mean individual's experienced persuasion", 
@@ -207,7 +207,7 @@ model_rownames_fixed <- c(
     "Mean partner's experienced pushing", 
     'Mean barriers',
     "Mean facilitators",
-    "Mean weartime"
+    "Mean wear time"
   )
 
 
