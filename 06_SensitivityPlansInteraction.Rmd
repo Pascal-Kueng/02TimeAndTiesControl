@@ -59,8 +59,8 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = TRUE
-check_models = TRUE
+get_bayesfactor = FALSE
+check_models = FALSE
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -132,8 +132,6 @@ model_rows_fixed <- c(
     'day', 
     'plan_selfPlan',
     'plan_partnerPlan', # todo: do we need this??
-    'barriers_self_cw', 
-    'facilitators_self_cw', 
     'weartime_self_cw',
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -143,15 +141,24 @@ model_rows_fixed <- c(
     'pressure_partner_cb',
     'pushing_self_cb',
     'pushing_partner_cb',
-    'barriers_self_cb', 
-    'facilitators_self_cb', 
     'weartime_self_cb',
     
     # Interactions
+    'persuasion_self_cw:plan_selfPlan',
+    'plan_selfPlan:pressure_self_cw',
+    'plan_selfPlan:pushing_self_cw',
     
-    'persuasion_self_cw:plan_self_cw',
-    'plan_self_cw:pressure_self_cw',
-    'plan_self_cw:pushing_self_cw'
+    'plan_selfPlan:persuasion_partner_cw', 
+    'plan_selfPlan:pressure_partner_cw', 
+    'plan_selfPlan:pushing_partner_cw', 
+        
+    'persuasion_self_cw:plan_partnerPlan',
+    'pressure_self_cw:plan_partnerPlan',
+    'pushing_self_cw:plan_partnerPlan',
+    
+    'persuasion_partner_cw:plan_partnerPlan',
+    'pressure_partner_cw:plan_partnerPlan', 
+    'pushing_partner_cw:plan_partnerPlan'
   )
 
 
@@ -175,13 +182,14 @@ model_rows_random <- c(
   'sd(pressure_partner_cw)',
   'sd(pushing_self_cw)',
   'sd(pushing_partner_cw)',
-  
-  'sd(barriers_self_cw)', 
-  'sd(facilitators_self_cw)',
-  
-  'sd(persuasion_self_cw:plan_self_cw)',
-  'sd(plan_self_cw:pressure_self_cw)',
-  'sd(plan_self_cw:pushing_self_cw)',
+  'sd(plan_selfPlan)',
+
+  'sd(persuasion_self_cw:plan_selfPlan)',
+  'sd(plan_selfPlan:pressure_self_cw)',
+  'sd(plan_selfPlan:pushing_self_cw)',
+  'sd(plan_selfPlan:persuasion_partner_cw)', 
+  'sd(plan_selfPlan:pressure_partner_cw)', 
+  'sd(plan_selfPlan:pushing_partner_cw)',
   
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
@@ -208,8 +216,6 @@ model_rownames_fixed <- c(
     "Day", 
     "Own actionplan",
     'Partner actionplan',
-    "Daily barriers",
-    "Daily facilitators",
     "Daily wear time",
     
 
@@ -220,14 +226,24 @@ model_rownames_fixed <- c(
     "Mean partner's experienced pressure", 
     "Mean individual's experienced pushing", 
     "Mean partner's experienced pushing", 
-    'Mean barriers',
-    "Mean facilitators",
     "Mean wear time",
     
     # Interactions
-    'persuasion_self_cw:plan_self_cw',
-    'plan_self_cw:pressure_self_cw',
-    'plan_self_cw:pushing_self_cw'
+    'persuasion_self_cw:plan_selfPlan',
+    'plan_selfPlan:pressure_self_cw',
+    'plan_selfPlan:pushing_self_cw',
+    
+    'plan_selfPlan:persuasion_partner_cw', 
+    'plan_selfPlan:pressure_partner_cw', 
+    'plan_selfPlan:pushing_partner_cw', 
+        
+    'persuasion_self_cw:plan_partnerPlan',
+    'pressure_self_cw:plan_partnerPlan',
+    'pushing_self_cw:plan_partnerPlan',
+    
+    'persuasion_partner_cw:plan_partnerPlan',
+    'pressure_partner_cw:plan_partnerPlan', 
+    'pushing_partner_cw:plan_partnerPlan'
   )
 
 
@@ -251,13 +267,14 @@ model_rownames_random <- c(
   "sd(Daily partner's experienced pressure)", 
   "sd(Daily individual's experienced pushing)", 
   "sd(Daily partner's experienced pushing)", 
-  
-  'sd(barriers_self_cw)', 
-  'sd(facilitators_self_cw)',
-  
-  'sd(persuasion_self_cw:plan_self_cw)',
-  'sd(plan_self_cw:pressure_self_cw)',
-  'sd(plan_self_cw:pushing_self_cw)',
+
+  'sd(plan_selfPlan)',
+  'sd(persuasion_self_cw:plan_selfPlan)',
+  'sd(plan_selfPlan:pressure_self_cw)',
+  'sd(plan_selfPlan:pushing_self_cw)',
+  'sd(plan_selfPlan:persuasion_partner_cw)', 
+  'sd(plan_selfPlan:pressure_partner_cw)', 
+  'sd(plan_selfPlan:pushing_partner_cw)',
 
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
@@ -273,20 +290,20 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 ```{r parameters_for_printing}
 
 rows_to_pack <- list(
-  "Within-Person Effects" = c(2,10),
-  "Between-Person Effects" = c(11,19),
-  "Interactions" = c(20, 25),
-  "Random Effects" = c(26, 37), 
-  "Additional Parameters" = c(38,38)
+  "Within-Person Effects" = c(2,11),
+  "Between-Person Effects" = c(12,18),
+  "Interactions" = c(19, 30),
+  "Random Effects" = c(31, 40), 
+  "Additional Parameters" = c(41,41)
   )
 
 
 rows_to_pack_ordinal <- list(
-  "Within-Person Effects" = c(2+5,10+5),
-  "Between-Person Effects" = c(11+5,19+5),
-  "Interactions" = c(20+5, 25+5),
-  "Random Effects" = c(26+5, 37+5), 
-  "Additional Parameters" = c(38+5,38+6)
+  "Within-Person Effects" = c(2+5,11+5),
+  "Between-Person Effects" = c(12+5,18+5),
+  "Interactions" = c(19+5, 30+5),
+  "Random Effects" = c(31+5, 40+5), 
+  "Additional Parameters" = c(41+5,41+6)
   )
 
 ```
@@ -310,61 +327,67 @@ hist(log(df_double$pa_sub+00000000001), breaks = 40)
 
 formula <- bf(
   pa_sub ~ 
-    persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    plan_self_cb + plan_partner_cw + plan_partner_cb +
+    persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
 
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw +
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self +
+    
+    persuasion_self_cw * plan_partner + 
+    pressure_self_cw * plan_partner + 
+    pushing_self_cw * plan_partner + 
+
+    persuasion_partner_cw * plan_partner + 
+    pressure_partner_cw * plan_partner +
+    pushing_partner_cw * plan_partner +
     
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
-    
-    #plan_self + plan_partner +
-    barriers_self_cb + 
-    facilitators_self_cb + 
-    day +  
-    
-    # Random effects
-    (1 + persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw | dd | coupleID),
   
-  hu = ~ persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
+    day +  
     
-    plan_self_cb + plan_partner_cw + plan_partner_cb +
+    # Random effects
+    (1 + persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
+      
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self | dd | coupleID),
+  
+  hu = ~ persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
 
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw +
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self +
+    
+    persuasion_self_cw * plan_partner + 
+    pressure_self_cw * plan_partner + 
+    pushing_self_cw * plan_partner + 
+
+    persuasion_partner_cw * plan_partner + 
+    pressure_partner_cw * plan_partner +
+    pushing_partner_cw * plan_partner +
     
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
-    
-    #plan_self + plan_partner +
-    barriers_self_cb + 
-    facilitators_self_cb + 
+
     day +  
     
     # Random effects
-    (1 + persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw | dd | coupleID)
+    (1 + persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
+      
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self | dd | coupleID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -475,7 +498,9 @@ summary_pa_sub <- summarize_brms(
 
 # Print the updated dataframe
 summary_pa_sub %>%
-  print_df(rows_to_pack = rows_to_pack)
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
 
 
 # Plot continuous part of model
@@ -608,33 +633,36 @@ hist(df_double$pa_obj_log, breaks = 50)
 
 formula <- bf(
   pa_obj ~ 
-    persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    plan_self_cb + plan_partner_cw + plan_partner_cb +
+    persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
 
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw +
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self +
+    
+    persuasion_self_cw * plan_partner + 
+    pressure_self_cw * plan_partner + 
+    pushing_self_cw * plan_partner + 
+
+    persuasion_partner_cw * plan_partner + 
+    pressure_partner_cw * plan_partner +
+    pushing_partner_cw * plan_partner +
     
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    #plan_self + plan_partner +
-    barriers_self_cb + 
-    facilitators_self_cb + 
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
-    (1 + persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw | coupleID)
+    (1 + persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
+      
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self | coupleID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -667,8 +695,8 @@ pa_obj_log <- my_brm(
   data = df_double, 
   family = lognormal(),
   control = list(adapt_delta = 0.99),
-  iter = iterations + 200,
-  warmup = warmup + 200,
+  iter = iterations + 1000,
+  warmup = warmup + 1000,
   chains = 4,
   cores = 4,
   seed = 7777,
@@ -720,7 +748,9 @@ summary_pa_obj <- summarize_brms(
   exponentiate = T) 
 
 summary_pa_obj %>%
-  print_df(rows_to_pack = rows_to_pack)
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
 
 
 plot(
@@ -757,33 +787,36 @@ hist(df_double$aff, breaks = 15)
 
 formula <- bf(
   aff ~ 
-    persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    plan_self_cb + plan_partner_cw + plan_partner_cb +
+    persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
 
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw +
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self +
+    
+    persuasion_self_cw * plan_partner + 
+    pressure_self_cw * plan_partner + 
+    pushing_self_cw * plan_partner + 
+
+    persuasion_partner_cw * plan_partner + 
+    pressure_partner_cw * plan_partner +
+    pushing_partner_cw * plan_partner +
     
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
-    
-    #plan_self + plan_partner +
-    barriers_self_cb + 
-    facilitators_self_cb + 
+
     day +  
     
     # Random effects
-    (1 + persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw | coupleID)
+    (1 + persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
+      
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self | coupleID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -862,7 +895,9 @@ summary_mood <- summarize_brms(
   exponentiate = F) 
 
 summary_mood %>%
-  print_df(rows_to_pack = rows_to_pack)
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
 
 
 plot(
@@ -911,33 +946,36 @@ df_double$reactance_ordinal <- factor(df_double$reactance,
 
 formula <- bf(
   reactance_ordinal ~ 
-    persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    plan_self_cb + plan_partner_cw + plan_partner_cb +
+    persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
 
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw +
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self +
+    
+    persuasion_self_cw * plan_partner + 
+    pressure_self_cw * plan_partner + 
+    pushing_self_cw * plan_partner + 
+
+    persuasion_partner_cw * plan_partner + 
+    pressure_partner_cw * plan_partner +
+    pushing_partner_cw * plan_partner +
     
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    #plan_self + plan_partner +
-    barriers_self_cb + 
-    facilitators_self_cb + 
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
-    (1 + persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw | coupleID)
+    (1 + persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
+      
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self | coupleID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -1017,7 +1055,9 @@ summary_reactance_ordinal <- summarize_brms(
   exponentiate = T) 
 
 summary_reactance_ordinal %>%
-  print_df(rows_to_pack = rows_to_pack_ordinal)
+  print_df(
+    rows_to_pack = rows_to_pack_ordinal
+    )
 
 
 plot(
@@ -1066,33 +1106,36 @@ if (use_mi) {
 
 formula <- bf(
   is_reactance ~ 
-    persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    plan_self_cb + plan_partner_cw + plan_partner_cb +
+    persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
 
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw +
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self +
+    
+    persuasion_self_cw * plan_partner + 
+    pressure_self_cw * plan_partner + 
+    pushing_self_cw * plan_partner + 
+
+    persuasion_partner_cw * plan_partner + 
+    pressure_partner_cw * plan_partner +
+    pushing_partner_cw * plan_partner +
     
     persuasion_self_cb + persuasion_partner_cb +
     pressure_self_cb + pressure_partner_cb +
     pushing_self_cb + pushing_partner_cb +
     
-    #plan_self + plan_partner +
-    barriers_self_cb + 
-    facilitators_self_cb + 
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
-    (1 + persuasion_self_cw * plan_self_cw + 
-    pressure_self_cw * plan_self_cw + 
-    pushing_self_cw * plan_self_cw + 
-    
-    persuasion_partner_cw +
-    pressure_partner_cw +
-    pushing_partner_cw | coupleID)
+    (1 + persuasion_self_cw * plan_self + 
+    pressure_self_cw * plan_self + 
+    pushing_self_cw * plan_self + 
+      
+    persuasion_partner_cw * plan_self + 
+    pressure_partner_cw * plan_self +
+    pushing_partner_cw * plan_self | coupleID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -1171,7 +1214,9 @@ summary_is_reactance <- summarize_brms(
   exponentiate = T) 
 
 summary_is_reactance %>%
-  print_df(rows_to_pack = rows_to_pack)
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
 
 plot(
   bayestestR::p_direction(is_reactance),
@@ -1222,7 +1267,9 @@ summary_all_models <- report_side_by_side(
 )
 
 summary_all_models <- summary_all_models %>%
-  print_df(rows_to_pack = rows_to_pack) %>%
+  print_df(
+    rows_to_pack = rows_to_pack
+    ) %>%
   add_header_above(
     c(
       " ", "Hurdle Component" = 2, "Non-Zero Component" = 2,
@@ -1266,7 +1313,7 @@ library(plotly)
 p <- conditional_effects(
   pa_sub, 
   dpar = 'hu',
-  effects = 'pushing_self_cw:barriers_self_cw',
+  effects = 'pushing_self_cw:plan_partner',
   re_formula = NA, 
   method = 'posterior_linpred',
   plot = FALSE
@@ -1286,274 +1333,12 @@ plots[[1]] +
 
 ```
 
-# Test slope of pushing at high levels of barriers
+# Test slope significance for both levels. 
 
 ```{r}
 
-
-library(tidybayes)
-library(dplyr)
-library(ggplot2)
-
-plot_slope_by_moderator <- function(
-  mod,            
-  df,             
-  moderator,      
-  predictor_par,  
-  interaction_par,
-  exponentiate = FALSE,   
-  n_points = 1000,
-  fill_colors = c("Significant" = "steelblue",
-                  "Non-significant" = "coral"),
-  line_colors = fill_colors,  # Reuse fill colors by default
-  vjust_val = -1.5
-) {
-  
-  # Generate a sequence of moderator values
-  moderator_seq <- seq(
-    from = min(df[[moderator]], na.rm = TRUE),
-    to = max(df[[moderator]], na.rm = TRUE),
-    length.out = n_points
-  )
-  
-  # Extract posterior draws for the parameters of interest
-  library(rlang)
-  predictor_sym <- rlang::sym(predictor_par)
-  interaction_sym <- rlang::sym(interaction_par)
-
-  post_draws <- mod %>%
-    spread_draws(!!predictor_sym, !!interaction_sym)
-  
-  # For each moderator value, compute the slope for each posterior draw
-  slope_list <- lapply(moderator_seq, function(mod_val) {
-    tibble(
-      moderator_value = mod_val,
-      slope = - (post_draws[[predictor_par]] + mod_val * post_draws[[interaction_par]])
-    )
-  })
-  
-  # Combine the list into a single data frame
-  slope_df <- bind_rows(slope_list)
-  
-  # Summarize the posterior for each moderator value (using a 95% credible interval)
-  slope_summary <- slope_df %>%
-    group_by(moderator_value) %>%
-    summarize(
-      slope_median = median(slope),
-      slope_lower  = quantile(slope, probs = 0.025),
-      slope_upper  = quantile(slope, probs = 0.975)
-    ) %>%
-    # Create significance flag: "sig" if CI excludes 0, "ns" otherwise
-    mutate(sig_flag = if_else(slope_lower > 0 | slope_upper < 0, "sig", "ns")) %>%
-    arrange(moderator_value)
-  
-  # If exponentiate == TRUE, transform slope columns
-  if (exponentiate) {
-    slope_summary <- slope_summary %>%
-      mutate(
-        slope_median_exp = exp(slope_median),
-        slope_lower_exp  = exp(slope_lower),
-        slope_upper_exp  = exp(slope_upper)
-      )
-  }
-  
-  # Identify boundary rows and duplicate them for each category
-  slope_summary <- slope_summary %>%
-    mutate(
-      next_sig_flag = lead(sig_flag),
-      is_boundary   = sig_flag != next_sig_flag & !is.na(next_sig_flag)
-    )
-  
-  boundary_rows <- slope_summary %>%
-    filter(is_boundary)
-  
-  boundary_rows_next <- boundary_rows
-  boundary_rows_next$sig_flag <- boundary_rows_next$next_sig_flag
-  
-  slope_summary_extended <- bind_rows(slope_summary, boundary_rows_next)
-  
-  # Split into "sig" and "ns"
-  slope_summary_sig <- slope_summary_extended %>% filter(sig_flag == "sig")
-  slope_summary_ns  <- slope_summary_extended %>% filter(sig_flag == "ns")
-  
-  # Build the base plot:
-  #    We'll use either slope_{median, lower, upper} or slope_{median_exp, lower_exp, upper_exp} 
-  #    depending on exponentiate.
-  if (exponentiate) {
-    median_col <- "slope_median_exp"
-    lower_col <- "slope_lower_exp"
-    upper_col <- "slope_upper_exp"
-    y_lab <- "Odds Ratio (Exponentiated Slope)"
-    ref_line <- 1  # reference line for ORs is 1
-  } else {
-    median_col <- "slope_median"
-    lower_col <- "slope_lower"
-    upper_col <- "slope_upper"
-    y_lab <- "Slope (Log-Odds Scale)"
-    ref_line <- 0
-  }
-  
-  p <- ggplot() +
-    # Non-significant region
-    geom_ribbon(
-      data = slope_summary_ns,
-      aes_string(
-        x = "moderator_value",
-        ymin = lower_col,
-        ymax = upper_col,
-        fill = '"Non-significant"'
-      ),
-      alpha = 0.2
-    ) +
-    geom_line(
-      data = slope_summary_ns,
-      aes_string(
-        x = "moderator_value",
-        y = median_col,
-        color = '"Non-significant"'
-      ),
-      size = 1
-    ) +
-    # Significant region
-    geom_ribbon(
-      data = slope_summary_sig,
-      aes_string(
-        x = "moderator_value",
-        ymin = lower_col,
-        ymax = upper_col,
-        fill = '"Significant"'
-      ),
-      alpha = 0.2
-    ) +
-    geom_line(
-      data = slope_summary_sig,
-      aes_string(
-        x = "moderator_value",
-        y = median_col,
-        color = '"Significant"'
-      ),
-      size = 1
-    ) +
-    # Reference line (0 for log-odds, 1 for odds-ratios)
-    geom_hline(
-      yintercept = ref_line, 
-      linetype = "dashed"
-    ) +
-    # Manual scales for fill & color
-    scale_fill_manual(
-      values = fill_colors
-    ) +
-    scale_color_manual(
-      values = line_colors
-    ) +
-    labs(
-      x = moderator,
-      y = y_lab,
-      fill = "Significance",
-      color = "Significance"
-    ) +
-    theme_minimal()
-  
-  # Add boundary lines (where significance changes) & labels
-  p2 <- p +
-    geom_vline(
-      data = boundary_rows,
-      aes(xintercept = moderator_value),
-      color = fill_colors["Significant"],
-      alpha = 0.35,
-      size = 0.7,
-      linetype = "dashed"
-    ) +
-    geom_text(
-      data = boundary_rows,
-      aes(x = moderator_value, y = -Inf, label = round(moderator_value, 3)),
-      vjust = vjust_val,
-      size  = 3.7
-    )
-  
-  return(p2)
-}
-
-
-p_log_odds <- plot_slope_by_moderator(
-  mod = pa_sub, 
-  df = df_double, 
-  moderator = "barriers_self_cw", 
-  predictor_par = "b_hu_pushing_self_cw", 
-  interaction_par = "b_hu_barriers_self_cw:pushing_self_cw",
-  exponentiate = FALSE
-)
-
-p_log_odds
-
-p_odds_ratio <- plot_slope_by_moderator(
-  mod = pa_sub, 
-  df = df_double, 
-  moderator = "barriers_self_cw", 
-  predictor_par = "b_hu_pushing_self_cw", 
-  interaction_par = "b_hu_barriers_self_cw:pushing_self_cw",
-  exponentiate = TRUE,
-  vjust_val = -12,
-) + coord_cartesian(ylim = c(1, 18))
-
-p_odds_ratio
-
-
-# Export
-ggsave(
-  filename = file.path("Output", "InteractPlot_log_odds.png"), 
-  plot = p_log_odds,
-  width = 8,
-  height = 5,
-  dpi = 300,
-  bg = 'white'
-)
-
-ggsave(
-  filename = file.path("Output", "InteractPlot_odds_ratio.png"), 
-  plot = p_odds_ratio, 
-  width = 8, 
-  height = 5, 
-  dpi = 300,
-  bg = 'white'
-)
-
-
-```
-
-
-2. Expected MVPA when the hurdle was crossed (interaction NOT significant)
-
-```{r}
-
-p3 <- conditional_effects(
-  pa_sub, 
-  dpar = 'mu',
-  effects = 'pushing_self_cw:barriers_self_cw',
-  #re_formula = NULL, 
-  plot = FALSE
-)
-
-p3[[1]]$estimate__ <- exp(p3[[1]]$estimate__)
-p3[[1]]$lower__ <- exp(p3[[1]]$lower__)
-p3[[1]]$upper__ <- exp(p3[[1]]$upper__)
-
-plot(p3, ask = FALSE)
-```
-
-
-2. Expected physical activity in Minutes (when both components combined)
-
-```{r}
-# Expected physical activity
-p4 <- conditional_effects(
-  pa_sub, 
-  effects = 'pushing_self_cw:barriers_self_cw',
-  #re_formula = NULL,
-  plot = FALSE
-)
-
-plot(p4, ask = FALSE)
+hypothesis(pa_sub, "-hu_pushing_self_cw > 0")
+hypothesis(pa_sub, "-(hu_pushing_self_cw + hu_plan_selfPlan) > 0")
 
 ```
 
