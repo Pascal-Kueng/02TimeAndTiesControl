@@ -57,26 +57,27 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
            day = day/54,
            
            
-           #barriers = (ss_barr_1 + ss_barr_2 + ss_barr_3 + ss_barr_4 + ss_barr_5 + ss_barr_6 + ss_barr_7) / 7,
-           
-           # sum up all negative values (set positive one's to 0) and divide by 7 to average.
+           # sum up all negative values (set positive one's to 0) and divide by 8 to average.
            barriers = if_else(
-             if_all(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7), is.na),
+             if_all(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7, ss_barr_8_option), is.na),
              NA_real_,
              rowSums(
-               across(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7),
-                      ~ if_else(. < 0, abs(.), 0))
-             ) / 7
-           ),
+               across(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7, ss_barr_8_option),
+                      ~ if_else(. < 0, abs(.), 0)),
+               na.rm = TRUE
+             ) / 8
+           )
+           ,
            
-           # sum up all positive values (set negative one's to 0) and divide by 7 to average.
+           # sum up all positive values (set negative one's to 0) and divide by 8 to average.
            facilitators = if_else(
-             if_all(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7), is.na),
+             if_all(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7, ss_barr_8_option), is.na),
              NA_real_,
              rowSums(
-               across(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7),
-                      ~ if_else(. > 0, ., 0))
-             ) / 7
+               across(c(ss_barr_1, ss_barr_2, ss_barr_3, ss_barr_4, ss_barr_5, ss_barr_6, ss_barr_7, ss_barr_8_option),
+                      ~ if_else(. > 0, ., 0)),
+               na.rm = TRUE
+             ) / 8
             ),
 
            plan = case_when(
@@ -140,7 +141,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
   df <- df %>%
     select(
       all_of(
-        c(all_variables, c("ss_barr_1", "ss_barr_2", "ss_barr_3", "ss_barr_4", "ss_barr_5", "ss_barr_6", "ss_barr_7"))
+        c(all_variables, c("ss_barr_1", "ss_barr_2", "ss_barr_3", "ss_barr_4", "ss_barr_5", "ss_barr_6", "ss_barr_7", "ss_barr_8_option"))
         )
       )
   

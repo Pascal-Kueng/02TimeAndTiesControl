@@ -1,0 +1,1513 @@
+---
+title: "APIM - Control - Final Models"
+author: "Pascal Küng, MSc, Patrick Höhener, MSc, James M. Allen, PhD, Robert Tobias, PhD, Urte Scholz, PhD"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_document:
+    theme: flatly
+    df_print: kable
+    toc: yes
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_folding: show
+    toc_depth: 5
+    highlight: tango
+---
+
+```{r setup, message=FALSE, results='hide'}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list = ls())
+
+#cmdstanr::set_cmdstan_path(path = "C:/Users/kueng/.cmdstan/cmdstan-2.35.0")
+#cmdstanr::set_cmdstan_path(path = "C:/Users/pascku/.cmdstan/cmdstan-2.36.0")
+
+library(tidyverse)
+library(R.utils)
+library(wbCorr)
+library(readxl)
+library(kableExtra)
+library(brms)
+library(bayesplot)
+library(see)
+library(beepr)
+library(DHARMa)
+library(digest)
+
+
+
+source(file.path('Functions', 'ReportModels.R'))
+source(file.path('Functions', 'PrettyTables.R'))
+source(file.path('Functions', 'ReportMeasures.R'))
+source(file.path('Functions', 'PrepareData.R'))
+
+
+
+```
+
+
+```{r set_options}
+
+system("shutdown /a")
+
+# Set options for analysis
+use_mi = FALSE
+shutdown = FALSE
+report_ordinal = FALSE
+do_priorsense = FALSE
+get_bayesfactor = TRUE
+check_models = TRUE #
+
+if (get_bayesfactor) {
+  stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
+} else {
+  stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'Rhat', 'ESS')
+}
+
+options(
+  dplyr.print_max = 100, 
+  brms.backend = 'cmdstan',
+  brms.file_refit = ifelse(use_mi, 'never', 'on_change'),
+  brms.file_refit = 'on_change',
+  #brms.file_refit = 'always',
+  error = function() {
+    beepr::beep(sound = 5)
+    if (shutdown) {
+      system("shutdown /s /t 180")
+      quit(save = "no", status = 1)
+    }
+  }
+  , es.use_symbols = TRUE
+)
+
+
+####################### Model parameters #######################
+
+iterations = 12000 # 12'000 per chain to achieve 40'000
+warmup = 2000 # 2000
+
+# NO AR!!!
+#corstr = 'ar'
+#corstr = 'cosy_couple'
+#corstr = 'cosy_couple:user'
+
+
+################################################################
+
+suffix = paste0('_AsPreregisteredAPIM_', as.character(iterations))
+
+
+```
+
+
+```{r prepare_datasets, results='asis'}
+
+df <- openxlsx::read.xlsx(file.path('long.xlsx'))
+df_original <- df
+
+df_double <- prepare_data(df, recode_pushing = TRUE, use_mi = use_mi)[[1]]
+summary(df_double$pushing)
+
+```
+
+
+# Prepare for APIM
+
+```{r apim_preparations}
+
+df_double$is_A <- ifelse(df_double$pa_obj_self_cb >= df_double$pa_obj_partner_cb, 0, 1)
+df_double$is_B <- ifelse(df_double$pa_obj_self_cb < df_double$pa_obj_partner_cb, 0, 1)
+
+```
+
+
+
+# Modelling
+
+## Self-Reported MVPA
+
+### Persuasion
+```{r pa_sub_lognormal_persuasion, results='hide'}
+
+
+formula <- bf(
+  pa_sub ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw +
+    
+    is_A:persuasion_self_cb + is_B:persuasion_self_cb + 
+    is_A:persuasion_partner_cb + is_B:persuasion_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw |dd| coupleID),
+  
+  hu = ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw +
+    
+    is_A:persuasion_self_cb + is_B:persuasion_self_cb + 
+    is_A:persuasion_partner_cb + is_B:persuasion_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+) 
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 2)", class = "b", dpar = "hu")
+  
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0.5, 2.5)", class = "b", coef = 'is_A', dpar = 'hu')
+  , brms::set_prior("normal(0.5, 2.5)", class = "b", coef = 'is_B', dpar = 'hu')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = hurdle_lognormal()
+#)
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_sub_persuasion <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::hurdle_lognormal(), 
+  #family = brms::hurdle_negbinomial(), 
+  #family = brms::hurdle_poisson(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 42,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_persuasion", suffix))
+  #, file_refit = 'always'
+)
+
+
+```
+
+
+```{r check_pa_sub_lognormal_persuasion}
+if (check_models) {
+  check_brms(pa_sub_persuasion, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_sub_persuasion, integer = TRUE, outliers_type = 'bootstrap')
+}
+```
+
+
+
+```{r report_pa_sub_lognormal_persuasion, results='asis', fig.width=8, fig.height=7, dpi=300}
+
+# rope range for continuous part of the model
+rope_factor <- sd(log(pa_sub_persuasion$data$pa_sub[pa_sub_persuasion$data$pa_sub > 0]))
+rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_sub <- summarize_brms(
+  pa_sub_persuasion, 
+  stats_to_report = stats_to_report,
+  rope_range = rope_range_continuous,
+  hu_rope_range = c(-0.18, 0.18),
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+
+# Print the updated dataframe
+summary_pa_sub %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+Hurdle part of the model on the left, non-zero part towards the right side of the table
+
+### Pressure
+```{r pa_sub_lognormal_pressure, results='hide'}
+
+
+formula <- bf(
+  pa_sub ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw +
+    
+    is_A:pressure_self_cb + is_B:pressure_self_cb + 
+    is_A:pressure_partner_cb + is_B:pressure_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw |dd| coupleID),
+  
+  hu = ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw +
+    
+    is_A:pressure_self_cb + is_B:pressure_self_cb + 
+    is_A:pressure_partner_cb + is_B:pressure_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+) 
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 2)", class = "b", dpar = "hu")
+  
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0.5, 2.5)", class = "b", coef = 'is_A', dpar = 'hu')
+  , brms::set_prior("normal(0.5, 2.5)", class = "b", coef = 'is_B', dpar = 'hu')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = hurdle_lognormal()
+#)
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_sub_pressure <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::hurdle_lognormal(), 
+  #family = brms::hurdle_negbinomial(), 
+  #family = brms::hurdle_poisson(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 42,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_pressure", suffix))
+  #, file_refit = 'always'
+)
+
+
+```
+
+
+```{r check_pa_sub_lognormal_pressure}
+if (check_models) {
+  check_brms(pa_sub_pressure, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_sub_pressure, integer = TRUE, outliers_type = 'bootstrap')
+}
+```
+
+
+
+```{r report_pa_sub_lognormal_pressure, results='asis', fig.width=8, fig.height=7, dpi=300}
+
+# rope range for continuous part of the model
+rope_factor <- sd(log(pa_sub_pressure$data$pa_sub[pa_sub_pressure$data$pa_sub > 0]))
+rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_sub <- summarize_brms(
+  pa_sub_pressure, 
+  stats_to_report = stats_to_report,
+  rope_range = rope_range_continuous,
+  hu_rope_range = c(-0.18, 0.18),
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+
+# Print the updated dataframe
+summary_pa_sub %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+Hurdle part of the model on the left, non-zero part towards the right side of the table
+
+### Pushing
+```{r pa_sub_lognormal_pushing, results='hide'}
+
+formula <- bf(
+  pa_sub ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw +
+    
+    is_A:pushing_self_cb + is_B:pushing_self_cb + 
+    is_A:pushing_partner_cb + is_B:pushing_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    barriers_self_cw + barriers_self_cb + 
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID),
+  
+  hu = ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw +
+    
+    is_A:pushing_self_cb + is_B:pushing_self_cb + 
+    is_A:pushing_partner_cb + is_B:pushing_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+) 
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  , brms::set_prior("normal(0, 2)", class = "b", dpar = "hu")
+  
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0.5, 2.5)", class = "b", coef = 'is_A', dpar = 'hu')
+  , brms::set_prior("normal(0.5, 2.5)", class = "b", coef = 'is_B', dpar = 'hu')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = hurdle_lognormal()
+#)
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_sub_pushing <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::hurdle_lognormal(), 
+  #family = brms::hurdle_negbinomial(), 
+  #family = brms::hurdle_poisson(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 42,
+  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal_pushing", suffix))
+  #, file_refit = 'always'
+)
+
+
+```
+
+
+```{r check_pa_sub_lognormal_pushing}
+if (check_models) {
+  check_brms(pa_sub_pushing, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_sub_pushing, integer = TRUE, outliers_type = 'bootstrap')
+}
+```
+
+
+
+```{r report_pa_sub_lognormal_pushing, results='asis', fig.width=8, fig.height=7, dpi=300}
+
+# rope range for continuous part of the model
+rope_factor <- sd(log(pa_sub_pushing$data$pa_sub[pa_sub_pushing$data$pa_sub > 0]))
+rope_range_continuous = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_sub <- summarize_brms(
+  pa_sub_pushing, 
+  stats_to_report = stats_to_report,
+  rope_range = rope_range_continuous,
+  hu_rope_range = c(-0.18, 0.18),
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+
+# Print the updated dataframe
+summary_pa_sub %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+Hurdle part of the model on the left, non-zero part towards the right side of the table
+
+
+
+## Device Based MVPA 
+
+```{r explore_pa_obj_dist}
+
+range(df_double$pa_obj, na.rm = T) 
+
+hist(df_double$pa_obj, breaks = 50)
+
+df_double$pa_obj_log <- log(df_double$pa_obj)
+
+hist(df_double$pa_obj_log, breaks = 50)
+
+```
+
+
+
+### Persuasion
+
+```{r pa_obj_log_g_persuasion, results='hide', message=FALSE}
+
+formula <- bf(
+  pa_obj ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw +
+    
+    is_A:persuasion_self_cb + is_B:persuasion_self_cb + 
+    is_A:persuasion_partner_cb + is_B:persuasion_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    is_A:weartime_self_cw + is_B:weartime_self_cw + 
+    is_A:weartime_self_cb + is_B:weartime_self_cb +
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = lognormal()
+#  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_obj_log_persuasion <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = lognormal(),
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_persuasion", suffix))
+)
+
+
+```
+
+
+```{r check_pa_obj_log_g_persuasion}
+if (check_models) {
+  check_brms(pa_obj_log_persuasion, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_obj_log_persuasion, integer = TRUE, outliers_type = 'bootstrap')
+}
+```
+
+
+```{r report_pa_obj_log_g_persuasion, results='asis'}
+
+# rope range for lognormal model
+rope_factor <- sd(log(pa_obj_log_persuasion$data$pa_obj))
+rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_obj <- summarize_brms(
+  pa_obj_log_persuasion, 
+  stats_to_report = stats_to_report,
+  rope_range = rope_range_log,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+summary_pa_obj %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+### Pressure
+
+```{r pa_obj_log_g_pressure, results='hide', message=FALSE}
+
+formula <- bf(
+  pa_obj ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw +
+    
+    is_A:pressure_self_cb + is_B:pressure_self_cb + 
+    is_A:pressure_partner_cb + is_B:pressure_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    is_A:weartime_self_cw + is_B:weartime_self_cw + 
+    is_A:weartime_self_cb + is_B:weartime_self_cb +
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = lognormal()
+#  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_obj_log_pressure <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = lognormal(),
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_pressure", suffix))
+)
+
+
+```
+
+
+```{r check_pa_obj_log_g_pressure}
+if (check_models) {
+  check_brms(pa_obj_log_pressure, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_obj_log_pressure, integer = TRUE, outliers_type = 'bootstrap')
+}
+```
+
+
+```{r report_pa_obj_log_g_pressure, results='asis'}
+
+# rope range for lognormal model
+rope_factor <- sd(log(pa_obj_log_pressure$data$pa_obj))
+rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_obj <- summarize_brms(
+  pa_obj_log_pressure, 
+  stats_to_report = stats_to_report,
+  rope_range = rope_range_log,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+summary_pa_obj %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+### Pushing
+
+```{r pa_obj_log_g_pushing, results='hide', message=FALSE}
+
+formula <- bf(
+  pa_obj ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw +
+    
+    is_A:pushing_self_cb + is_B:pushing_self_cb + 
+    is_A:pushing_partner_cb + is_B:pushing_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    barriers_self_cw + barriers_self_cb + 
+    is_A:day + is_B:day + 
+    
+    is_A:weartime_self_cw + is_B:weartime_self_cw + 
+    is_A:weartime_self_cb + is_B:weartime_self_cb +
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+)
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+  
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 50)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = lognormal()
+#  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+pa_obj_log_pushing <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = lognormal(),
+  #control = list(adapt_delta = 0.95),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian_pushing", suffix))
+)
+
+
+```
+
+
+```{r check_pa_obj_log_g_pushing}
+if (check_models) {
+  check_brms(pa_obj_log_pushing, log_pp_check = TRUE)
+  DHARMa.check_brms.all(pa_obj_log_pushing, integer = TRUE, outliers_type = 'bootstrap')
+}
+```
+
+
+```{r report_pa_obj_log__pushing, results='asis'}
+
+# rope range for lognormal model
+rope_factor <- sd(log(pa_obj_log_pushing$data$pa_obj))
+rope_range_log = c(-0.1 * rope_factor, 0.1 * rope_factor)
+
+summary_pa_obj <- summarize_brms(
+  pa_obj_log_pushing, 
+  stats_to_report = stats_to_report,
+  rope_range = rope_range_log,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+summary_pa_obj %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+
+## Affect
+
+```{r explore_aff_dist}
+
+range(df_double$aff, na.rm = T)
+hist(df_double$aff, breaks = 15)
+
+```
+
+
+
+### Persuasion
+
+```{r mood_gauss_persuasion, results='hide', results='hide', message=FALSE}
+
+
+formula <- bf(
+  aff ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw +
+    
+    is_A:persuasion_self_cb + is_B:persuasion_self_cb + 
+    is_A:persuasion_partner_cb + is_B:persuasion_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+)
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b")
+  
+  , brms::set_prior("normal(0, 20)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 20)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = gaussian()
+#  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+mood_gauss_persuasion <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("mood_gauss_persuasion", suffix))
+)
+
+
+```
+
+
+```{r check_mood_gauss_persuasion}
+if (check_models) {
+  check_brms(mood_gauss_persuasion, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_gauss_persuasion, integer = FALSE)
+}
+```
+
+
+
+```{r report_mood_gauss_persuasion, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_mood <- summarize_brms(
+  mood_gauss_persuasion, 
+  stats_to_report = stats_to_report,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = F) 
+
+summary_mood %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+
+
+### Pressure
+
+```{r mood_gauss_pressure, results='hide', results='hide', message=FALSE}
+
+
+formula <- bf(
+  aff ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw +
+    
+    is_A:pressure_self_cb + is_B:pressure_self_cb + 
+    is_A:pressure_partner_cb + is_B:pressure_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+)
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b")
+  
+  , brms::set_prior("normal(0, 20)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 20)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = gaussian()
+#  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+mood_gauss_pressure <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("mood_gauss_pressure", suffix))
+)
+
+
+```
+
+
+```{r check_mood_gauss_pressure}
+if (check_models) {
+  check_brms(mood_gauss_pressure, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_gauss_pressure, integer = FALSE)
+}
+```
+
+
+
+```{r report_mood_gauss_pressure, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_mood <- summarize_brms(
+  mood_gauss_pressure, 
+  stats_to_report = stats_to_report,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = F) 
+
+summary_mood %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+
+### pushing
+
+```{r mood_gauss_pushing, results='hide', results='hide', message=FALSE}
+
+
+formula <- bf(
+  aff ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw +
+    
+    is_A:pushing_self_cb + is_B:pushing_self_cb + 
+    is_A:pushing_partner_cb + is_B:pushing_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    barriers_self_cw + barriers_self_cb + 
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+)
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 5)", class = "b")
+  
+  , brms::set_prior("normal(0, 20)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 20)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
+)
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = gaussian()
+#  )
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+mood_gauss_pushing <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("mood_gauss_pushing", suffix))
+)
+
+
+```
+
+
+```{r check_mood_gauss_pushing}
+if (check_models) {
+  check_brms(mood_gauss_pushing, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_gauss_pushing, integer = FALSE)
+}
+```
+
+
+
+```{r report_mood_gauss_pushing, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_mood <- summarize_brms(
+  mood_gauss_pushing, 
+  stats_to_report = stats_to_report,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = F) 
+
+summary_mood %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+
+
+## Reactance
+
+```{r investigatee_reactance}
+
+range(df_double$reactance, na.rm = T) 
+hist(df_double$reactance, breaks = 7) 
+
+hist(log(df_double$reactance+0.1), breaks = 10)
+
+```
+
+```{r is_reactance_persuasion, results='hide', message=FALSE}
+introduce_binary_reactance <- function(data) {
+  data$is_reactance <- factor(data$reactance > 0, levels = c(FALSE, TRUE), labels = c(0, 1))
+  return(data)
+}
+
+df_double <- introduce_binary_reactance(df_double)
+if (use_mi) {
+  for (i in seq_along(implist)) {
+    implist[[i]] <- introduce_binary_reactance(implist[[i]])
+  }
+}
+```
+
+
+
+### Persuasion 
+
+```{r is_reactance_persuasion2, results='hide', message=FALSE}
+formula <- bf(
+  is_reactance ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw +
+    
+    is_A:persuasion_self_cb + is_B:persuasion_self_cb + 
+    is_A:persuasion_partner_cb + is_B:persuasion_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:persuasion_self_cw + is_B:persuasion_self_cw + 
+    is_A:persuasion_partner_cw + is_B:persuasion_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+  )
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+
+  , brms::set_prior("normal(0, 10)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 10)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+)
+
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = bernoulli()
+#  )
+
+
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+is_reactance_persuasion <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::bernoulli(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("is_reactance_persuasion", suffix))
+  #, file_refit = 'always'
+)
+
+
+```
+
+```{r check_is_reactance_persuasion}
+if (check_models) {
+  check_brms(is_reactance_persuasion)
+  DHARMa.check_brms.all(is_reactance_persuasion, integer = FALSE)
+}
+```
+
+
+
+```{r report_is_reactance_persuasion, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_is_reactance <- summarize_brms(
+  is_reactance_persuasion, 
+  stats_to_report = stats_to_report,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+summary_is_reactance %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+
+
+### Pressure 
+
+```{r is_reactance_pressure2, results='hide', message=FALSE}
+formula <- bf(
+  is_reactance ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw +
+    
+    is_A:pressure_self_cb + is_B:pressure_self_cb + 
+    is_A:pressure_partner_cb + is_B:pressure_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pressure_self_cw + is_B:pressure_self_cw + 
+    is_A:pressure_partner_cw + is_B:pressure_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+  )
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+
+  , brms::set_prior("normal(0, 10)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 10)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+)
+
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = bernoulli()
+#  )
+
+
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+is_reactance_pressure <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::bernoulli(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("is_reactance_pressure", suffix))
+  #, file_refit = 'always'
+)
+
+
+```
+
+```{r check_is_reactance_pressure}
+if (check_models) {
+  check_brms(is_reactance_pressure)
+  DHARMa.check_brms.all(is_reactance_pressure, integer = FALSE)
+}
+```
+
+
+
+```{r report_is_reactance_pressure, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_is_reactance <- summarize_brms(
+  is_reactance_pressure, 
+  stats_to_report = stats_to_report,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+summary_is_reactance %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+
+
+### pushing 
+
+```{r is_reactance_pushing2, results='hide', message=FALSE}
+formula <- bf(
+  is_reactance ~ 0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw +
+    
+    is_A:pushing_self_cb + is_B:pushing_self_cb + 
+    is_A:pushing_partner_cb + is_B:pushing_partner_cb +
+    
+    #is_A:plan_self + is_B:plan_self + 
+    #is_A:plan_partner + is_B:plan_partner +
+    barriers_self_cw + barriers_self_cb + 
+    is_A:day + is_B:day + 
+    
+    # Random effects
+    (0 + 
+    is_A + is_B + # Intercepts
+    is_A:pushing_self_cw + is_B:pushing_self_cw + 
+    is_A:pushing_partner_cw + is_B:pushing_partner_cw |dd| coupleID)
+  
+  , decomp = 'QR'
+  #, autocor = autocor_str
+  )
+
+
+
+prior1 <- c(
+  brms::set_prior("normal(0, 2.5)", class = "b")
+
+  , brms::set_prior("normal(0, 10)", class = "b", coef = 'is_A')
+  , brms::set_prior("normal(0, 10)", class = "b", coef = 'is_B')
+  
+  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
+)
+
+
+#brms::validate_prior(
+#  prior1, 
+#  formula = formula, 
+#  data = df_double, 
+#  family = bernoulli()
+#  )
+
+
+
+#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
+
+is_reactance_pushing <- my_brm(
+  mi = use_mi, 
+  imputed_data = implist,
+  
+  formula = formula, 
+  prior = prior1,
+  data = df_double, 
+  family = brms::bernoulli(),
+  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("is_reactance_pushing", suffix))
+  #, file_refit = 'always'
+)
+
+
+```
+
+```{r check_is_reactance_pushing}
+if (check_models) {
+  check_brms(is_reactance_pushing)
+  DHARMa.check_brms.all(is_reactance_pushing, integer = FALSE)
+}
+```
+
+
+
+```{r report_is_reactance_pushing, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_is_reactance <- summarize_brms(
+  is_reactance_pushing, 
+  stats_to_report = stats_to_report,
+  #model_rows_fixed = model_rows_fixed,
+  #model_rows_random = model_rows_random,
+  #model_rownames_fixed = model_rownames_fixed,
+  #model_rownames_random = model_rownames_random,
+  exponentiate = T) 
+
+summary_is_reactance %>%
+  print_df(
+    #rows_to_pack = rows_to_pack
+    )
+
+
+```
+
+
+
+
+
+```{r report_system, results='asis'}
+
+report::report_system()
+report::report_packages()
+report::cite_packages()
+
+```
+
+
+```{r shut_system_down, results='hide', echo=FALSE, message=FALSE}
+
+if (shutdown) {
+  system("shutdown /s /t 180")
+}
+
+beepr::beep(sound = 3)
+
+```
+
+

@@ -98,7 +98,7 @@ warmup = 2000 # 2000
 
 ################################################################
 
-suffix = paste0('_sensitivitySupport_', as.character(iterations))
+suffix = paste0('_SensitivityExchangeProcesses_', as.character(iterations))
 
 
 ```

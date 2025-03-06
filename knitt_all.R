@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+
 
 # Load the rmarkdown package
 library(rmarkdown)
@@ -11,7 +11,7 @@ rmd_files <- list.files(getwd(), pattern = "\\.Rmd$", full.names = TRUE)
 # Loop through each file and knit it
 for (rmd in rmd_files) {
   message("Rendering: ", rmd)
-  render(input = rmd, output_format = "all")  # or specify a particular format
+  try(render(input = rmd, output_format = "all"))  
 }
 
 message("All .Rmd files have been successfully rendered.")

@@ -98,8 +98,8 @@ warmup = 2000 # 2000
 
 ################################################################
 
-suffix_nopushing = paste0('_sensitivityNoPushing_', as.character(iterations))
-suffix_onlypushing = paste0('_sensitivityOnlyPushing_', as.character(iterations))
+suffix_nopushing = paste0('_SensitivityNoPushing_', as.character(iterations))
+suffix_onlypushing = paste0('_SensitivityOnlyPushing_', as.character(iterations))
 
 ```
 
