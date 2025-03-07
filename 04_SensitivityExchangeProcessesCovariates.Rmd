@@ -202,8 +202,8 @@ model_rownames_fixed <- c(
     "Daily individual's experienced pushing", 
     "Daily partner's experienced pushing", 
     "Day", 
-    "Own Actionplan",
-    'Partner Actionplan',
+    "Own action plan",
+    'Partner action plan',
     "Daily wear time",
     
     'Daily support received',
