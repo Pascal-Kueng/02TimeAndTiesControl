@@ -157,7 +157,6 @@ summarize_brms <- function(model,
   if ('ROPE' %in% stats_to_report) {
     compute_rope <- function(range) {
       
-      # Check for Multicollinearity
       vifs <- performance::check_collinearity(model)
       if (max(vifs$VIF) > 10) {
         warning('Collinearity detected. Some VIFs are > 10. This may invalidate ROPE inferences!')
@@ -1947,7 +1946,6 @@ check_brms <- function(
     log_pp_check = FALSE, # a function needs to be passed!
     transform = log1p
 ) { 
-  # Check for Multicollinearity
   print(performance::check_collinearity(model))
   try(print(performance::check_distribution(model)))
   rstan::check_hmc_diagnostics(model$fit)
