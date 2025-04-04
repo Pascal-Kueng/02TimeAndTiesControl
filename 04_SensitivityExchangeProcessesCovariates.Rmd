@@ -135,13 +135,14 @@ model_rows_fixed <- c(
     'day', 
     'plan_selfPlan',
     'plan_partnerPlan',
-    'weartime_self_cw',
     
     'support_self_cw',
     'support_partner_cw',
     'isWeekendWeekend',
     'got_JITAI_selfJITAIreceived',
     'skilled_supportDaysafterIntervention',
+    
+    'weartime_self_cw',
     
     
     # '-- BETWEEN PERSON MAIN EFFECTS',
@@ -151,12 +152,13 @@ model_rows_fixed <- c(
     'pressure_partner_cb',
     'pushing_self_cb',
     'pushing_partner_cb',
-    'weartime_self_cb',
     
     'support_self_cb',
     'support_partner_cb',
     'studyGroupFirst3weeksinterventions',
-    'studyGrouplast3weeksinterventions'
+    'studyGrouplast3weeksinterventions',
+    
+    'weartime_self_cb'
   )
 
 
@@ -205,13 +207,14 @@ model_rownames_fixed <- c(
     "Day", 
     "Own action plan",
     'Partner action plan',
-    "Daily wear time",
     
     'Daily support received',
     "Daily support provided (partner's view)",
     'Is a Weekend',
     'JITAI received',
     'Days post skilled support intervention',
+    
+    "Daily wear time",
     
     # "-- BETWEEN PERSON MAIN EFFECTS",
     "Mean individual's experienced persuasion", 
@@ -220,12 +223,13 @@ model_rownames_fixed <- c(
     "Mean partner's experienced pressure", 
     "Mean individual's experienced pushing", 
     "Mean partner's experienced pushing", 
-    "Mean wear time",
     
     "Mean individual's received support",
     "Mean partner's received support",
     'Difference study group 2',
-    'Difference study group 3'
+    'Difference study group 3',
+    
+    "Mean wear time"
   )
 
 
