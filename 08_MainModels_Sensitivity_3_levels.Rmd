@@ -832,15 +832,15 @@ if (do_priorsense) {
 summary_mood <- summarize_brms(
   mood_gauss, 
   stats_to_report = stats_to_report,
-  #model_rows_fixed = model_rows_fixed,
-  #model_rows_random = model_rows_random,
-  #model_rownames_fixed = model_rownames_fixed,
-  #model_rownames_random = model_rownames_random,
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
   exponentiate = F) 
 
 summary_mood %>%
   print_df(
-    #rows_to_pack = rows_to_pack
+    rows_to_pack = rows_to_pack
     )
 
 
@@ -904,12 +904,46 @@ prior1 <- c(
   , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
 )
 
+prior1 <- c(
+  # — Population‐level slopes on μ (aff/5)
+  set_prior("normal(0, 1)",    class = "b"),
+  
+  # — μ intercept
+  #   Student‑t(3,0,2.5) is a bit wider than N(0,1) but still rules out extreme logits.
+  set_prior("student_t(3, 0, 2.5)", class = "Intercept"),
+  
+  # — Dispersion φ on log scale
+  #   Gamma(2,0.1) centers φ around 20 (i.e. fairly peaked betas), but has heavy tail.
+  set_prior("gamma(2, 0.1)",   class = "phi"),
+  
+  # — Group‐level SDs (coupleID and coupleID:userID)
+  #   Student‑t(3,0,2.5) half‑Student for SDs: most mass < 5 logits of variation.
+  set_prior("student_t(3, 0, 2.5)", class = "sd"),
+  
+  # — Correlations among random effects
+  #   LKJ(2) mildly favors lower correlations over LKJ(1) (flat).
+  set_prior("lkj(2)",           class = "cor"),
+  
+    # — Inflation‐at‐bound intercepts
+  #    P(y∈{0,1}) ≈ logit⁻¹(–1.4) ≃ 0.2
+  set_prior("normal(-1.4, 1)",      class = "Intercept", dpar = "zoi"),
+
+  #    P(y=1 | y∈{0,1}) ≈ logit⁻¹(1.4)  ≃ 0.8
+  set_prior("normal(1.4, 1)",       class = "Intercept", dpar = "coi")
+)
+
+#brms::default_prior(
+#  formula,
+#  family = zero_one_inflated_beta(),
+#  data = df_double
+#)
+
 #brms::validate_prior(
 #  prior1, 
 #  formula = formula, 
 #  data = df_double, 
-#  family = gaussian()
-#  )
+#  family = zero_one_inflated_beta()
+#)
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
@@ -930,11 +964,74 @@ mood_gauss <- my_brm(
   file = file.path("models_cache_brms", paste0("mood_beta", suffix))
 )
 
-mood_gauss_digest <- digest::digest(mood_gauss)
+mood_gauss_digest <- digest::digest(mood_beta)
 
 
 ```
 
+```{r check_mood_beta}
+if (check_models) {
+  check_brms(mood_beta, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_beta, integer = FALSE)
+}
+```
+
+```{r check_mood_beta_priorsense}
+
+if (do_priorsense) {
+  gc()
+  priorsense::powerscale_sensitivity(mood_gauss, variable = priorsense_vars)
+  priorsense::powerscale_plot_dens(mood_gauss, variable = priorsense_vars)
+  priorsense::powerscale_plot_ecdf(mood_gauss, variable = priorsense_vars)
+  priorsense::powerscale_plot_quantities(mood_gauss, variable = priorsense_vars)
+}
+
+```
+
+```{r}
+summary(mood_beta)
+```
+
+
+
+```{r report_mood_beta, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_mood <- summarize_brms(
+  mood_beta, 
+  stats_to_report = stats_to_report,
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = F) 
+
+summary_mood %>%
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
+
+
+plot(
+  bayestestR::p_direction(mood_beta),
+  priors = TRUE
+)  + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
+
+plot(
+  bayestestR::rope(mood_beta, ci = 1)
+) + theme_bw()
+
+
+conditional_spaghetti(
+  mood_beta, 
+  effects = c('pushing_partner_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
+)
+
+
+```
 
 
 ## Reactance
