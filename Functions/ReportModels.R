@@ -140,8 +140,47 @@ summarize_brms <- function(model,
   # Extract summaries
   summ_og <- summary(model, robust = TRUE)
   fixed_effects <- summ_og$fixed
-  random_effects <- summ_og$random[[1]][grep('sd\\(', rownames(summ_og$random[[1]])), ]
-  random_effects <- rbind(random_effects, summ_og$cor_pars, summ_og$spec_pars, summ_og$rescor_pars)
+  
+  
+  # 3. Process the list of random effects programmatically
+  random_list <- summ_og$random
+  
+  # Check if the model has more than one grouping factor (i.e., is 3-level or higher)
+  if (length(random_list) > 1) {
+    
+    # --- LOGIC FOR 3+ LEVEL MODELS ---
+    # This is the same multi-level logic from before.
+    
+    processed_random_list <- lapply(names(random_list), function(group_name) {
+      re_df <- random_list[[group_name]]
+      sd_rows_idx <- grep('^sd\\(', rownames(re_df))
+      if (length(sd_rows_idx) == 0) return(NULL)
+      
+      sd_df <- re_df[sd_rows_idx, , drop = FALSE]
+      # Prefix rownames with the grouping factor name
+      rownames(sd_df) <- paste(group_name, rownames(sd_df), sep = ": ")
+      return(sd_df)
+    })
+    
+    random_effects_sds <- do.call(rbind, processed_random_list)
+    
+  } else {
+    
+    # --- SIMPLIFIED LOGIC FOR 2-LEVEL MODELS ---
+    
+    # Directly access the single data frame of random effects
+    re_df <- random_list[[1]]
+    
+    # Filter for standard deviation parameters
+    sd_rows_idx <- grep('^sd\\(', rownames(re_df))
+    
+    # Subset to just those rows, leaving rownames unchanged
+    random_effects_sds <- re_df[sd_rows_idx, , drop = FALSE]
+  }
+  
+  # 4. Combine with other parameter types (this step is the same for both cases)
+  random_effects <- rbind(random_effects_sds, summ_og$cor_pars, summ_og$spec_pars, summ_og$rescor_pars)
+  
   
   # Add p_direction to fixed effects
   if ('pd' %in% stats_to_report | pd_significance) {
