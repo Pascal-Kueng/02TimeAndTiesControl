@@ -947,7 +947,7 @@ prior1 <- c(
 
 #df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
 
-mood_gauss <- my_brm(
+mood_beta <- my_brm(
   mi = use_mi, 
   imputed_data = implist,
   
