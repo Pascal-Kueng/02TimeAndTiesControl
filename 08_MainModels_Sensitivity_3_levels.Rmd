@@ -866,12 +866,14 @@ conditional_spaghetti(
 ```
 
 
-### One inflated Beta
-```{r mood_gauss, results='hide', results='hide', message=FALSE}
+# inversed affect
 
+```{r}
 
-formula <- bf(
-  aff/5 ~ 
+df_double$aff_inv <- 5 - df_double$aff
+
+formula_cens <- bf(
+  aff_inv ~ 
     persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw +
@@ -883,113 +885,102 @@ formula <- bf(
     plan_self + plan_partner +
     day +
     
-    # Random effects
     (persuasion_self_cw + persuasion_partner_cw +
+     pressure_self_cw + pressure_partner_cw +
+     pushing_self_cw + pushing_partner_cw | c_c | coupleID) + 
+    
+    (persuasion_self_cw + persuasion_partner_cw +
+     pressure_self_cw + pressure_partner_cw +
+     pushing_self_cw + pushing_partner_cw | c_u | coupleID:userID),
+  
+  hu = ~ persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID/userID)
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    plan_self + plan_partner +
+    day +
+    
+    (persuasion_self_cw + persuasion_partner_cw +
+     pressure_self_cw + pressure_partner_cw +
+     pushing_self_cw + pushing_partner_cw | c_c | coupleID) + 
+    
+    (persuasion_self_cw + persuasion_partner_cw +
+     pressure_self_cw + pressure_partner_cw +
+     pushing_self_cw + pushing_partner_cw | c_u | coupleID:userID),
   
-  , zoi ~ 1 
-  
-  , coi ~ 1 
-  
-  , decomp = 'QR'
-  #, autocor = autocor_str
+  decomp = "QR"
 )
 
+# 3. Priors
 
 prior1 <- c(
-  brms::set_prior("normal(0, 5)", class = "b")
-  ,brms::set_prior("normal(0, 20)", class = "Intercept", lb=1, ub=6)
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
-)
-
-prior1 <- c(
-  # — Population‐level slopes on μ (aff/5)
-  set_prior("normal(0, 1)",    class = "b"),
+  # Mean (mu) part on log scale
+  set_prior("normal(0, 0.7)", class = "b"),
+  set_prior("normal(log(1), 1)", class = "Intercept"),  # center μ≈1 on positive part
   
-  # — μ intercept
-  #   Student‑t(3,0,2.5) is a bit wider than N(0,1) but still rules out extreme logits.
-  set_prior("student_t(3, 0, 2.5)", class = "Intercept"),
-  
-  # — Dispersion φ on log scale
-  #   Gamma(2,0.1) centers φ around 20 (i.e. fairly peaked betas), but has heavy tail.
-  set_prior("gamma(2, 0.1)",   class = "phi"),
-  
-  # — Group‐level SDs (coupleID and coupleID:userID)
-  #   Student‑t(3,0,2.5) half‑Student for SDs: most mass < 5 logits of variation.
+  # Random effects (mu)
   set_prior("student_t(3, 0, 2.5)", class = "sd"),
+  set_prior("lkj(2)",               class = "cor"),
   
-  # — Correlations among random effects
-  #   LKJ(2) mildly favors lower correlations over LKJ(1) (flat).
-  set_prior("lkj(2)",           class = "cor"),
+  # Shape (dispersion) parameter on log scale
+  set_prior("normal(0, 1)", class = "shape"),
   
-    # — Inflation‐at‐bound intercepts
-  #    P(y∈{0,1}) ≈ logit⁻¹(–1.4) ≃ 0.2
-  set_prior("normal(-1.4, 1)",      class = "Intercept", dpar = "zoi"),
-
-  #    P(y=1 | y∈{0,1}) ≈ logit⁻¹(1.4)  ≃ 0.8
-  set_prior("normal(1.4, 1)",       class = "Intercept", dpar = "coi")
+  # Hurdle part (logit)
+  set_prior("normal(0, 1)",   class = "Intercept", dpar = "hu"),
+  set_prior("normal(0, 0.5)", class = "b",        dpar = "hu")
 )
 
-#brms::default_prior(
-#  formula,
-#  family = zero_one_inflated_beta(),
-#  data = df_double
-#)
-
-#brms::validate_prior(
-#  prior1, 
-#  formula = formula, 
-#  data = df_double, 
-#  family = zero_one_inflated_beta()
-#)
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-mood_beta <- my_brm(
-  mi = use_mi, 
+# 4. Fit model
+mood_inv <- my_brm(
+  mi = use_mi,
   imputed_data = implist,
-  
-  formula = formula, 
-  #prior = prior1,
-  data = df_double, 
-  family = zero_one_inflated_beta(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  formula = formula_cens,
+  data = df_double,
+  family = hurdle_gamma(),
+  prior = prior1,
+  control = list(adapt_delta = 0.95, max_treedepth = 15),
   iter = iterations,
   warmup = warmup,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("mood_beta", suffix))
+  file = file.path("models_cache_brms", paste0("mood_inv_hurdle", suffix))
 )
 
-mood_gauss_digest <- digest::digest(mood_beta)
-
+mood_cens_digest <- digest::digest(mood_inv)
 
 ```
 
+
 ```{r check_mood_beta}
 if (check_models) {
-  check_brms(mood_beta, log_pp_check = FALSE)
-  DHARMa.check_brms.all(mood_beta, integer = FALSE)
+  check_brms(mood_inv, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_cens, integer = FALSE)
 }
+
+pp_check(mood_inv, transform = function(y) pmin(pmax(y, 0), 5), type = 'hist')
+pp_check(mood_inv, transform = function(y) pmin(pmax(y, 0), 5))
+
 ```
 
 ```{r check_mood_beta_priorsense}
 
 if (do_priorsense) {
   gc()
-  priorsense::powerscale_sensitivity(mood_gauss, variable = priorsense_vars)
-  priorsense::powerscale_plot_dens(mood_gauss, variable = priorsense_vars)
-  priorsense::powerscale_plot_ecdf(mood_gauss, variable = priorsense_vars)
-  priorsense::powerscale_plot_quantities(mood_gauss, variable = priorsense_vars)
+  priorsense::powerscale_sensitivity(mood_inv, variable = priorsense_vars)
+  priorsense::powerscale_plot_dens(mood_inv, variable = priorsense_vars)
+  priorsense::powerscale_plot_ecdf(mood_inv, variable = priorsense_vars)
+  priorsense::powerscale_plot_quantities(mood_inv, variable = priorsense_vars)
 }
 
 ```
 
 ```{r}
-summary(mood_beta)
+summary(mood_inv)
 ```
 
 
@@ -997,7 +988,7 @@ summary(mood_beta)
 ```{r report_mood_beta, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summary_mood <- summarize_brms(
-  mood_beta, 
+  mood_cens, 
   stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
@@ -1012,19 +1003,19 @@ summary_mood %>%
 
 
 plot(
-  bayestestR::p_direction(mood_beta),
+  bayestestR::p_direction(mood_cens),
   priors = TRUE
 )  + 
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
 plot(
-  bayestestR::rope(mood_beta, ci = 1)
+  bayestestR::rope(mood_cens, ci = 1)
 ) + theme_bw()
 
 
 conditional_spaghetti(
-  mood_beta, 
+  mood_cens, 
   effects = c('pushing_partner_cw'),
   group_var = 'coupleID',
   plot_full_range = TRUE
