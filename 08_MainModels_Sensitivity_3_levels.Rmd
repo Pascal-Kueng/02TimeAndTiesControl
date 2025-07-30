@@ -307,9 +307,7 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
   
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | d_u | coupleID:userID),
+    (1 | d_u | coupleID:userID),
   
   hu = ~ persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
@@ -327,9 +325,7 @@ formula <- bf(
     pressure_self_cw + pressure_partner_cw +
     pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
   
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | d_u | coupleID:userID)
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -623,9 +619,11 @@ formula <- bf(
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID/userID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -760,9 +758,11 @@ formula <- bf(
     day +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID/userID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -885,13 +885,12 @@ formula_cens <- bf(
     plan_self + plan_partner +
     day +
     
-    (persuasion_self_cw + persuasion_partner_cw +
-     pressure_self_cw + pressure_partner_cw +
-     pushing_self_cw + pushing_partner_cw | c_c | coupleID) + 
-    
-    (persuasion_self_cw + persuasion_partner_cw +
-     pressure_self_cw + pressure_partner_cw +
-     pushing_self_cw + pushing_partner_cw | c_u | coupleID:userID),
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID),
   
   hu = ~ persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
@@ -904,13 +903,12 @@ formula_cens <- bf(
     plan_self + plan_partner +
     day +
     
-    (persuasion_self_cw + persuasion_partner_cw +
-     pressure_self_cw + pressure_partner_cw +
-     pushing_self_cw + pushing_partner_cw | c_c | coupleID) + 
-    
-    (persuasion_self_cw + persuasion_partner_cw +
-     pressure_self_cw + pressure_partner_cw +
-     pushing_self_cw + pushing_partner_cw | c_u | coupleID:userID),
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID),
   
   decomp = "QR"
 )
@@ -1059,9 +1057,11 @@ formula <- bf(
     day +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID/userID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -1202,9 +1202,11 @@ formula <- bf(
     day +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID/userID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
