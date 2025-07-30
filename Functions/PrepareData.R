@@ -141,7 +141,14 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
   df <- df %>%
     select(
       all_of(
-        c(all_variables, c("ss_barr_1", "ss_barr_2", "ss_barr_3", "ss_barr_4", "ss_barr_5", "ss_barr_6", "ss_barr_7", "ss_barr_8_option"))
+        c(all_variables, c(
+          "ss_barr_1", "ss_barr_2", "ss_barr_3", "ss_barr_4", "ss_barr_5", "ss_barr_6", "ss_barr_7", "ss_barr_8_option", 
+          'persuasion',
+          'pressure', 
+          'pushing',
+          'ss_psc_more',
+          'ss_nsc_more', 
+          'ss_push_plan'))
         )
       )
   
@@ -251,6 +258,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "coupleID", 
     "day", 
     c("persuasion", "pressure", "pushing", 
+      
       "weartime", "barriers", "facilitators", "plan", "support", "got_JITAI", "pa_obj")
   )
   
@@ -259,6 +267,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "coupleID", 
     "day", 
     c("persuasion", "pressure", "pushing", 
+      
       "weartime", "barriers", "facilitators", "plan", "support", "got_JITAI", "pa_obj")
   )
   

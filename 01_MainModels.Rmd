@@ -115,6 +115,64 @@ summary(df_double$pushing)
 ```
 
 
+# Correlations between self-report and partner-report
+
+```{r corrs_measures_self_partner, results='asis'}
+
+cors <- wbCorr(
+  df_double[,c('ss_psc_more', 'persuasion_partner')], 
+  df_double$coupleID, 
+  method = 'spearman')
+
+summary(cors, 'wb')
+
+cors <- wbCorr(
+  df_double[,c('ss_nsc_more', 'pressure_partner')], 
+  df_double$coupleID, 
+  method = 'spearman')
+
+summary(cors, 'wb')
+
+cors <- wbCorr(
+  df_double[,c('ss_push_plan', 'pushing_partner')], 
+  df_double$coupleID, 
+  method = 'spearman')
+
+summary(cors, 'wb')
+```
+
+Within-person correlations are above the diagonal and between-person correlations are below the diagonal.
+On the diagonal are intraclass correlations (ICCs)
+
+# Reliability Omega within-person and between-person 
+```{r omegasem, results='asis'}
+
+reliability_psc <- multilevelTools::omegaSEM(
+  c('ss_psc_more', 'persuasion_partner'),
+  'coupleID',
+  data = df_double
+)
+
+reliability_nsc <- multilevelTools::omegaSEM(
+  c('ss_nsc_more', 'pressure_partner'),
+  'coupleID',
+  data = df_double
+)
+
+reliability_pushing <- multilevelTools::omegaSEM(
+  c('ss_push_plan', 'pushing_partner'),
+  'coupleID',
+  data = df_double
+)
+
+print(reliability_psc)
+print(reliability_nsc)
+print(reliability_pushing)
+
+
+```
+
+
 # Modelling
 
 ```{r set_report_order_persuasion}
