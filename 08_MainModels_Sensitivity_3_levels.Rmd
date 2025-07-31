@@ -167,12 +167,6 @@ model_rows_random <- c(
   'coupleID: sd(pushing_partner_cw)',
   
   'coupleID:userID: sd(Intercept)', 
-  'coupleID:userID: sd(persuasion_self_cw)',
-  'coupleID:userID: sd(persuasion_partner_cw)',
-  'coupleID:userID: sd(pressure_self_cw)',
-  'coupleID:userID: sd(pressure_partner_cw)',
-  'coupleID:userID: sd(pushing_self_cw)',
-  'coupleID:userID: sd(pushing_partner_cw)',
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
@@ -234,12 +228,6 @@ model_rownames_random <- c(
   
   # '-- RANDOM EFFECTS L3 --',
   'L2:sd(Intercept)', 
-  "L2:sd(Daily individual's experienced persuasion)", 
-  "L2:sd(Daily partner's experienced persuasion)", # OR partner received
-  "L2:sd(Daily individual's experienced pressure)", 
-  "L2:sd(Daily partner's experienced pressure)", 
-  "L2:sd(Daily individual's experienced pushing)", 
-  "L2:sd(Daily partner's experienced pushing)", 
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
@@ -257,8 +245,8 @@ rows_to_pack <- list(
   "Within-Person Effects" = c(2,11),
   "Between-Person Effects" = c(12,18),
   "Random Effects (Level 3 - Couple)" = c(19, 25), 
-  "Random Effects (Level 2 - Couple:Person)" = c(26, 32), 
-  "Additional Parameters" = c(33,33)
+  "Random Effects (Level 2 - Couple:Person)" = c(26, 26), 
+  "Additional Parameters" = c(27,27)
   )
 
 
@@ -266,8 +254,8 @@ rows_to_pack_ordinal <- list(
   "Within-Person Effects" = c(2+5,11+5),
   "Between-Person Effects" = c(12+5,18+5),
   "Random Effects (Level 3 - Couple)" = c(19+5, 25+5), 
-  "Random Effects (Level 2 - Couple:Person)" = c(26+5, 32+5), 
-  "Additional Parameters" = c(33+5,33+6)
+  "Random Effects (Level 2 - Couple:Person)" = c(26+5, 26+5), 
+  "Additional Parameters" = c(27+5,27+6)
   )
 
 ```
@@ -656,13 +644,14 @@ pa_obj_log <- my_brm(
   prior = prior1,
   data = df_double, 
   family = lognormal(),
-  #control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.95),
   iter = iterations,
   warmup = warmup,
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix))
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix)),
+  refit = TRUE
 )
 
 pa_obj_log_digest <- digest::digest(pa_obj_log)
@@ -957,7 +946,7 @@ mood_cens_digest <- digest::digest(mood_inv)
 ```{r check_mood_beta}
 if (check_models) {
   check_brms(mood_inv, log_pp_check = FALSE)
-  DHARMa.check_brms.all(mood_cens, integer = FALSE)
+  DHARMa.check_brms.all(mood_inv, integer = FALSE)
 }
 
 pp_check(mood_inv, transform = function(y) pmin(pmax(y, 0), 5), type = 'hist')
@@ -985,8 +974,8 @@ summary(mood_inv)
 
 ```{r report_mood_beta, results='asis', fig.width=8, fig.height=6, dpi=300}
 
-summary_mood <- summarize_brms(
-  mood_cens, 
+summary_mood_inv <- summarize_brms(
+  mood_inv, 
   stats_to_report = stats_to_report,
   model_rows_fixed = model_rows_fixed,
   model_rows_random = model_rows_random,
@@ -994,26 +983,26 @@ summary_mood <- summarize_brms(
   model_rownames_random = model_rownames_random,
   exponentiate = F) 
 
-summary_mood %>%
+summary_mood_inv %>%
   print_df(
     rows_to_pack = rows_to_pack
     )
 
 
 plot(
-  bayestestR::p_direction(mood_cens),
+  bayestestR::p_direction(mood_inv),
   priors = TRUE
 )  + 
   coord_cartesian(xlim = c(-3, 3)) +
   theme_bw()
 
 plot(
-  bayestestR::rope(mood_cens, ci = 1)
+  bayestestR::rope(mood_inv, ci = 1)
 ) + theme_bw()
 
 
 conditional_spaghetti(
-  mood_cens, 
+  mood_inv, 
   effects = c('pushing_partner_cw'),
   group_var = 'coupleID',
   plot_full_range = TRUE
