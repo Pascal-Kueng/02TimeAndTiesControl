@@ -35,6 +35,8 @@ library(see)
 library(beepr)
 library(DHARMa)
 library(digest)
+library(multilevelTools)
+library(wbCorr)
 
 
 
@@ -56,7 +58,7 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = TRUE
+shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
 get_bayesfactor = TRUE
@@ -153,11 +155,17 @@ reliability_psc <- multilevelTools::omegaSEM(
   data = df_double
 )
 
+print(reliability_psc)
+
+
 reliability_nsc <- multilevelTools::omegaSEM(
   c('ss_nsc_more', 'pressure_partner'),
   'coupleID',
   data = df_double
 )
+
+print(reliability_nsc)
+
 
 reliability_pushing <- multilevelTools::omegaSEM(
   c('ss_push_plan', 'pushing_partner'),
@@ -165,8 +173,6 @@ reliability_pushing <- multilevelTools::omegaSEM(
   data = df_double
 )
 
-print(reliability_psc)
-print(reliability_nsc)
 print(reliability_pushing)
 
 
