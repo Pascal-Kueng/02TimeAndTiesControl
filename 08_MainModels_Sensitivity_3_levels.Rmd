@@ -650,8 +650,7 @@ pa_obj_log <- my_brm(
   chains = 4,
   cores = 4,
   seed = 7777,
-  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix)),
-  refit = TRUE
+  file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix))
 )
 
 pa_obj_log_digest <- digest::digest(pa_obj_log)
@@ -782,7 +781,7 @@ mood_gauss <- my_brm(
   prior = prior1,
   data = df_double, 
   family = gaussian(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  control = list(adapt_delta = 0.95, max_treedepth = 15),
   iter = iterations,
   warmup = warmup,
   chains = 4,
