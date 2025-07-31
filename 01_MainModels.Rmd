@@ -56,7 +56,7 @@ system("shutdown /a")
 
 # Set options for analysis
 use_mi = FALSE
-shutdown = FALSE
+shutdown = TRUE
 report_ordinal = FALSE
 do_priorsense = FALSE
 get_bayesfactor = TRUE
