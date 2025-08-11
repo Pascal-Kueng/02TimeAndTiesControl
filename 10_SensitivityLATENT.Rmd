@@ -35,8 +35,6 @@ library(see)
 library(beepr)
 library(DHARMa)
 library(digest)
-library(multilevelTools)
-library(wbCorr)
 
 
 
@@ -61,8 +59,8 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = TRUE
-check_models = TRUE 
+get_bayesfactor = F
+check_models = T
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -100,7 +98,7 @@ warmup = 2000 # 2000
 
 ################################################################
 
-suffix = paste0('_MainModels_', as.character(iterations))
+suffix = paste0('_MainModels_3_level_LATENT', as.character(iterations))
 
 
 ```
@@ -116,41 +114,71 @@ summary(df_double$pushing)
 
 ```
 
+# Prepare latent stuff
+
+```{r}
+
+df_double <- df_double %>%
+  rename(
+    received_persuasion_self = persuasion_self,
+    received_persuasion_partner = persuasion_partner,
+    received_persuasion_self_cw = persuasion_self_cw,
+    received_persuasion_partner_cw = persuasion_partner_cw,
+    received_persuasion_self_cb = persuasion_self_cb,
+    received_persuasion_partner_cb = persuasion_partner_cb,
+    
+    received_pressure_self = pressure_self,
+    received_pressure_partner = pressure_partner,
+    received_pressure_self_cw = pressure_self_cw,
+    received_pressure_partner_cw = pressure_partner_cw,
+    received_pressure_self_cb = pressure_self_cb,
+    received_pressure_partner_cb = pressure_partner_cb,
+    
+    received_pushing_self = pushing_self,
+    received_pushing_partner = pushing_partner,
+    received_pushing_self_cw = pushing_self_cw,
+    received_pushing_partner_cw = pushing_partner_cw,
+    received_pushing_self_cb = pushing_self_cb,
+    received_pushing_partner_cb = pushing_partner_cb
+  )
+
+```
+
+
+
 
 # Correlations between self-report and partner-report
 
 ```{r corrs_measures_self_partner, results='asis'}
 
 cors <- wbCorr(
-  df_double[,c('exerted_persuasion_self', 'persuasion_partner')], 
+  df_double[,c('exerted_persuasion_self', 'received_persuasion_partner')], 
   df_double$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 
 cors <- wbCorr(
-  df_double[,c('exerted_pressure_self', 'pressure_partner')], 
+  df_double[,c('exerted_pressure_self', 'received_pressure_partner')], 
   df_double$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 
 cors <- wbCorr(
-  df_double[,c('exerted_pushing_self', 'pushing_partner')], 
+  df_double[,c('exerted_pushing_self', 'received_pushing_partner')], 
   df_double$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 ```
 
-Within-person correlations are above the diagonal and between-person correlations are below the diagonal.
-On the diagonal are intraclass correlations (ICCs)
 
 # Reliability Omega within-person and between-person 
 ```{r omegasem, results='asis'}
 
 reliability_psc <- multilevelTools::omegaSEM(
-  c('exerted_persuasion_self', 'persuasion_partner'),
+  c('exerted_persuasion_self', 'received_persuasion_partner'),
   'coupleID',
   data = df_double
 )
@@ -159,7 +187,7 @@ print(reliability_psc)
 
 
 reliability_nsc <- multilevelTools::omegaSEM(
-  c('exerted_pressure_self', 'pressure_partner'),
+  c('exerted_pressure_self', 'received_pressure_partner'),
   'coupleID',
   data = df_double
 )
@@ -168,13 +196,56 @@ print(reliability_nsc)
 
 
 reliability_pushing <- multilevelTools::omegaSEM(
-  c('exerted_pushing_self', 'pushing_partner'),
+  c('exerted_pushing_self', 'received_pushing_partner'),
   'coupleID',
   data = df_double
 )
 
 print(reliability_pushing)
 
+
+```
+
+
+#LATENT STUFF
+
+```{r}
+
+# add empty latent variable to data frame
+df$exerted_persuasion <- as.numeric(NA)
+#df$received_persuasion <- as.numeric(NA)
+
+
+# mi(x) tells brms that it is missing
+bf1 <- bf(exerted_persuasion_self ~ 0 + mi(exerted_persuasion)) # factor loading 1 (constant)
+bf2 <- bf(received_persuasion_partner ~ 0 + mi(exerted_persuasion)) # factor loading 2
+bf3 <- bf(exerted_persuasion | mi() ~ 0)
+
+
+get_prior(bf1 + bf2 + bf3, data = df_double)
+
+prior1 <- c(
+  prior(normal(1, 0.000001), coef = miexerted_persuasion, resp = exertedpersuasionself),
+  prior(normal(1,1), coef = miexerted_persuasion, resp = receivedpersuasionpartner)
+)
+
+fit <- brm(
+  bf1 + bf2 + bf3 
+  + set_rescor(FALSE), 
+  
+  prior = prior1,
+  data = df_double, 
+  family = gaussian(),
+  #control = list(adapt_delta = 0.95),
+  iter = 1000,
+  warmup = 500,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  #file = file.path("models_cache_brms", paste0("pa_obj_log_gaussian", suffix))
+)
+
+summary(fit)
 
 ```
 
@@ -222,13 +293,15 @@ model_rows_fixed_ordinal <- c(
 model_rows_random <- c(
   # '--------------',
   # '-- RANDOM EFFECTS --',
-  'sd(Intercept)', 
-  'sd(persuasion_self_cw)',
-  'sd(persuasion_partner_cw)',
-  'sd(pressure_self_cw)',
-  'sd(pressure_partner_cw)',
-  'sd(pushing_self_cw)',
-  'sd(pushing_partner_cw)',
+  'coupleID: sd(Intercept)', 
+  'coupleID: sd(persuasion_self_cw)',
+  'coupleID: sd(persuasion_partner_cw)',
+  'coupleID: sd(pressure_self_cw)',
+  'coupleID: sd(pressure_partner_cw)',
+  'coupleID: sd(pushing_self_cw)',
+  'coupleID: sd(pushing_partner_cw)',
+  
+  'coupleID:userID: sd(Intercept)', 
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
@@ -279,14 +352,17 @@ model_rownames_fixed_ordinal <- c(
 
 model_rownames_random <- c(
   # '--------------',
-  # '-- RANDOM EFFECTS --',
-  'sd(Intercept)', 
-  "sd(Daily individual's experienced persuasion)", 
-  "sd(Daily partner's experienced persuasion)", # OR partner received
-  "sd(Daily individual's experienced pressure)", 
-  "sd(Daily partner's experienced pressure)", 
-  "sd(Daily individual's experienced pushing)", 
-  "sd(Daily partner's experienced pushing)", 
+  # '-- RANDOM EFFECTS L2 --',
+  'L3:sd(Intercept)', 
+  "L3:sd(Daily individual's experienced persuasion)", 
+  "L3:sd(Daily partner's experienced persuasion)", # OR partner received
+  "L3:sd(Daily individual's experienced pressure)", 
+  "L3:sd(Daily partner's experienced pressure)", 
+  "L3:sd(Daily individual's experienced pushing)", 
+  "L3:sd(Daily partner's experienced pushing)", 
+  
+  # '-- RANDOM EFFECTS L3 --',
+  'L2:sd(Intercept)', 
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
@@ -303,16 +379,18 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 rows_to_pack <- list(
   "Within-Person Effects" = c(2,11),
   "Between-Person Effects" = c(12,18),
-  "Random Effects" = c(19, 25), 
-  "Additional Parameters" = c(26,26)
+  "Random Effects (Level 3 - Couple)" = c(19, 25), 
+  "Random Effects (Level 2 - Couple:Person)" = c(26, 26), 
+  "Additional Parameters" = c(27,27)
   )
 
 
 rows_to_pack_ordinal <- list(
   "Within-Person Effects" = c(2+5,11+5),
   "Between-Person Effects" = c(12+5,18+5),
-  "Random Effects" = c(19+5, 25+5), 
-  "Additional Parameters" = c(26+5,26+6)
+  "Random Effects (Level 3 - Couple)" = c(19+5, 25+5), 
+  "Random Effects (Level 2 - Couple:Person)" = c(26+5, 26+5), 
+  "Additional Parameters" = c(27+5,27+6)
   )
 
 ```
@@ -330,134 +408,16 @@ hist(log(df_double$pa_sub+00000000001), breaks = 40)
 
 ```
 
-### Hurdle Lognormal Model
-```{r pa_sub_lognormal, results='hide'}
 
 
-formula <- bf(
-  pa_sub ~ 
-    persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    plan_self + plan_partner +
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | dd | coupleID),
-  
-  hu = ~ persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw +
-    
-    persuasion_self_cb + persuasion_partner_cb +
-    pressure_self_cb + pressure_partner_cb +
-    pushing_self_cb + pushing_partner_cb +
-    
-    plan_self + plan_partner +
-    day + 
-    
-    # Random effects
-    (1 + persuasion_self_cw + persuasion_partner_cw +
-    pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | dd | coupleID)
-  
-  , decomp = 'QR'
-  #, autocor = autocor_str
-) 
-
-prior1 <- c(
-  brms::set_prior("normal(0, 2.5)", class = "b")
-  , brms::set_prior("normal(0, 2)", class = "b", dpar = "hu")
-  , brms::set_prior("normal(0, 50)", class = "Intercept") # for non-zero PA
-  , brms::set_prior("normal(0.5, 2.5)", class = "Intercept", dpar = 'hu') # hurdle part
-  , brms::set_prior("normal(0, 2)", class = "sd", group = "coupleID", lb = 0)
-  , brms::set_prior("student_t(3, 0, 2.5)", class = "sigma", lb = 0)
-)
-
-#brms::validate_prior(
-#  prior1, 
-#  formula = formula, 
-#  data = df_double, 
-#  family = hurdle_lognormal()
-#)
-
-#df_minimal <- df_double[, c("AorB", all.vars(as.formula(formula)))]
-
-pa_sub <- my_brm(
-  mi = use_mi, 
-  imputed_data = implist,
-  
-  formula = formula, 
-  prior = prior1,
-  data = df_double, 
-  family = brms::hurdle_lognormal(), 
-  #family = brms::hurdle_negbinomial(), 
-  #family = brms::hurdle_poisson(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
-  iter = iterations,
-  warmup = warmup,
-  chains = 4,
-  cores = 4,
-  seed = 42,
-  file = file.path("models_cache_brms", paste0("pa_sub_hu_lognormal", suffix))
-  #, file_refit = 'always'
-)
 
 
-pa_sub_digest <- digest::digest(pa_sub)
 
 
-```
 
 
-```{r check_pa_sub_lognormal}
-if (check_models) {
-  check_brms(pa_sub, log_pp_check = TRUE)
-  DHARMa.check_brms.all(pa_sub, integer = TRUE, outliers_type = 'bootstrap')
-}
-```
 
-
-```{r check_pa_sub_lognormal_priorsense, cache=TRUE, cache.extra=c(pa_sub_digest, do_priorsense)}
-if (do_priorsense) {
-  priorsense_vars <- c(
-      'Intercept',
-      'b_persuasion_self_cw',
-      'b_persuasion_partner_cw',
-      'b_pressure_self_cw',
-      'b_pressure_partner_cw',
-      'b_pushing_self_cw',
-      'b_pushing_partner_cw'
-  )
-  
-  hurdle_priorsense_vars <- c(
-    'Intercept_hu',
-    'b_hu_persuasion_self_cw',
-    'b_hu_persuasion_partner_cw',
-    'b_hu_pressure_self_cw',
-    'b_hu_pressure_partner_cw',
-    'b_hu_pushing_self_cw',
-    'b_hu_pushing_partner_cw'
-  )
-  
-  gc()
-  priorsense::powerscale_sensitivity(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
-  priorsense::powerscale_plot_dens(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
-  priorsense::powerscale_plot_ecdf(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
-  priorsense::powerscale_plot_quantities(pa_sub, variable = c(priorsense_vars, hurdle_priorsense_vars))
-}
-
-```
-
-
-```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300, cache=TRUE, cache.extra=c(pa_sub_digest, report_function_hash)}
+```{r report_pa_sub_lognormal, results='asis', fig.width=8, fig.height=7, dpi=300}
 
 # rope range for continuous part of the model
 rope_factor <- sd(log(pa_sub$data$pa_sub[pa_sub$data$pa_sub > 0]))
@@ -477,7 +437,9 @@ summary_pa_sub <- summarize_brms(
 
 # Print the updated dataframe
 summary_pa_sub %>%
-  print_df(rows_to_pack = rows_to_pack)
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
 
 
 # Plot continuous part of model
@@ -538,7 +500,7 @@ plot(
 
 Hurdle part of the model on the left, non-zero part towards the right side of the table
 
-```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest, warnings = FALSE}
+```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', warnings = FALSE, message=FALSE}
 
 
 
@@ -638,6 +600,16 @@ hist(df_double$pa_obj_log, breaks = 50)
 
 ```
 
+### Latent lognormal model
+
+```{r}
+
+df_double$persuasion_self_cw <- 
+
+
+```
+
+
 
 
 ### Lognormal Model
@@ -658,9 +630,11 @@ formula <- bf(
     day + weartime_self_cw + weartime_self_cb +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -693,7 +667,7 @@ pa_obj_log <- my_brm(
   prior = prior1,
   data = df_double, 
   family = lognormal(),
-  #control = list(adapt_delta = 0.95),
+  control = list(adapt_delta = 0.95),
   iter = iterations,
   warmup = warmup,
   chains = 4,
@@ -716,7 +690,7 @@ if (check_models) {
 ```
 
 
-```{r check_pa_obj_log_priorsense, cache=TRUE, cache.extra=c(pa_obj_log_digest, do_priorsense)}
+```{r check_pa_obj_log_priorsense}
 if (do_priorsense) {
   gc()
   priorsense::powerscale_sensitivity(pa_obj_log, variable = priorsense_vars)
@@ -729,7 +703,7 @@ if (do_priorsense) {
 
 
 
-```{r report_pa_obj_log_g, results='asis', cache=TRUE, cache.extra=c(pa_obj_log_digest, report_function_hash)}
+```{r report_pa_obj_log_g, results='asis'}
 
 # rope range for lognormal model
 rope_factor <- sd(log(pa_obj_log$data$pa_obj))
@@ -795,9 +769,11 @@ formula <- bf(
     day +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -828,7 +804,7 @@ mood_gauss <- my_brm(
   prior = prior1,
   data = df_double, 
   family = gaussian(),
-  #control = list(adapt_delta = 0.95, max_treedepth = 15),
+  control = list(adapt_delta = 0.95, max_treedepth = 15),
   iter = iterations,
   warmup = warmup,
   chains = 4,
@@ -841,8 +817,6 @@ mood_gauss_digest <- digest::digest(mood_gauss)
 
 
 ```
-
-
 ```{r check_mood_gauss}
 if (check_models) {
   check_brms(mood_gauss, log_pp_check = FALSE)
@@ -851,7 +825,7 @@ if (check_models) {
 ```
 
 
-```{r check_mood_gauss_priorsense, cache=TRUE, cache.extra=c(mood_gauss_digest, do_priorsense)}
+```{r check_mood_gauss_priorsense}
 
 if (do_priorsense) {
   gc()
@@ -863,7 +837,8 @@ if (do_priorsense) {
 
 ```
 
-```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(mood_gauss_digest, report_function_hash)}
+
+```{r report_mood_gauss, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summary_mood <- summarize_brms(
   mood_gauss, 
@@ -875,7 +850,9 @@ summary_mood <- summarize_brms(
   exponentiate = F) 
 
 summary_mood %>%
-  print_df(rows_to_pack = rows_to_pack)
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
 
 
 plot(
@@ -900,6 +877,161 @@ conditional_spaghetti(
 ```
 
 
+# inversed affect
+
+```{r}
+
+df_double$aff_inv <- 5 - df_double$aff
+
+formula_cens <- bf(
+  aff_inv ~ 
+    persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    plan_self + plan_partner +
+    day +
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID),
+  
+  hu = ~ persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw +
+    
+    persuasion_self_cb + persuasion_partner_cb +
+    pressure_self_cb + pressure_partner_cb +
+    pushing_self_cb + pushing_partner_cb +
+    
+    plan_self + plan_partner +
+    day +
+    
+    # Random effects
+    (1 + persuasion_self_cw + persuasion_partner_cw +
+    pressure_self_cw + pressure_partner_cw +
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID),
+  
+  decomp = "QR"
+)
+
+# 3. Priors
+
+prior1 <- c(
+  # Mean (mu) part on log scale
+  set_prior("normal(0, 0.7)", class = "b"),
+  set_prior("normal(log(1), 1)", class = "Intercept"),  # center μ≈1 on positive part
+  
+  # Random effects (mu)
+  set_prior("student_t(3, 0, 2.5)", class = "sd"),
+  set_prior("lkj(2)",               class = "cor"),
+  
+  # Shape (dispersion) parameter on log scale
+  set_prior("normal(0, 1)", class = "shape"),
+  
+  # Hurdle part (logit)
+  set_prior("normal(0, 1)",   class = "Intercept", dpar = "hu"),
+  set_prior("normal(0, 0.5)", class = "b",        dpar = "hu")
+)
+
+# 4. Fit model
+mood_inv <- my_brm(
+  mi = use_mi,
+  imputed_data = implist,
+  formula = formula_cens,
+  data = df_double,
+  family = hurdle_gamma(),
+  prior = prior1,
+  control = list(adapt_delta = 0.95, max_treedepth = 15),
+  iter = iterations,
+  warmup = warmup,
+  chains = 4,
+  cores = 4,
+  seed = 7777,
+  file = file.path("models_cache_brms", paste0("mood_inv_hurdle", suffix))
+)
+
+mood_cens_digest <- digest::digest(mood_inv)
+
+```
+
+
+```{r check_mood_beta}
+if (check_models) {
+  check_brms(mood_inv, log_pp_check = FALSE)
+  DHARMa.check_brms.all(mood_inv, integer = FALSE)
+}
+
+pp_check(mood_inv, transform = function(y) pmin(pmax(y, 0), 5), type = 'hist')
+pp_check(mood_inv, transform = function(y) pmin(pmax(y, 0), 5))
+
+```
+
+```{r check_mood_beta_priorsense}
+
+if (do_priorsense) {
+  gc()
+  priorsense::powerscale_sensitivity(mood_inv, variable = priorsense_vars)
+  priorsense::powerscale_plot_dens(mood_inv, variable = priorsense_vars)
+  priorsense::powerscale_plot_ecdf(mood_inv, variable = priorsense_vars)
+  priorsense::powerscale_plot_quantities(mood_inv, variable = priorsense_vars)
+}
+
+```
+
+```{r}
+summary(mood_inv)
+```
+
+
+
+```{r report_mood_beta, results='asis', fig.width=8, fig.height=6, dpi=300}
+
+summary_mood_inv <- summarize_brms(
+  mood_inv, 
+  stats_to_report = stats_to_report,
+  model_rows_fixed = model_rows_fixed,
+  model_rows_random = model_rows_random,
+  model_rownames_fixed = model_rownames_fixed,
+  model_rownames_random = model_rownames_random,
+  exponentiate = F) 
+
+summary_mood_inv %>%
+  print_df(
+    rows_to_pack = rows_to_pack
+    )
+
+
+plot(
+  bayestestR::p_direction(mood_inv),
+  priors = TRUE
+)  + 
+  coord_cartesian(xlim = c(-3, 3)) +
+  theme_bw()
+
+plot(
+  bayestestR::rope(mood_inv, ci = 1)
+) + theme_bw()
+
+
+conditional_spaghetti(
+  mood_inv, 
+  effects = c('pushing_partner_cw'),
+  group_var = 'coupleID',
+  plot_full_range = TRUE
+)
+
+
+```
 
 
 ## Reactance
@@ -936,9 +1068,11 @@ formula <- bf(
     day +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -993,7 +1127,7 @@ if (check_models) {
 ```
 
 
-```{r check_reactance_ordinal_priorsense, cache=TRUE, cache.extra=c(reactance_ordinal_digest, do_priorsense)}
+```{r check_reactance_ordinal_priorsense}
 
 if (do_priorsense) {
   gc()
@@ -1005,7 +1139,7 @@ if (do_priorsense) {
 
 ```
 
-```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(reactance_ordinal_digest, report_function_hash)}
+```{r report_reactance_ordinal, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summary_reactance_ordinal <- summarize_brms(
   reactance_ordinal, 
@@ -1038,7 +1172,7 @@ conditional_spaghetti(
   reactance_ordinal, 
   effects = c('persuasion_self_cw', 'pressure_self_cw')
   , group_var = 'coupleID'
-  #, n_groups = 15
+  , n_groups = 15
   , plot_full_range = T
 )
 
@@ -1079,9 +1213,11 @@ formula <- bf(
     day +
     
     # Random effects
-    (persuasion_self_cw + persuasion_partner_cw +
+    (1 + persuasion_self_cw + persuasion_partner_cw +
     pressure_self_cw + pressure_partner_cw +
-    pushing_self_cw + pushing_partner_cw | coupleID)
+    pushing_self_cw + pushing_partner_cw | d_c | coupleID) +
+  
+    (1 | d_u | coupleID:userID)
   
   , decomp = 'QR'
   #, autocor = autocor_str
@@ -1137,7 +1273,7 @@ if (check_models) {
 ```
 
 
-```{r check_is_reactance_priorsense, cache=TRUE, cache.extra=c(is_reactance_digest, do_priorsense)}
+```{r check_is_reactance_priorsense}
 if (do_priorsense) {
   gc()
   priorsense::powerscale_sensitivity(is_reactance, variable = priorsense_vars)
@@ -1148,7 +1284,7 @@ if (do_priorsense) {
 
 ```
 
-```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300, cache=TRUE, cache.extra=c(is_reactance_digest, report_function_hash)}
+```{r report_is_reactance, results='asis', fig.width=8, fig.height=6, dpi=300}
 
 summary_is_reactance <- summarize_brms(
   is_reactance, 
@@ -1231,7 +1367,7 @@ export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack,
   file.path("Output", paste0("AllModels", suffix, ".xlsx")), 
-  merge_option = 'both', 
+  merge_option = 'header', 
   simplify_2nd_row = FALSE,
   line_above_rows = c(1,2),
   line_below_rows = c(-1)

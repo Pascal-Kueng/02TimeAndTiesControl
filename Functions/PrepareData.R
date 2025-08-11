@@ -100,7 +100,7 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     ) 
   
   
-    if (use_exerted_control) {
+    if (use_exerted_control) { # deprecated
       df <- df %>% 
         rename(
           persuasion = ss_psc_more,
@@ -119,6 +119,11 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
           persuasion = sp_psc_more,
           pressure = sp_nsc_more,
           pushing = sp_push_plan,
+          
+          exerted_persuasion = ss_psc_more,
+          exerted_pressure = ss_nsc_more,
+          exerted_pushing = ss_push_plan,
+          
           reactance = ss_reactance,
           weartime = wear_minutes,
           
@@ -146,9 +151,11 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
           'persuasion',
           'pressure', 
           'pushing',
-          'ss_psc_more',
-          'ss_nsc_more', 
-          'ss_push_plan'))
+
+          'exerted_persuasion',
+          'exerted_pressure', 
+          'exerted_pushing'
+          ))
         )
       )
   
@@ -259,6 +266,8 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "day", 
     c("persuasion", "pressure", "pushing", 
       
+      "exerted_persuasion", "exerted_pressure", "exerted_pushing", 
+      
       "weartime", "barriers", "facilitators", "plan", "support", "got_JITAI", "pa_obj")
   )
   
@@ -267,6 +276,8 @@ prepare_data <- function(df, recode_pushing = TRUE, use_mi = FALSE, contrast_cod
     "coupleID", 
     "day", 
     c("persuasion", "pressure", "pushing", 
+      
+      "exerted_persuasion", "exerted_pressure", "exerted_pushing", 
       
       "weartime", "barriers", "facilitators", "plan", "support", "got_JITAI", "pa_obj")
   )
