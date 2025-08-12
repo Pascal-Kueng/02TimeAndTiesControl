@@ -153,47 +153,25 @@ df_double <- df_double %>%
 
 ```{r}
 
-df <- df_double %>% 
-  group_by(userID) %>%
-  mutate(
-    exerted_persuasion_self_pm = mean(exerted_persuasion_self, na.rm=TRUE),
-    exerted_persuasion_partner_pm = mean(exerted_persuasion_partner, na.rm=TRUE)
-  ) %>%
-  ungroup() %>%
-  group_by(coupleID) %>%
-  mutate(
-    exerted_persuasion_self_cm = mean(exerted_persuasion_self_pm, na.rm=TRUE),
-    exerted_persuasion_partner_cm = mean(exerted_persuasion_partner_pm, na.rm=TRUE)
-  ) %>%
-  ungroup() %>%
-  mutate(
-    exerted_persuasion_self_cwp = exerted_persuasion_self - exerted_persuasion_self_pm, 
-    exerted_persuasion_partner_cwp = exerted_persuasion_partner - exerted_persuasion_partner_pm, 
-    
-    exerted_persuasion_self_cwcbp = exerted_persuasion_self_pm - exerted_persuasion_self_cm, 
-    exerted_persuasion_partner_cwcbp = exerted_persuasion_partner_pm - exerted_persuasion_partner_cm, 
-    
-    exerted_persuasion_self_cbc = exerted_persuasion_self_cm - mean(exerted_persuasion_self, na.rm=TRUE), 
-    exerted_persuasion_partner_cbc = exerted_persuasion_partner_cm - mean(exerted_persuasion_partner, na.rm=TRUE), 
-  )
-
-df$exerted_persuasion_self_cbc - df$exerted_persuasion_partner_cbc
 # Truth bias model
 
 formula <- bf(
-  received_persuasion_self ~ exerted_persuasion_partner_cbc + exerted_persuasion_partner_cwcbp + exerted_persuasion_partner_cwp + exerted_persuasion_self_cwp +  (1 | coupleID) + (1 | coupleID:userID)
+  received_persuasion_self ~ 
+    day +
+    exerted_persuasion_partner_cw + 
+    exerted_persuasion_self_cw + 
+    exerted_persuasion_partner_cb + 
+    exerted_persuasion_self_cb +  
+    (1 + exerted_persuasion_partner_cw + exerted_persuasion_self_cw | coupleID) + (1 | coupleID:userID)
 )
 
-
-#formula <- bf(
-#  received_persuasion_self ~ exerted_persuasion_partner_cw + exerted_persuasion_self_cw + exerted_persuasion_partner_cb + #exerted_persuasion_self_cb + (1 + exerted_persuasion_partner_cw + exerted_persuasion_self_cw | coupleID) + (1 | coupleID:userID)
-#)
 
 fit <- brm(
   formula, 
-  data = df, 
+  data = df_double, 
   chains = 4, 
-  cores = 4
+  cores = 4,
+  file = 'models_cache_brms/testest'
 )
 
 summary(fit)
@@ -201,34 +179,7 @@ summary(fit)
 ```
 
 
-```{r}
 
-bfX <- bf(exerted_persuasion_self ~ 1 + (1|c|coupleID) + (1|p|userID))
-bfY <- bf(received_persuasion_partner ~ 1 + (1|c|coupleID) + (1|p|userID))
-
-priors <- c(
-  prior(normal(0, 5), class = Intercept),
-  prior(lkj(2), class = cor),     # random-effect correlation prior (person & couple)
-  prior(lkj(2), class = rescor)   # residual correlation prior (within-day WP)
-)
-
-
-fit <- brm(
-  bfX + bfY + set_rescor(TRUE),
-  data    = df_double,
-  prior   = priors,
-  family  = gaussian(),
-  chains  = 4, cores = 4,
-  iter    = 4000, warmup = 1000,
-  seed    = 2025,
-  #control = list(adapt_delta = 0.95, max_treedepth = 12),
-  save_pars = save_pars(all = TRUE),
-  file = "reliability",
-)
-
-summary(fit)
-
-```
 
 ```{r corrs_measures_self_partner, results='asis'}
 
