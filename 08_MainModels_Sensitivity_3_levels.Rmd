@@ -217,7 +217,7 @@ model_rownames_fixed_ordinal <- c(
 
 model_rownames_random <- c(
   # '--------------',
-  # '-- RANDOM EFFECTS L2 --',
+  # '-- RANDOM EFFECTS L3 --',
   'L3:sd(Intercept)', 
   "L3:sd(Daily individual's experienced persuasion)", 
   "L3:sd(Daily partner's experienced persuasion)", # OR partner received
@@ -226,9 +226,9 @@ model_rownames_random <- c(
   "L3:sd(Daily individual's experienced pushing)", 
   "L3:sd(Daily partner's experienced pushing)", 
   
-  # '-- RANDOM EFFECTS L3 --',
+  # '-- RANDOM EFFECTS L2 --',
   'L2:sd(Intercept)', 
-  # '-- CORRELATION STRUCTURE -- ', 
+  # '-- CORRELATION STRUCTURE L1 -- ', 
   'sigma'
 )
 
