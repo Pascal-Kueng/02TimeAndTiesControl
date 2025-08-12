@@ -118,7 +118,7 @@ summary(df_double$pushing)
 
 ```{r}
 
-df_double <- df_double %>%
+df2 <- df_double %>%
   rename(
     received_persuasion_self = persuasion_self,
     received_persuasion_partner = persuasion_partner,
@@ -170,7 +170,7 @@ formula <- bf(
 
 fit <- brm(
   formula, 
-  data = df_double, 
+  data = df2, 
   chains = 4, 
   cores = 4,
   file = 'models_cache_brms/testest'
@@ -186,22 +186,22 @@ summary(fit)
 ```{r corrs_measures_self_partner, results='asis'}
 
 cors <- wbCorr(
-  df_double[,c('exerted_persuasion_self', 'received_persuasion_partner')], 
-  df_double$coupleID, 
+  df2[,c('exerted_persuasion_self', 'received_persuasion_partner')], 
+  df2$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 
 cors <- wbCorr(
-  df_double[,c('exerted_pressure_self', 'received_pressure_partner')], 
-  df_double$coupleID, 
+  df2[,c('exerted_pressure_self', 'received_pressure_partner')], 
+  df2$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 
 cors <- wbCorr(
-  df_double[,c('exerted_pushing_self', 'received_pushing_partner')], 
-  df_double$coupleID, 
+  df2[,c('exerted_pushing_self', 'received_pushing_partner')], 
+  df2$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
@@ -214,7 +214,7 @@ summary(cors, 'wb')
 reliability_psc <- multilevelTools::omegaSEM(
   c('exerted_persuasion_self', 'received_persuasion_partner'),
   'coupleID',
-  data = df_double
+  data = df2
 )
 
 print(reliability_psc)
@@ -223,7 +223,7 @@ print(reliability_psc)
 reliability_nsc <- multilevelTools::omegaSEM(
   c('exerted_pressure_self', 'received_pressure_partner'),
   'coupleID',
-  data = df_double
+  data = df2
 )
 
 print(reliability_nsc)
@@ -232,7 +232,7 @@ print(reliability_nsc)
 reliability_pushing <- multilevelTools::omegaSEM(
   c('exerted_pushing_self', 'received_pushing_partner'),
   'coupleID',
-  data = df_double
+  data = df2
 )
 
 print(reliability_pushing)
@@ -242,6 +242,7 @@ print(reliability_pushing)
 
 
 # Modelling
+
 
 ```{r set_report_order_persuasion}
 
