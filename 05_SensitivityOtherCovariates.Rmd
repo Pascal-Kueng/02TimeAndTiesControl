@@ -274,8 +274,9 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 rows_to_pack <- list(
   "Within-Person Effects" = c(2,16),
   "Between-Person Effects" = c(17,27),
-  "Random Effects" = c(28, 34), 
-  "Additional Parameters" = c(35,35)
+  "Random Effects (Level 3 - Couple)" = c(28, 34), 
+  "Random Effects (Level 2 - Couple:Person)" = c(35, 35), 
+  "Additional Parameters" = c(36,36)
   )
 
 
@@ -283,8 +284,9 @@ rows_to_pack_ordinal <- list(
   "Intercepts" = c(1,6),
   "Within-Person Effects" = c(2+5,16+5),
   "Between-Person Effects" = c(17+5,27+5),
-  "Random Effects" = c(28+5, 34+5), 
-  "Additional Parameters" = c(35+5,35+6)
+  "Random Effects (Level 3 - Couple)" = c(28+5, 34+5), 
+  "Random Effects (Level 2 - Couple:Person)" = c(35+5, 35+5), 
+  "Additional Parameters" = c(36+5,36+6)
   )
 
 
