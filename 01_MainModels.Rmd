@@ -35,8 +35,6 @@ library(see)
 library(beepr)
 library(DHARMa)
 library(digest)
-library(multilevelTools)
-library(wbCorr)
 
 
 
@@ -61,8 +59,8 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = TRUE
-check_models = TRUE 
+get_bayesfactor = F
+check_models = T
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -100,7 +98,7 @@ warmup = 2000 # 2000
 
 ################################################################
 
-suffix = paste0('_MainModels_', as.character(iterations))
+suffix = paste0('_MainModels_3_level_LATENT', as.character(iterations))
 
 
 ```
@@ -116,41 +114,152 @@ summary(df_double$pushing)
 
 ```
 
+# Prepare stuff
+
+```{r}
+
+df_double <- df_double %>%
+  rename(
+    received_persuasion_self = persuasion_self,
+    received_persuasion_partner = persuasion_partner,
+    received_persuasion_self_cw = persuasion_self_cw,
+    received_persuasion_partner_cw = persuasion_partner_cw,
+    received_persuasion_self_cb = persuasion_self_cb,
+    received_persuasion_partner_cb = persuasion_partner_cb,
+    
+    received_pressure_self = pressure_self,
+    received_pressure_partner = pressure_partner,
+    received_pressure_self_cw = pressure_self_cw,
+    received_pressure_partner_cw = pressure_partner_cw,
+    received_pressure_self_cb = pressure_self_cb,
+    received_pressure_partner_cb = pressure_partner_cb,
+    
+    received_pushing_self = pushing_self,
+    received_pushing_partner = pushing_partner,
+    received_pushing_self_cw = pushing_self_cw,
+    received_pushing_partner_cw = pushing_partner_cw,
+    received_pushing_self_cb = pushing_self_cb,
+    received_pushing_partner_cb = pushing_partner_cb
+  )
+
+```
+
+
+
 
 # Correlations between self-report and partner-report
+
+# Method 2
+
+```{r}
+
+df <- df_double %>% 
+  group_by(userID) %>%
+  mutate(
+    exerted_persuasion_self_pm = mean(exerted_persuasion_self, na.rm=TRUE),
+    exerted_persuasion_partner_pm = mean(exerted_persuasion_partner, na.rm=TRUE)
+  ) %>%
+  ungroup() %>%
+  group_by(coupleID) %>%
+  mutate(
+    exerted_persuasion_self_cm = mean(exerted_persuasion_self_pm, na.rm=TRUE),
+    exerted_persuasion_partner_cm = mean(exerted_persuasion_partner_pm, na.rm=TRUE)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    exerted_persuasion_self_cwp = exerted_persuasion_self - exerted_persuasion_self_pm, 
+    exerted_persuasion_partner_cwp = exerted_persuasion_partner - exerted_persuasion_partner_pm, 
+    
+    exerted_persuasion_self_cwcbp = exerted_persuasion_self_pm - exerted_persuasion_self_cm, 
+    exerted_persuasion_partner_cwcbp = exerted_persuasion_partner_pm - exerted_persuasion_partner_cm, 
+    
+    exerted_persuasion_self_cbc = exerted_persuasion_self_cm - mean(exerted_persuasion_self, na.rm=TRUE), 
+    exerted_persuasion_partner_cbc = exerted_persuasion_partner_cm - mean(exerted_persuasion_partner, na.rm=TRUE), 
+  )
+
+df$exerted_persuasion_self_cbc - df$exerted_persuasion_partner_cbc
+# Truth bias model
+
+formula <- bf(
+  received_persuasion_self ~ exerted_persuasion_partner_cbc + exerted_persuasion_partner_cwcbp + exerted_persuasion_partner_cwp + exerted_persuasion_self_cwp +  (1 | coupleID) + (1 | coupleID:userID)
+)
+
+
+#formula <- bf(
+#  received_persuasion_self ~ exerted_persuasion_partner_cw + exerted_persuasion_self_cw + exerted_persuasion_partner_cb + #exerted_persuasion_self_cb + (1 + exerted_persuasion_partner_cw + exerted_persuasion_self_cw | coupleID) + (1 | coupleID:userID)
+#)
+
+fit <- brm(
+  formula, 
+  data = df, 
+  chains = 4, 
+  cores = 4
+)
+
+summary(fit)
+
+```
+
+
+```{r}
+
+bfX <- bf(exerted_persuasion_self ~ 1 + (1|c|coupleID) + (1|p|userID))
+bfY <- bf(received_persuasion_partner ~ 1 + (1|c|coupleID) + (1|p|userID))
+
+priors <- c(
+  prior(normal(0, 5), class = Intercept),
+  prior(lkj(2), class = cor),     # random-effect correlation prior (person & couple)
+  prior(lkj(2), class = rescor)   # residual correlation prior (within-day WP)
+)
+
+
+fit <- brm(
+  bfX + bfY + set_rescor(TRUE),
+  data    = df_double,
+  prior   = priors,
+  family  = gaussian(),
+  chains  = 4, cores = 4,
+  iter    = 4000, warmup = 1000,
+  seed    = 2025,
+  #control = list(adapt_delta = 0.95, max_treedepth = 12),
+  save_pars = save_pars(all = TRUE),
+  file = "reliability",
+)
+
+summary(fit)
+
+```
 
 ```{r corrs_measures_self_partner, results='asis'}
 
 cors <- wbCorr(
-  df_double[,c('exerted_persuasion_self', 'persuasion_partner')], 
+  df_double[,c('exerted_persuasion_self', 'received_persuasion_partner')], 
   df_double$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 
 cors <- wbCorr(
-  df_double[,c('exerted_pressure_self', 'pressure_partner')], 
+  df_double[,c('exerted_pressure_self', 'received_pressure_partner')], 
   df_double$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 
 cors <- wbCorr(
-  df_double[,c('exerted_pushing_self', 'pushing_partner')], 
+  df_double[,c('exerted_pushing_self', 'received_pushing_partner')], 
   df_double$coupleID, 
   method = 'spearman')
 
 summary(cors, 'wb')
 ```
 
-Within-person correlations are above the diagonal and between-person correlations are below the diagonal.
-On the diagonal are intraclass correlations (ICCs)
 
 # Reliability Omega within-person and between-person 
 ```{r omegasem, results='asis'}
 
 reliability_psc <- multilevelTools::omegaSEM(
-  c('exerted_persuasion_self', 'persuasion_partner'),
+  c('exerted_persuasion_self', 'received_persuasion_partner'),
   'coupleID',
   data = df_double
 )
@@ -159,7 +268,7 @@ print(reliability_psc)
 
 
 reliability_nsc <- multilevelTools::omegaSEM(
-  c('exerted_pressure_self', 'pressure_partner'),
+  c('exerted_pressure_self', 'received_pressure_partner'),
   'coupleID',
   data = df_double
 )
@@ -168,7 +277,7 @@ print(reliability_nsc)
 
 
 reliability_pushing <- multilevelTools::omegaSEM(
-  c('exerted_pushing_self', 'pushing_partner'),
+  c('exerted_pushing_self', 'received_pushing_partner'),
   'coupleID',
   data = df_double
 )
