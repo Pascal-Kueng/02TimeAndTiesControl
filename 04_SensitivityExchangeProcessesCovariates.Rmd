@@ -175,13 +175,15 @@ model_rows_fixed_ordinal <- c(
 model_rows_random <- c(
   # '--------------',
   # '-- RANDOM EFFECTS --',
-  'sd(Intercept)', 
-  'sd(persuasion_self_cw)',
-  'sd(persuasion_partner_cw)',
-  'sd(pressure_self_cw)',
-  'sd(pressure_partner_cw)',
-  'sd(pushing_self_cw)',
-  'sd(pushing_partner_cw)',
+  'coupleID: sd(Intercept)', 
+  'coupleID: sd(persuasion_self_cw)',
+  'coupleID: sd(persuasion_partner_cw)',
+  'coupleID: sd(pressure_self_cw)',
+  'coupleID: sd(pressure_partner_cw)',
+  'coupleID: sd(pushing_self_cw)',
+  'coupleID: sd(pushing_partner_cw)',
+  
+  'coupleID:userID: sd(Intercept)', 
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
@@ -243,20 +245,23 @@ model_rownames_fixed_ordinal <- c(
   model_rownames_fixed[2:length(model_rownames_fixed)]
 )
 
+
 model_rownames_random <- c(
   # '--------------',
-  # '-- RANDOM EFFECTS --',
-  'sd(Intercept)', 
-  "sd(Daily individual's experienced persuasion)", 
-  "sd(Daily partner's experienced persuasion)", # OR partner received
-  "sd(Daily individual's experienced pressure)", 
-  "sd(Daily partner's experienced pressure)", 
-  "sd(Daily individual's experienced pushing)", 
-  "sd(Daily partner's experienced pushing)", 
-  # '-- CORRELATION STRUCTURE -- ', 
+  # '-- RANDOM EFFECTS L3 --',
+  'L3:sd(Intercept)', 
+  "L3:sd(Daily individual's experienced persuasion)", 
+  "L3:sd(Daily partner's experienced persuasion)", # OR partner received
+  "L3:sd(Daily individual's experienced pressure)", 
+  "L3:sd(Daily partner's experienced pressure)", 
+  "L3:sd(Daily individual's experienced pushing)", 
+  "L3:sd(Daily partner's experienced pushing)", 
+  
+  # '-- RANDOM EFFECTS L2 --',
+  'L2:sd(Intercept)', 
+  # '-- CORRELATION STRUCTURE L1 -- ', 
   'sigma'
 )
-
 
 model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 
