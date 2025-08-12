@@ -61,7 +61,7 @@ use_mi = FALSE
 shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
-get_bayesfactor = TRUE
+get_bayesfactor = FALSE
 check_models = TRUE 
 
 if (get_bayesfactor) {
@@ -1311,7 +1311,7 @@ export_xlsx(
   summary_all_models, 
   rows_to_pack = rows_to_pack,
   file.path("Output", paste0("AllModels", suffix, ".xlsx")), 
-  merge_option = 'both', 
+  merge_option = 'header', 
   simplify_2nd_row = FALSE,
   line_above_rows = c(1,2),
   line_below_rows = c(-1)
