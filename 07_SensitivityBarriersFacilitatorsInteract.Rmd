@@ -488,8 +488,8 @@ formula_terms <- paste(
   "+ pressure_self_cw + pressure_partner_cw",
   "+ pushing_self_cw + pushing_partner_cw",
   interaction_terms, 
-  "| dd | coupleID)
-  + (1 | d_u | coupleID:userID)"
+  "| dd | userID:coupleID)
+  + (1 | d_u | coupleID)"
 )
 
 
