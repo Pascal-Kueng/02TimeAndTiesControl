@@ -162,9 +162,8 @@ formula <- bf(
     exerted_persuasion_self_cw + 
     exerted_persuasion_partner_cb + 
     exerted_persuasion_self_cb +  
-    (1 + exerted_persuasion_partner_cw + exerted_persuasion_self_cw | coupleID) 
-  
-  + (1 | coupleID:userID)
+    (1 | coupleID) 
+  + (1 + exerted_persuasion_partner_cw + exerted_persuasion_self_cw | coupleID:userID)
 )
 
 
