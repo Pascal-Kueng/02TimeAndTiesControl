@@ -498,43 +498,6 @@ plot(
 
 Hurdle part of the model on the left, non-zero part towards the right side of the table
 
-```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest, warnings = FALSE}
-
-
-
-conds_eff <- conditional_spaghetti(
-  pa_sub, 
-  effects = c(
-    'persuasion_self_cw',
-    'persuasion_partner_cw',
-    'pressure_self_cw',
-    'pressure_partner_cw',
-    'pushing_self_cw',
-    'pushing_partner_cw'
-  ),
-  x_label = c(
-    'Received Persuasion',
-    'Exerted Persuasion',
-    'Received Pressure',
-    'Exerted Pressure',
-    'Received Plan-Related Pushing',
-    'Exerted Plan-Related Pushing'
-  ),
-  group_var = 'coupleID',
-  plot_full_range = TRUE,
-  y_limits = c(0, 100),
-  y_label = "Same-Day MVPA",
-  y_labels = c('Probability of Being Active', 'Minutes of MVPA When Active', 'Overall Expected Minutes of MVPA'),
-  , filter_quantiles = .9995
-  , font_family = 'Candara'
-)
-
-print(conds_eff)
-
-```
-**Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
-The plots display the probability of being active, expected minutes of MVPA when active, and combined predicted MVPA. The bottom density plot visualizes the posterior distributions of slope estimates, transformed to represent multiplicative changes in odds ratios (hurdle component) or expected values. Medians and 95% credible intervals (2.5th and 97.5th percentiles) are shown. Effects are significant, when the 95% credible interval does not overlap 1.
-
 
 ### Comparing effect size of pressure and pushing
 
@@ -820,13 +783,6 @@ plot(
 ) + theme_bw()
 
 
-conditional_spaghetti(
-  mood_gauss, 
-  effects = c('pushing_partner_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE
-)
-
 ```
 
 
@@ -968,15 +924,6 @@ plot(
 
 
 
-#conditional_spaghetti(
-#  reactance_ordinal, 
-#  effects = c('persuasion_self_cw', 'pressure_self_cw')
-#  , group_var = 'coupleID'
-#  #, n_groups = 15
-#  , plot_full_range = T
-#)
-
-
 ```
 
 
@@ -1111,14 +1058,6 @@ plot(
   bayestestR::rope(is_reactance, ci = 1)
 ) + theme_bw()
 
-
-
-conditional_spaghetti(
-  is_reactance, 
-  effects = c('pressure_self_cw', 'pushing_self_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE
-)
 
 ```
 

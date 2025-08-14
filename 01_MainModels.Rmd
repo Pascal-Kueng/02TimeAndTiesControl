@@ -62,6 +62,8 @@ do_priorsense = FALSE
 get_bayesfactor = TRUE
 check_models = TRUE
 
+conditional_spaghettsi_plots = FALSE
+
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
 } else {
@@ -98,7 +100,7 @@ warmup = 2000 # 2000
 
 ################################################################
 
-suffix = paste0('_MainModels_3_level', as.character(iterations))
+suffix = paste0('_MainModels', as.character(iterations))
 
 
 ```
@@ -285,14 +287,15 @@ model_rows_random <- c(
   # '--------------',
   # '-- RANDOM EFFECTS --',
   'coupleID: sd(Intercept)', 
-  'coupleID: sd(persuasion_self_cw)',
-  'coupleID: sd(persuasion_partner_cw)',
-  'coupleID: sd(pressure_self_cw)',
-  'coupleID: sd(pressure_partner_cw)',
-  'coupleID: sd(pushing_self_cw)',
-  'coupleID: sd(pushing_partner_cw)',
-  
+
   'coupleID:userID: sd(Intercept)', 
+  'coupleID:userID: sd(persuasion_self_cw)',
+  'coupleID:userID: sd(persuasion_partner_cw)',
+  'coupleID:userID: sd(pressure_self_cw)',
+  'coupleID:userID: sd(pressure_partner_cw)',
+  'coupleID:userID: sd(pushing_self_cw)',
+  'coupleID:userID: sd(pushing_partner_cw)',
+  
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
@@ -346,15 +349,16 @@ model_rownames_random <- c(
   # '--------------',
   # '-- RANDOM EFFECTS L3 --',
   'L3:sd(Intercept)', 
-  "L3:sd(Daily individual's experienced persuasion)", 
-  "L3:sd(Daily partner's experienced persuasion)", # OR partner received
-  "L3:sd(Daily individual's experienced pressure)", 
-  "L3:sd(Daily partner's experienced pressure)", 
-  "L3:sd(Daily individual's experienced pushing)", 
-  "L3:sd(Daily partner's experienced pushing)", 
   
-  # '-- RANDOM EFFECTS L2 --',
+  
   'L2:sd(Intercept)', 
+  "L2:sd(Daily individual's experienced persuasion)", 
+  "L2:sd(Daily partner's experienced persuasion)", # OR partner received
+  "L2:sd(Daily individual's experienced pressure)", 
+  "L2:sd(Daily partner's experienced pressure)", 
+  "L2:sd(Daily individual's experienced pushing)", 
+  "L2:sd(Daily partner's experienced pushing)", 
+  
   # '-- CORRELATION STRUCTURE L1 -- ', 
   'sigma'
 )
@@ -371,8 +375,8 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 rows_to_pack <- list(
   "Within-Person Effects" = c(2,11),
   "Between-Person Effects" = c(12,18),
-  "Random Effects (Level 3 - Couple)" = c(19, 25), 
-  "Random Effects (Level 2 - Couple:Person)" = c(26, 26), 
+  "Random Effects (Level 3 - Couple)" = c(19, 19), 
+  "Random Effects (Level 2 - Couple:Person)" = c(20, 26), 
   "Additional Parameters" = c(27,27)
   )
 
@@ -380,8 +384,8 @@ rows_to_pack <- list(
 rows_to_pack_ordinal <- list(
   "Within-Person Effects" = c(2+5,11+5),
   "Between-Person Effects" = c(12+5,18+5),
-  "Random Effects (Level 3 - Couple)" = c(19+5, 25+5), 
-  "Random Effects (Level 2 - Couple:Person)" = c(26+5, 26+5), 
+  "Random Effects (Level 3 - Couple)" = c(19+5, 19+5), 
+  "Random Effects (Level 2 - Couple:Person)" = c(20+5, 26+5), 
   "Additional Parameters" = c(27+5,27+6)
   )
 
@@ -614,7 +618,7 @@ Hurdle part of the model on the left, non-zero part towards the right side of th
 
 ```{r report_pa_sub_lognormald, fig.height=11, fig.width=12, dpi=600, results='asis', cache=TRUE, cache.extra=pa_sub_digest, warnings = FALSE}
 
-
+if (conditional_spaghettsi_plots){
 
 conds_eff <- conditional_spaghetti(
   pa_sub, 
@@ -644,6 +648,7 @@ conds_eff <- conditional_spaghetti(
 )
 
 print(conds_eff)
+}
 
 ```
 **Note.** This graphic illustrates the relationship between social control and moderate to vigorous physical activity (MVPA) using a Bayesian Hurdle-Lognormal Multilevel Model. The predictor is centered within individuals to examine how deviations from their average social control relate to same-day MVPA. Shaded areas indicate credible intervals, thick lines show fixed effects, and thin lines represent random effects, highlighting variability across couples.
@@ -967,13 +972,14 @@ plot(
   bayestestR::rope(mood_gauss, ci = 1)
 ) + theme_bw()
 
-
+if (conditional_spaghettsi_plots){
 conditional_spaghetti(
   mood_gauss, 
   effects = c('pushing_partner_cw'),
   group_var = 'coupleID',
   plot_full_range = TRUE
 )
+}
 
 ```
 
@@ -1113,15 +1119,15 @@ plot(
 ) + theme_bw()
 
 
-
-#conditional_spaghetti(
-#  reactance_ordinal, 
-#  effects = c('persuasion_self_cw', 'pressure_self_cw')
-#  , group_var = 'coupleID'
+if (conditional_spaghettsi_plots){
+conditional_spaghetti(
+  reactance_ordinal, 
+  effects = c('persuasion_self_cw', 'pressure_self_cw')
+  , group_var = 'coupleID'
   #, n_groups = 15
-#  , plot_full_range = T
-#)
-
+  , plot_full_range = T
+)
+}
 
 ```
 
@@ -1256,13 +1262,14 @@ plot(
 ) + theme_bw()
 
 
-
+if (conditional_spaghettsi_plots){
 conditional_spaghetti(
   is_reactance, 
   effects = c('pressure_self_cw', 'pushing_self_cw'),
   group_var = 'coupleID',
   plot_full_range = TRUE
 )
+}
 
 ```
 

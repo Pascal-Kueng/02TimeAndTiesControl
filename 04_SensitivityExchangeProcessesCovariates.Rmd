@@ -61,7 +61,7 @@ shutdown = FALSE
 report_ordinal = FALSE
 do_priorsense = FALSE
 get_bayesfactor = FALSE
-check_models = TRUE #
+check_models = FALSE #
 
 if (get_bayesfactor) {
   stats_to_report <- c('CI', 'SE', 'pd', 'ROPE', 'BF', 'Rhat', 'ESS')
@@ -729,12 +729,6 @@ plot(
 ) + theme_bw()
 
 
-conditional_spaghetti(
-  mood_gauss, 
-  effects = c('pushing_partner_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE
-)
 
 ```
 
@@ -974,14 +968,6 @@ plot(
   bayestestR::rope(is_reactance, ci = 1)
 ) + theme_bw()
 
-
-
-conditional_spaghetti(
-  is_reactance, 
-  effects = c('pressure_self_cw', 'pushing_self_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE
-)
 
 ```
 

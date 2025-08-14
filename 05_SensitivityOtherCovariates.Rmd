@@ -711,13 +711,6 @@ plot(
 ) + theme_bw()
 
 
-conditional_spaghetti(
-  mood_gauss, 
-  effects = c('pushing_partner_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE
-)
-
 ```
 
 
@@ -955,14 +948,6 @@ plot(
   bayestestR::rope(is_reactance, ci = 1)
 ) + theme_bw()
 
-
-
-conditional_spaghetti(
-  is_reactance, 
-  effects = c('pressure_self_cw', 'pushing_self_cw'),
-  group_var = 'coupleID',
-  plot_full_range = TRUE
-)
 
 ```
 
