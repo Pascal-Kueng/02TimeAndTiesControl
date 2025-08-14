@@ -160,16 +160,16 @@ model_rows_fixed_ordinal <- c(
 
 model_rows_random <- c(
   # '--------------',
-  # '-- RANDOM EFFECTS --',
   'coupleID: sd(Intercept)', 
-  'coupleID: sd(persuasion_self_cw)',
-  'coupleID: sd(persuasion_partner_cw)',
-  'coupleID: sd(pressure_self_cw)',
-  'coupleID: sd(pressure_partner_cw)',
-  'coupleID: sd(pushing_self_cw)',
-  'coupleID: sd(pushing_partner_cw)',
-  
+
   'coupleID:userID: sd(Intercept)', 
+  'coupleID:userID: sd(persuasion_self_cw)',
+  'coupleID:userID: sd(persuasion_partner_cw)',
+  'coupleID:userID: sd(pressure_self_cw)',
+  'coupleID:userID: sd(pressure_partner_cw)',
+  'coupleID:userID: sd(pushing_self_cw)',
+  'coupleID:userID: sd(pushing_partner_cw)',
+  
   # '-- CORRELATION STRUCTURE -- ', 
   'sigma'
 )
@@ -223,15 +223,16 @@ model_rownames_random <- c(
   # '--------------',
   # '-- RANDOM EFFECTS L3 --',
   'L3:sd(Intercept)', 
-  "L3:sd(Daily individual's experienced persuasion)", 
-  "L3:sd(Daily partner's experienced persuasion)", # OR partner received
-  "L3:sd(Daily individual's experienced pressure)", 
-  "L3:sd(Daily partner's experienced pressure)", 
-  "L3:sd(Daily individual's experienced pushing)", 
-  "L3:sd(Daily partner's experienced pushing)", 
   
-  # '-- RANDOM EFFECTS L2 --',
+  
   'L2:sd(Intercept)', 
+  "L2:sd(Daily individual's experienced persuasion)", 
+  "L2:sd(Daily partner's experienced persuasion)", # OR partner received
+  "L2:sd(Daily individual's experienced pressure)", 
+  "L2:sd(Daily partner's experienced pressure)", 
+  "L2:sd(Daily individual's experienced pushing)", 
+  "L2:sd(Daily partner's experienced pushing)", 
+  
   # '-- CORRELATION STRUCTURE L1 -- ', 
   'sigma'
 )
@@ -248,8 +249,8 @@ model_rownames_random_ordinal <- c(model_rownames_random,'disc')
 rows_to_pack <- list(
   "Within-Person Effects" = c(2,11),
   "Between-Person Effects" = c(12,18),
-  "Random Effects (Level 3 - Couple)" = c(19, 25), 
-  "Random Effects (Level 2 - Couple:Person)" = c(26, 26), 
+  "Random Effects (Level 3 - Couple)" = c(19, 19), 
+  "Random Effects (Level 2 - Couple:Person)" = c(20, 26), 
   "Additional Parameters" = c(27,27)
   )
 
@@ -257,8 +258,8 @@ rows_to_pack <- list(
 rows_to_pack_ordinal <- list(
   "Within-Person Effects" = c(2+5,11+5),
   "Between-Person Effects" = c(12+5,18+5),
-  "Random Effects (Level 3 - Couple)" = c(19+5, 25+5), 
-  "Random Effects (Level 2 - Couple:Person)" = c(26+5, 26+5), 
+  "Random Effects (Level 3 - Couple)" = c(19+5, 19+5), 
+  "Random Effects (Level 2 - Couple:Person)" = c(20+5, 26+5), 
   "Additional Parameters" = c(27+5,27+6)
   )
 
