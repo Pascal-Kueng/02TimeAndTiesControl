@@ -25,3 +25,7 @@ usable_couples_count <- df_merged %>%
 
 print(usable_couples_count)
 
+
+report::report_table(df_merged[, c('pre_interruptions', 'pre_completionTime')])
+
+report::report_table(df_merged[, c('interruptions', 'completionTime')])
